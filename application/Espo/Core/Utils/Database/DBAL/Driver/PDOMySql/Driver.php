@@ -32,6 +32,7 @@ namespace Espo\Core\Utils\Database\DBAL\Driver\PDOMySql;
 use Espo\Core\Utils\Database\DBAL\{
     Platforms\MySqlPlatform,
     Schema\MySqlSchemaManager,
+    Driver\PDOConnection,
 };
 
 use Doctrine\DBAL\{
@@ -49,5 +50,42 @@ class Driver extends OriginalDriver
     public function getSchemaManager(Connection $conn)
     {
         return new MySqlSchemaManager($conn);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function connect(array $params, $username = null, $password = null, array $driverOptions = [])
+    {
+        $conn = new PDOConnection(
+            $this->_constructPdoDsnCustom($params),
+            $username,
+            $password,
+            $driverOptions
+        );
+
+        return $conn;
+    }
+
+    private function _constructPdoDsnCustom(array $params)
+    {
+        $dsn = 'mysql:';
+        if (isset($params['host']) && $params['host'] != '') {
+            $dsn .= 'host=' . $params['host'] . ';';
+        }
+        if (isset($params['port'])) {
+            $dsn .= 'port=' . $params['port'] . ';';
+        }
+        if (isset($params['dbname'])) {
+            $dsn .= 'dbname=' . $params['dbname'] . ';';
+        }
+        if (isset($params['unix_socket'])) {
+            $dsn .= 'unix_socket=' . $params['unix_socket'] . ';';
+        }
+        if (isset($params['charset'])) {
+            $dsn .= 'charset=' . $params['charset'] . ';';
+        }
+
+        return $dsn;
     }
 }
