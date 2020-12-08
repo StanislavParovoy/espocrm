@@ -27,24 +27,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Loaders;
+namespace Espo\Tools\Pdf;
 
-use Espo\Core\{
-    InjectableFactory,
-    Utils\DataCache as DataCacheService,
+use Espo\{
+    ORM\Entity,
 };
 
-class DataCache implements Loader
+interface EntityPrinter
 {
-    protected $injectableFactory;
-
-    public function __construct(InjectableFactory $injectableFactory)
-    {
-        $this->injectableFactory = $injectableFactory;
-    }
-
-    public function load() : DataCacheService
-    {
-        return $this->injectableFactory->create(DataCacheService::class);
-    }
+    public function print(Template $template, Entity $entity, Data $data) : Contents;
 }

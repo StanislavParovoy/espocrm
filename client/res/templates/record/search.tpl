@@ -58,11 +58,18 @@
     </div>
 </div>
 
-<div class="advanced-filters-bar" style="margin-bottom: 12px;"></div>
 <div class="advanced-filters hidden grid-auto-fill-sm">
 {{#each filterDataList}}
     <div class="filter filter-{{name}}" data-name="{{name}}">
         {{{var key ../this}}}
     </div>
 {{/each}}
+</div>
+
+<div class="advanced-filters-apply-container{{#unless toShowApplyFiltersButton}} hidden{{/unless}}">
+    <a href="javascript:" class="btn btn-default btn-sm" data-action="applyFilters">
+        <span class="fas fa-search"></span>
+        <span class="text-apply{{#if toShowResetFiltersText}} hidden{{/if}}">{{translate 'Apply'}}</span>
+        <span class="text-reset{{#unless toShowResetFiltersText}} hidden{{/unless}}">{{translate 'Reset'}}</span>
+    </a>
 </div>

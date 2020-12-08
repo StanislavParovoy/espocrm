@@ -29,16 +29,12 @@
 
 namespace Espo\Core\Authentication\Login;
 
-use Espo\Entities\{
-    User,
-    AuthToken,
-};
-
 use Espo\Core\{
     ORM\EntityManager,
     Api\Request,
     Utils\PasswordHash,
     Authentication\Result,
+    Authentication\AuthToken\AuthToken,
 };
 
 class Espo implements Login
@@ -54,26 +50,30 @@ class Espo implements Login
 
     public function login(?string $username, ?string $password, ?AuthToken $authToken = null, ?Request $request = null) : Result
     {
-        if (!$password) return Result::fail('Empty password');
+        if (!$password) {
+            return Result::fail('Empty password');
+        }
 
         if ($authToken) {
-            $hash = $authToken->get('hash');
+            $hash = $authToken->getHash();
         } else {
             $hash = $this->passwordHash->hash($password);
         }
 
-        $user = $this->entityManager->getRepository('User')->where([
-            'userName' => $username,
-            'password' => $hash,
-            'type!=' => ['api', 'system'],
-        ])->findOne();
+        $user = $this->entityManager->getRepository('User')
+            ->where([
+                'userName' => $username,
+                'password' => $hash,
+                'type!=' => ['api', 'system'],
+            ])
+            ->findOne();
 
         if (!$user) {
             return Result::fail();
         }
 
         if ($authToken) {
-            if ($user->id !== $authToken->get('userId')) {
+            if ($user->id !== $authToken->getUserId()) {
                 return Result::fail('User and token mismatch');
             }
         }

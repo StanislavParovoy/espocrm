@@ -40,5 +40,7 @@ define('views/record/edit-for-modal', 'views/record/edit', function (Dep) {
 
         accessControlDisabled: true,
 
+        confirmLeaveDisabled: true,
+
     });
 });

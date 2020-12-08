@@ -27,23 +27,31 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Log\Monolog;
+namespace Espo\Tools\Pdf;
 
-class Logger extends \Monolog\Logger
+/**
+ * Data transfer object.
+ */
+class Data
 {
-    protected $defaultLevelName = 'DEBUG';
+    private $additionalTemplateData = [];
 
-    public function setLevel($levelName)
+    public function setAdditionalTemplateData(array $additionalTemplateData)
     {
-        $level = static::toMonologLevel($levelName);
+        $this->additionalTemplateData = $additionalTemplateData;
+    }
 
-        $handlers = $this->getHandlers();
+    public function getAdditionalTemplateData() : array
+    {
+        return $this->additionalTemplateData;
+    }
 
-        foreach ($handlers as $handler) {
-            if ($handler->getLevel() > $level) {
-                $className = get_class($handler);
-                $handler->setLevel($level);
-            }
-        }
+    public static function createFromArray(array $data) : Data
+    {
+        $obj = new self();
+
+        $obj->additionalTemplateData = $data['additionalTemplateData'] ?? [];
+
+        return $obj;
     }
 }

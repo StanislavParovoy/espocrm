@@ -25,12 +25,44 @@
  *
  * In accordance with Section 7(b) of the GNU General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
- ************************************************************************/ 
+ ************************************************************************/
 
 namespace Espo\Entities;
 
-class AuthToken extends \Espo\Core\ORM\Entity
+use Espo\Core\{
+    ORM\Entity as BaseEntity,
+    Authentication\AuthToken\AuthToken as AuthTokenInterface,
+};
+
+class AuthToken extends BaseEntity implements AuthTokenInterface
 {
+    public function getToken() : string
+    {
+        return $this->get('token');
+    }
 
+    public function getUserId() : string
+    {
+        return $this->get('userId');
+    }
+
+    public function getPortalId() : ?string
+    {
+        return $this->get('portalId');
+    }
+
+    public function getSecret() : ?string
+    {
+        return $this->get('secret');
+    }
+
+    public function isActive() : bool
+    {
+        return $this->get('isActive');
+    }
+
+    public function getHash() : ?string
+    {
+        return $this->get('hash');
+    }
 }
-
