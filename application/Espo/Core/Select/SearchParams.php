@@ -97,9 +97,9 @@ class SearchParams
         return $this->rawParams['boolFilterList'] ?? [];
     }
 
-    public function getWhere() : array
+    public function getWhere() : ?array
     {
-        return $this->rawParams['where'] ?? [];
+        return $this->rawParams['where'] ?? null;
     }
 
     public static function fromRaw(array $params) : self
@@ -119,7 +119,7 @@ class SearchParams
         $primaryFilter = $params['primaryFilter'] ?? null;
         $textFilter = $params['textFilter'] ?? null;
 
-        $where = $params['where'] ?? [];
+        $where = $params['where'] ?? null;
 
         if ($select && !is_array($select)) {
             throw new Error("select should be array.");
@@ -145,7 +145,7 @@ class SearchParams
             throw new Error("textFilter should be string.");
         }
 
-        if (!is_array($where)) {
+        if ($where && !is_array($where)) {
             throw new Error("where should be array.");
         }
 

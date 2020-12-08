@@ -54,8 +54,6 @@ class SelectBuilder
 
     protected $applyNoComplexExpressions = false;
 
-    protected $inCategoryFilterList = [];
-
     protected $textFilter = null;
 
     protected $primaryFilter = null;
@@ -107,8 +105,10 @@ class SelectBuilder
 
     public function build() : Query
     {
-        if ($this->searchParams) {
-            $this->createSearchParamsHandler()->apply($this->queryBuilder, $this->searchParams);
+        $this->applyFromSearchParams();
+
+        if ($this->applyAccessControl) {
+            $this->applyAccessControl();
         }
 
         return $this->queryBuilder->build();
@@ -142,12 +142,12 @@ class SelectBuilder
         return $this;
     }
 
-    public function withInCategoryFilter(string $field, string $categoryId) : self
+    /*public function withInCategoryFilter(string $field, string $categoryId) : self
     {
-        $this->inCategoryFilterList[] = [$field, $categoryId];
+        $this->inCategoryFilter = [$field => $categoryId];
 
         return $this;
-    }
+    }*/
 
     public function withTextFilter(string $textFilter) : self
     {
@@ -177,11 +177,59 @@ class SelectBuilder
         return $this;
     }
 
-    /*public function withRawWhere(array $rawWhere) : self
+    protected function applyAccessControl()
     {
-        $this->rawWhere = $rawWhere;
+        $this->createAccessControlHandler($this->entityType)
+            ->apply(
+                $this->queryBuilder
+            );
+    }
 
-        return $this;
-    }*/
+    protected function applyFromSearchParams()
+    {
+        if (!$this->searchParams) {
+            return;
+        }
 
+        if ($this->searchParams->getOrderBy() || $this->searchParams->getOrder()) {
+            $this->createOrderHandler($this->entityType)
+                ->apply(
+                    $this->queryBuilder,
+                    $this->searchParams->getOrderBy(),
+                    $this->searchParams->getOrder()
+                );
+        }
+
+        if ($this->searchParams->getMaxSize() || $this->searchParams->getOffset()) {
+            $this->createLimitHandler($this->entityType)
+                ->apply(
+                    $this->queryBuilder,
+                    $this->searchParams->getOffset(),
+                    $this->searchParams->getMaxSize()
+                );
+        }
+
+        if ($this->searchParams->getSelect()) {
+            $this->createSelectHandler($this->entityType)
+                ->apply(
+                    $this->queryBuilder,
+                    $this->searchParams->getSelect()
+                );
+        }
+
+        if ($this->searchParams->getWhere()) {
+            // @todo move to class
+            $whereParams = [
+                'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
+                'applyNoComplexExpressions' => $this->applyNoComplexExpressions,
+            ];
+
+            $this->createWhereHandler($this->entityType)
+                ->apply(
+                    $this->queryBuilder,
+                    $this->searchParams->getWhere(),
+                    $whereParams
+                );
+        }
+    }
 }
