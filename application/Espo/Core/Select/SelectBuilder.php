@@ -33,6 +33,18 @@ use Espo\Core\{
     Exceptions\Error,
 };
 
+use Espo\Core\Select\{
+    HandlerFactory,
+    Handler\WhereHandler,
+    Handler\SelectHandler,
+    Handler\OrderHandler,
+    Handler\LimitHandler,
+    Handler\AccessControlHandler,
+    Handler\PrimaryFilterHandler,
+    Handler\BoolFilterListHandler,
+    Handler\TextFilterHandler,
+};
+
 use Espo\{
     ORM\QueryParams\Select as Query,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
@@ -50,18 +62,22 @@ class SelectBuilder
 
     protected $applyDefaultOrder = false;
 
-    protected $applyWherePermissionsCheck = false;
-
-    protected $applyNoComplexExpressions = false;
-
     protected $textFilter = null;
 
     protected $primaryFilter = null;
 
     protected $boolFilterList = [];
 
-    public function __construct(string $entityType)
+    protected $applyWherePermissionsCheck = false;
+
+    protected $applyNoComplexExpressions = false;
+
+    protected $handlerFactory;
+
+    public function __construct(string $entityType, HandlerFactory $handlerFactory)
     {
+        $this->handlerFactory = $handlerFactory;
+
         $this->entityType = $entityType;
 
         $this->queryBuilder = new QueryBuilder();
@@ -106,6 +122,22 @@ class SelectBuilder
     public function build() : Query
     {
         $this->applyFromSearchParams();
+
+        if ($this->applyDefaultOrder) {
+            $this->applyDefaultOrder();
+        }
+
+        if ($this->primaryFilter) {
+            $this->applyPrimaryFilter();
+        }
+
+        if (count($this->boolFilterList)) {
+            $this->applyBoolFilterList();
+        }
+
+        if ($this->textFilter) {
+            $this->applyTextFilter();
+        }
 
         if ($this->applyAccessControl) {
             $this->applyAccessControl();
@@ -177,9 +209,45 @@ class SelectBuilder
         return $this;
     }
 
+    protected function applyPrimaryFilter()
+    {
+        $this->createPrimaryFilterHandler()
+            ->apply(
+                $this->queryBuilder,
+                $this->primaryFilter
+            );
+    }
+
+    protected function applyBoolFilterList()
+    {
+        $this->createBoolFilterListHandler()
+            ->apply(
+                $this->queryBuilder,
+                $this->boolFilterList
+            );
+    }
+
+    protected function applyTextFilter()
+    {
+        $this->createTextFilterHandler()
+            ->apply(
+                $this->queryBuilder,
+                $this->textFilter
+            );
+    }
+
     protected function applyAccessControl()
     {
-        $this->createAccessControlHandler($this->entityType)
+        $this->createAccessControlHandler()
+            ->apply(
+                $this->queryBuilder
+            );
+    }
+
+    protected function applyDefaultOrder()
+    {
+        // if null, null then apply default
+        $this->createOrderHandler()
             ->apply(
                 $this->queryBuilder
             );
@@ -191,17 +259,28 @@ class SelectBuilder
             return;
         }
 
-        if ($this->searchParams->getOrderBy() || $this->searchParams->getOrder()) {
-            $this->createOrderHandler($this->entityType)
+        if (
+            !$this->applyDefaultOrder &&
+            (
+                $this->searchParams->getOrderBy() || $this->searchParams->getOrder()
+            )
+        ) {
+            // @todo move to class
+            $params = [
+                'applyNoComplexExpressions' => $this->applyNoComplexExpressions,
+            ];
+
+            $this->createOrderHandler()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getOrderBy(),
-                    $this->searchParams->getOrder()
+                    $this->searchParams->getOrder(),
+                    $params
                 );
         }
 
         if ($this->searchParams->getMaxSize() || $this->searchParams->getOffset()) {
-            $this->createLimitHandler($this->entityType)
+            $this->createLimitHandler()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getOffset(),
@@ -210,7 +289,7 @@ class SelectBuilder
         }
 
         if ($this->searchParams->getSelect()) {
-            $this->createSelectHandler($this->entityType)
+            $this->createSelectHandler()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getSelect()
@@ -219,17 +298,57 @@ class SelectBuilder
 
         if ($this->searchParams->getWhere()) {
             // @todo move to class
-            $whereParams = [
+            $params = [
                 'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
                 'applyNoComplexExpressions' => $this->applyNoComplexExpressions,
             ];
 
-            $this->createWhereHandler($this->entityType)
+            $this->createWhereHandler()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getWhere(),
-                    $whereParams
+                    $params
                 );
         }
+    }
+
+    protected function createWhereHandler() : WhereHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::WHERE);
+    }
+
+    protected function createSelectHandler() : SelectHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::SELECT);
+    }
+
+    protected function createOrderHandler() : OrderHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::ORDER);
+    }
+
+    protected function createLimitHandler() : LimitHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::LIMIT);
+    }
+
+    protected function createAccessControlHandler() : AccessControlHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::ACCESS_CONTROL);
+    }
+
+    protected function createTextFilterHandler() : TextFilterHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::TEXT_FILTER);
+    }
+
+    protected function createPrimaryFilterHandler() : PrimaryFilterHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::PRIMARY_FILTER);
+    }
+
+    protected function createBoolFilterListHandler() : BoolFilterListHandler
+    {
+        return $this->handlerFactory->create($this->entityType, HandlerFactory::BOOL_FILTER_LIST);
     }
 }
