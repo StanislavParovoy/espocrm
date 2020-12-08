@@ -73,7 +73,7 @@ class SelectBuilder
 
     public function fromSearchParams(Search $searchParams) : self
     {
-        //$this->searchParams = $searchParams;
+        $this->searchParams = $searchParams;
 
         $this->withBoolFilterList(
             $searchParams->getBoolFilterList()
