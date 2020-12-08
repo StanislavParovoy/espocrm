@@ -27,27 +27,12 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Database\DBAL\Schema;
+namespace Espo\Core\Utils\Database\DBAL\Platforms;
 
-class Schema extends \Doctrine\DBAL\Schema\Schema
+use Doctrine\DBAL\Platforms\MySQL80Platform as OriginalMySQL80Platform;
+use Espo\Core\Utils\Database\DBAL\Traits\Platforms\MySQLPlatform as MySQLPlatformTrait;
+
+class MySQL80Platform extends OriginalMySQL80Platform
 {
-    /**
-     * Creates a new table.
-     *
-     * @param string $tableName
-     *
-     * @return \Doctrine\DBAL\Schema\Table
-     */
-    public function createTable($tableName)
-    {
-        $table = new Table($tableName);
-        $this->_addTable($table);
-
-        foreach ($this->_schemaConfig->getDefaultTableOptions() as $name => $value) {
-            $table->addOption($name, $value);
-        }
-
-        return $table;
-    }
-
+    use MySQLPlatformTrait;
 }

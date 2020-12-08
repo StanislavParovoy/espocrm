@@ -27,62 +27,29 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Database\DBAL\Schema;
+namespace Espo\Core\Utils\Database\DBAL\Platforms;
 
-class Column extends \Doctrine\DBAL\Schema\Column
+use Doctrine\DBAL\{
+    Types\Types,
+    Platforms\Keywords\MariaDb102Keywords,
+};
+
+class MariaDb1027Platform extends MySQLPlatform
 {
-    /**
-     * @var boolean
-     */
-    protected $_notnull = false;
-
-    /**
-     * @var boolean
-     */
-    protected $_unique = false;
-
-    protected $_quoted = true;
-
-    /**
-     * @param boolean $unique
-     *
-     * @return \Doctrine\DBAL\Schema\Column
-     */
-    public function setUnique($unique)
+    public function getJsonTypeDeclarationSQL(array $column): string
     {
-        $this->_unique = (bool)$unique;
-
-        return $this;
+        return 'LONGTEXT';
     }
 
-    /**
-     * @return boolean
-     */
-    public function getUnique()
+    protected function getReservedKeywordsClass(): string
     {
-        return $this->_unique;
+        return Keywords\MariaDb102Keywords::class;
     }
 
-    /**
-     * @return array
-     */
-    public function toArray()
+    protected function initializeDoctrineTypeMappings(): void
     {
-        return array_merge(array(
-            'name'          => $this->_name,
-            'type'          => $this->_type,
-            'default'       => $this->_default,
-            'notnull'       => $this->_notnull,
-            'length'        => $this->_length,
-            'precision'     => $this->_precision,
-            'scale'         => $this->_scale,
-            'fixed'         => $this->_fixed,
-            'unsigned'      => $this->_unsigned,
-            'autoincrement' => $this->_autoincrement,
-            'unique' => $this->_unique,
-            'columnDefinition' => $this->_columnDefinition,
-            'comment' => $this->_comment,
-        ), $this->_platformOptions, $this->_customSchemaOptions);
-    }
+        parent::initializeDoctrineTypeMappings();
 
+        $this->doctrineTypeMapping['json'] = Types::JSON;
+    }
 }
