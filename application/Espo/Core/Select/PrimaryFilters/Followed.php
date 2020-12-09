@@ -48,13 +48,15 @@ class Followed implements PrimaryFilter
 
     public function apply(QueryBuilder $queryBuilder)
     {
+        $alias = 'subscriptionFollowedPrimaryFilter';
+
         $queryBuilder->join(
             'Subscription',
-            'subscription',
+            $alias,
             [
-                'subscription.entityType' => $this->entityType,
-                'subscription.entityId=:' => 'id',
-                'subscription.userId' => $this->user->id,
+                $alias . '.entityType' => $this->entityType,
+                $alias . '.entityId=:' => 'id',
+                $alias . '.userId' => $this->user->id,
             ]
         );
     }
