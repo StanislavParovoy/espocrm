@@ -33,6 +33,7 @@ use Espo\Core\{
     Exceptions\Error,
     InjectableFactory,
     Utils\Metadata,
+    SelectManagerFactory,
 };
 
 use Espo\{
@@ -52,11 +53,14 @@ class ApplierFactory
 
     protected $injectableFactory;
     protected $metadata;
+    protected $selectManagerFactory;
 
-    public function __construct(InjectableFactory $injectableFactory, Metadata $metadata)
-    {
+    public function __construct(
+        InjectableFactory $injectableFactory, Metadata $metadata, SelectManagerFactory $selectManagerFactory
+    ) {
         $this->injectableFactory = $injectableFactory;
         $this->metadata = $metadata;
+        $this->selectManagerFactory = $selectManagerFactory;
     }
 
     public function create(string $entityType, User $user, string $type) : object
@@ -73,9 +77,12 @@ class ApplierFactory
             throw new Error("Bad select handler '{$type}'.");
         }
 
+        $selectManager = $this->selectManagerFactory->create($entityType, $user);
+
         return $this->injectableFactory->createWith($className, [
             'entityType' => $entityType,
             'user' => $user,
+            'selectManager' => $selectManager, // to use for backward compatibility
         ]);
     }
 
