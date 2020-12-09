@@ -59,7 +59,7 @@ class ApplierFactory
         $this->metadata = $metadata;
     }
 
-    public function create(string $entityType, ?User $user, string $type) : object
+    public function create(string $entityType, User $user, string $type) : object
     {
         $className = $this->metadata->get(
             [
