@@ -48,6 +48,7 @@ use Espo\Core\Select\{
 use Espo\{
     ORM\QueryParams\Select as Query,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
+    Entities\User,
 };
 
 class SelectBuilder
@@ -56,7 +57,7 @@ class SelectBuilder
 
     protected $queryBuilder;
 
-    protected $userId = null;
+    protected $user = null;
 
     protected $searchParams = null;
 
@@ -76,11 +77,13 @@ class SelectBuilder
 
     protected $applierFactory;
 
-    public function __construct(string $entityType, ApplierFactory $applierFactory)
+    public function __construct(string $entityType, User $user, ApplierFactory $applierFactory)
     {
+        $this->entityType = $entityType;
+
         $this->applierFactory = $applierFactory;
 
-        $this->entityType = $entityType;
+        $this->user = $user;
 
         $this->queryBuilder = new QueryBuilder();
 
@@ -148,12 +151,9 @@ class SelectBuilder
         return $this->queryBuilder->build();
     }
 
-    public function forUserId(string $userId) : self
+    public function forUser(User $user) : self
     {
-        $this->withWherePermissionsCheck();
-        $this->withAccessControl();
-
-        $this->userId = $userId;
+        $this->user = $user;
 
         return $this;
     }
@@ -326,41 +326,41 @@ class SelectBuilder
 
     protected function createWhereApplier() : WhereApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::WHERE);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::WHERE);
     }
 
     protected function createSelectApplier() : SelectApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::SELECT);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::SELECT);
     }
 
     protected function createOrderApplier() : OrderApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::ORDER);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::ORDER);
     }
 
     protected function createLimitApplier() : LimitApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::LIMIT);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::LIMIT);
     }
 
     protected function createAccessControlApplier() : AccessControlApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::ACCESS_CONTROL);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::ACCESS_CONTROL);
     }
 
     protected function createTextFilterApplier() : TextFilterApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::TEXT_FILTER);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::TEXT_FILTER);
     }
 
     protected function createPrimaryFilterApplier() : PrimaryFilterApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::PRIMARY_FILTER);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::PRIMARY_FILTER);
     }
 
     protected function createBoolFilterListApplier() : BoolFilterListApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::BOOL_FILTER_LIST);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::BOOL_FILTER_LIST);
     }
 }

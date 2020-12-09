@@ -35,6 +35,10 @@ use Espo\Core\{
     Utils\Metadata,
 };
 
+use Espo\{
+    Entities\User,
+};
+
 class ApplierFactory
 {
     const SELECT = 'select';
@@ -55,7 +59,7 @@ class ApplierFactory
         $this->metadata = $metadata;
     }
 
-    public function create(string $entityType, ?string $userId, string $type) : object
+    public function create(string $entityType, ?User $user, string $type) : object
     {
         $className = $this->metadata->get(
             [
@@ -71,7 +75,7 @@ class ApplierFactory
 
         return $this->injectableFactory->createWith($className, [
             'entityType' => $entityType,
-            'userId' => $userId,
+            'user' => $user,
         ]);
     }
 
