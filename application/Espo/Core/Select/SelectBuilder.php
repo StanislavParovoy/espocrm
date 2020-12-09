@@ -85,7 +85,7 @@ class SelectBuilder
 
         $this->user = $user;
 
-        $this->queryBuilder = new QueryBuilder();
+        $this->queryBuilder = new OrmSelectBuilder();
 
         $this->queryBuilder->from($entityType);
     }

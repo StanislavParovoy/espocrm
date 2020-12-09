@@ -1977,6 +1977,37 @@ class SelectManager
     }
 
     /**
+     * Fallback for backward compatibiltiy.
+     */
+    public function hasPrimaryFilter(string $filter) : bool
+    {
+        if (
+            method_exists($this, 'filter' . ucfirst($filter))
+        ) {
+            return true;
+        }
+
+        if (
+            $this->getMetadata()->get(
+                ['entityDefs', $this->entityType, 'collection', 'filters', $filter, 'className']
+            )
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function applyPrimaryFilterToQueryBuilder(OrmSelectBuilder $queryBuilder, string $filter)
+    {
+        $result = $queryBuilder->build()->getRawParams();
+
+        $this->applyPrimaryFilter($filter, $result);
+
+        $queryBuilder->setRawParams($result);
+    }
+
+    /**
      * Apply a primary filter to select parameters.
      */
     public function applyPrimaryFilter(string $filter, array &$result)
