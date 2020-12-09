@@ -32,47 +32,63 @@ namespace Espo\Core\Select\Appliers;
 use Espo\Core\{
     Exceptions\Error,
     Select\SelectManager,
-    Select\Factory\PrimaryFilterFactory,
+    Select\Factory\BoolFilterFactory,
 };
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
+    ORM\QueryParams\Parts\Where\OrGroup,
     Entities\User,
 };
 
-class PrimaryFilterApplier
+class BoolFilterListApplier
 {
     protected $entityType;
     protected $user;
     protected $selectManager;
-    protected $primaryFilterFactory;
+    protected $boolFilterFactory;
 
     public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, PrimaryFilterFactory $primaryFilterFactory
+        string $entityType, User $user, SelectManager $selectManager, BoolFilterFactory $boolFilterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->selectManager = $selectManager;
-        $this->primaryFilterFactory = $primaryFilterFactory;
+        $this->boolFilterFactory = $boolFilterFactory;
     }
 
-    public function apply(QueryBuilder $queryBuilder, string $filterName)
+    public function apply(QueryBuilder $queryBuilder, array $boolFilterNameList)
     {
-        if ($this->primaryFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->primaryFilterFactory->create($this->entityType, $user, $filterName);
+        $orGroup = new OrGroup();
 
-            $filter->apply($queryBuilder);
+        foreach ($boolFilterNameList as $filterName) {
+            $itemWhereClause = $this->applyBoolFilter($queryBuilder, $filterName);
 
-            return;
+            $orGroup->add($itemWhereClause);
+        }
+
+        $whereClause = new WhereClause();
+
+        $whereClause->add($orGroup);
+
+        $queryBuilder->where($whereClause);
+    }
+
+    protected function applyBoolFilter(QueryBuilder $queryBuilder, array $filterName) : WhereClause
+    {
+        if ($this->boolFilterFactory->has($this->entityType, $filterName)) {
+            $filter = $this->boolFilterFactory->create($this->entityType, $user, $filterName);
+
+            return $filter->apply($queryBuilder);
         }
 
         // For backward compatibility.
-        if ($selectManager->hasPrimaryFilter($filterName)) {
-            $selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
+        if ($selectManager->hasBoolFilter($filterName)) {
+            $rawWhereClause = $selectManager->applyBoolFilterToQueryBuilder($queryBuilder, $filterName);
 
-            return;
+            return WhereClause::fromRaw($rawWhereClause);
         }
 
-        throw new Error("No primary filter '{$filterName}' for '{$this->entityType}'.");
+        throw new Error("No bool filter '{$filterName}' for '{this->entityType}'.");
     }
 }

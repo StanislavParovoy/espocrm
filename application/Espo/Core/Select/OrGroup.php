@@ -27,52 +27,34 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
+namespace Espo\Core\Select;
 
-use Espo\Core\{
-    Exceptions\Error,
-    Select\SelectManager,
-    Select\Factory\PrimaryFilterFactory,
-};
-
-use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
-    Entities\User,
-};
-
-class PrimaryFilterApplier
+/**
+ * Move to Espo\ORM\QueryParams\Parts\Where\OrGroup.
+ */
+class OrGroup implements WhereItem
 {
-    protected $entityType;
-    protected $user;
-    protected $selectManager;
-    protected $primaryFilterFactory;
+    protected $raw = [];
 
-    public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, PrimaryFilterFactory $primaryFilterFactory
-    ) {
-        $this->entityType = $entityType;
-        $this->user = $user;
-        $this->selectManager = $selectManager;
-        $this->primaryFilterFactory = $primaryFilterFactory;
+    public function __construct()
+    {
     }
 
-    public function apply(QueryBuilder $queryBuilder, string $filterName)
+    public function getRawValue() : array
     {
-        if ($this->primaryFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->primaryFilterFactory->create($this->entityType, $user, $filterName);
+        return $this->getRaw();
+    }
 
-            $filter->apply($queryBuilder);
+    public function getKey() : string
+    {
+        return 'OR';
+    }
 
-            return;
-        }
+    public function add(WhereItem $item)
+    {
+        $key = $item->getKey();
+        $value = $item->getRawValue();
 
-        // For backward compatibility.
-        if ($selectManager->hasPrimaryFilter($filterName)) {
-            $selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
-
-            return;
-        }
-
-        throw new Error("No primary filter '{$filterName}' for '{$this->entityType}'.");
+        $this->raw[] = [$key => $value];
     }
 }

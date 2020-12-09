@@ -30,19 +30,19 @@
 namespace Espo\Core\Select;
 
 use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
+    ORM\QueryParams\Parts\Where\WhereItem,
 };
 
 /**
  * To be extended from ORM WhereClause when one is written.
  * Or change usage to ORM WhereClause.
- * Move to Espo\ORM\QueryPart\WhereClause.
+ * Move to Espo\ORM\QueryParams\Parts\WhereClause.
  */
-class WhereClause
+class WhereClause implements WhereItem
 {
-    protected $whereClause = [];
+    protected $raw = [];
 
-    protected function __construct()
+    public function __construct()
     {
     }
 
@@ -50,13 +50,37 @@ class WhereClause
     {
         $object = new self();
 
-        $object->whereClause = $whereClause;
+        $object->raw = $whereClause;
 
         return $self;
     }
 
     public function getRaw() : array
     {
-        return $this->whereClause;
+        return $this->raw;
+    }
+
+    public function getRawValue() : array
+    {
+        return $this->getRaw();
+    }
+
+    public function getKey() : string
+    {
+        return 'AND';
+    }
+
+    public function add(WhereItem $item)
+    {
+        if ($item instanceof WhereClause) {
+            $this->raw[] = $item->getRaw();
+
+            return;
+        }
+
+        $key = $item->getKey();
+        $value = $item->getRawValue();
+
+        $this->raw[] = [$key => $value];
     }
 }

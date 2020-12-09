@@ -31,14 +31,14 @@ namespace Espo\Core\Select\Factory;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\PrimaryFilter,
+    Select\BoolFilter,
 };
 
 use Espo\{
     Entities\User,
 };
 
-class PrimaryFilterFactory
+class BoolFilterFactory
 {
     protected $injectableFactory;
     protected $metadata;
@@ -49,12 +49,12 @@ class PrimaryFilterFactory
         $this->metadata = $metadata;
     }
 
-    public function create(string $entityType, User $user, string $name) : PrimaryFilter
+    public function create(string $entityType, User $user, string $name) : BoolFilter
     {
         $className = $this->getClassName($entityType, $name);
 
         if (!$className) {
-            throw new Error("Primary filter '{$name}' for '{$entityType}' does not exist.");
+            throw new Error("Bool filter '{$name}' for '{$entityType}' does not exist.");
         }
 
         return $this->injectableFactory->createWith($className, [
@@ -71,14 +71,14 @@ class PrimaryFilterFactory
     protected function getClassName(string $entityType, string $name) : ?string
     {
         if (!$name) {
-            throw new Error("Empty primary filter name.");
+            throw new Error("Empty bool filter name.");
         }
 
         $className = $this->metadata->get(
             [
                 'selectDefs',
                 $entityType,
-                'primaryFilters',
+                'boolFilters',
                 $name,
                 'className',
             ]
@@ -99,7 +99,7 @@ class PrimaryFilterFactory
 
     protected function getDefaultClassName(string $name) : string
     {
-        $className = 'Espo\\Core\\Select\\PrimaryFilters\\' . ucfirst($name);
+        $className = 'Espo\\Core\\Select\\BoolFilters\\' . ucfirst($name);
 
         return $className;
     }

@@ -27,52 +27,42 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
-
-use Espo\Core\{
-    Exceptions\Error,
-    Select\SelectManager,
-    Select\Factory\PrimaryFilterFactory,
-};
+namespace Espo\Core\Select\BoolFilters;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    Entities\User,
+    ORM\QueryParams\Parts\WhereClause,
+    Core\Select\BoolFilter,
+    Enities\User,
 };
 
-class PrimaryFilterApplier
+class Followed implements BoolFilter
 {
     protected $entityType;
     protected $user;
-    protected $selectManager;
-    protected $primaryFilterFactory;
 
-    public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, PrimaryFilterFactory $primaryFilterFactory
-    ) {
+    public function __construct(string $entityType, User $user)
+    {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->selectManager = $selectManager;
-        $this->primaryFilterFactory = $primaryFilterFactory;
     }
 
-    public function apply(QueryBuilder $queryBuilder, string $filterName)
+    public function apply(QueryBuilder $queryBuilder) : WhereClause
     {
-        if ($this->primaryFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->primaryFilterFactory->create($this->entityType, $user, $filterName);
+        $alias = 'subscriptionFollowedBoolFilter';
 
-            $filter->apply($queryBuilder);
+        $queryBuilder->join(
+            'Subscription',
+            $alias,
+            [
+                $alias . '.entityType' => $this->entityType,
+                $alias . '.entityId=:' => 'id',
+                $alias . '.userId' => $this->user->id,
+            ]
+        );
 
-            return;
-        }
-
-        // For backward compatibility.
-        if ($selectManager->hasPrimaryFilter($filterName)) {
-            $selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
-
-            return;
-        }
-
-        throw new Error("No primary filter '{$filterName}' for '{$this->entityType}'.");
+        return WhereClause::fromRaw([
+            $alias . '.id!=' => null,
+        ]);
     }
 }

@@ -31,6 +31,7 @@ namespace Espo\Core\Select;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
+    ORM\QueryParams\Parts\WhereClause,
 };
 
 interface BoolFilter
