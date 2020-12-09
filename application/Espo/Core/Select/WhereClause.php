@@ -33,7 +33,30 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
 };
 
-interface BoolFilter
+/**
+ * To be extended from ORM WhereClause when one is written.
+ * Or change usage to ORM WhereClause.
+ * Move to Espo\ORM\QueryPart\WhereClause.
+ */
+class WhereClause
 {
-    public function apply(QueryBuilder $queryBuilder) : WhereClause; // Change to ORM where clause?
+    protected $whereClause = [];
+
+    protected function __construct()
+    {
+    }
+
+    public static function fromRaw(array $whereClause) : self
+    {
+        $object = new self();
+
+        $object->whereClause = $whereClause;
+
+        return $self;
+    }
+
+    public function getRaw() : array
+    {
+        return $this->whereClause;
+    }
 }
