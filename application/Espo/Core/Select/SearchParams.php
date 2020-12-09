@@ -106,7 +106,7 @@ class SearchParams
     {
         $object = new self();
 
-        $rawParams = $params;
+        $rawParams = [];
 
         $select = $params['select'] ?? null;
         $orderBy = $params['orderBy'] ?? null;
@@ -117,7 +117,7 @@ class SearchParams
 
         $boolFilterList = $params['boolFilterList'] ?? [];
         $primaryFilter = $params['primaryFilter'] ?? null;
-        $textFilter = $params['textFilter'] ?? null;
+        $textFilter = $params['textFilter'] ?? $params['q'] ?? null;
 
         $where = $params['where'] ?? null;
 
