@@ -100,7 +100,7 @@ class PrimaryFilterFactory
 
     protected function getDefaultClassName(string $name) : string
     {
-        $className = 'Espo\\Core\\Select\\PrimaryFilters\\' . ucfirst($name) . 'PrimaryFilter';
+        $className = 'Espo\\Core\\Select\\PrimaryFilters\\' . ucfirst($name);
 
         return $className;
     }
