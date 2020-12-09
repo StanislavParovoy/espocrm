@@ -34,15 +34,15 @@ use Espo\Core\{
 };
 
 use Espo\Core\Select\{
-    HandlerFactory,
-    Handler\WhereHandler,
-    Handler\SelectHandler,
-    Handler\OrderHandler,
-    Handler\LimitHandler,
-    Handler\AccessControlHandler,
-    Handler\PrimaryFilterHandler,
-    Handler\BoolFilterListHandler,
-    Handler\TextFilterHandler,
+    ApplierFactory,
+    Applier\WhereApplier,
+    Applier\SelectApplier,
+    Applier\OrderApplier,
+    Applier\LimitApplier,
+    Applier\AccessControlApplier,
+    Applier\PrimaryFilterApplier,
+    Applier\BoolFilterListApplier,
+    Applier\TextFilterApplier,
 };
 
 use Espo\{
@@ -55,6 +55,8 @@ class SelectBuilder
     protected $entityType;
 
     protected $queryBuilder;
+
+    protected $userId = null;
 
     protected $searchParams = null;
 
@@ -70,13 +72,13 @@ class SelectBuilder
 
     protected $applyWherePermissionsCheck = false;
 
-    protected $applyNoComplexExpressions = false;
+    protected $applyComplexExpressions = false;
 
-    protected $handlerFactory;
+    protected $applierFactory;
 
-    public function __construct(string $entityType, HandlerFactory $handlerFactory)
+    public function __construct(string $entityType, ApplierFactory $applierFactory)
     {
-        $this->handlerFactory = $handlerFactory;
+        $this->applierFactory = $applierFactory;
 
         $this->entityType = $entityType;
 
@@ -146,6 +148,16 @@ class SelectBuilder
         return $this->queryBuilder->build();
     }
 
+    public function forUserId(string $userId) : self
+    {
+        $this->withWherePermissionsCheck();
+        $this->withAccessControl();
+
+        $this->userId = $userId;
+
+        return $this;
+    }
+
     public function withAccessControl() : self
     {
         $this->applyAccessControl = true;
@@ -167,9 +179,9 @@ class SelectBuilder
         return $this;
     }
 
-    public function withNoComplexExpressions() : self
+    public function withComplexExpressions() : self
     {
-        $this->applyNoComplexExpressions = true;
+        $this->applyComplexExpressions = true;
 
         return $this;
     }
@@ -211,7 +223,7 @@ class SelectBuilder
 
     protected function applyPrimaryFilter()
     {
-        $this->createPrimaryFilterHandler()
+        $this->createPrimaryFilterApplier()
             ->apply(
                 $this->queryBuilder,
                 $this->primaryFilter
@@ -220,7 +232,7 @@ class SelectBuilder
 
     protected function applyBoolFilterList()
     {
-        $this->createBoolFilterListHandler()
+        $this->createBoolFilterListApplier()
             ->apply(
                 $this->queryBuilder,
                 $this->boolFilterList
@@ -229,7 +241,7 @@ class SelectBuilder
 
     protected function applyTextFilter()
     {
-        $this->createTextFilterHandler()
+        $this->createTextFilterApplier()
             ->apply(
                 $this->queryBuilder,
                 $this->textFilter
@@ -238,7 +250,7 @@ class SelectBuilder
 
     protected function applyAccessControl()
     {
-        $this->createAccessControlHandler()
+        $this->createAccessControlApplier()
             ->apply(
                 $this->queryBuilder
             );
@@ -247,7 +259,7 @@ class SelectBuilder
     protected function applyDefaultOrder()
     {
         // if null, null then apply default
-        $this->createOrderHandler()
+        $this->createOrderApplier()
             ->apply(
                 $this->queryBuilder
             );
@@ -267,10 +279,10 @@ class SelectBuilder
         ) {
             // @todo move to class
             $params = [
-                'applyNoComplexExpressions' => $this->applyNoComplexExpressions,
+                'complexExpressions' => $this->applyComplexExpressions,
             ];
 
-            $this->createOrderHandler()
+            $this->createOrderApplier()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getOrderBy(),
@@ -280,7 +292,7 @@ class SelectBuilder
         }
 
         if ($this->searchParams->getMaxSize() || $this->searchParams->getOffset()) {
-            $this->createLimitHandler()
+            $this->createLimitApplier()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getOffset(),
@@ -289,7 +301,7 @@ class SelectBuilder
         }
 
         if ($this->searchParams->getSelect()) {
-            $this->createSelectHandler()
+            $this->createSelectApplier()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getSelect()
@@ -299,11 +311,11 @@ class SelectBuilder
         if ($this->searchParams->getWhere()) {
             // @todo move to class
             $params = [
-                'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
-                'applyNoComplexExpressions' => $this->applyNoComplexExpressions,
+                'wherePermissionsCheck' => $this->applyWherePermissionsCheck,
+                'complexExpressions' => $this->applyComplexExpressions, // reversed
             ];
 
-            $this->createWhereHandler()
+            $this->createWhereApplier()
                 ->apply(
                     $this->queryBuilder,
                     $this->searchParams->getWhere(),
@@ -312,43 +324,43 @@ class SelectBuilder
         }
     }
 
-    protected function createWhereHandler() : WhereHandler
+    protected function createWhereApplier() : WhereApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::WHERE);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::WHERE);
     }
 
-    protected function createSelectHandler() : SelectHandler
+    protected function createSelectApplier() : SelectApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::SELECT);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::SELECT);
     }
 
-    protected function createOrderHandler() : OrderHandler
+    protected function createOrderApplier() : OrderApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::ORDER);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::ORDER);
     }
 
-    protected function createLimitHandler() : LimitHandler
+    protected function createLimitApplier() : LimitApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::LIMIT);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::LIMIT);
     }
 
-    protected function createAccessControlHandler() : AccessControlHandler
+    protected function createAccessControlApplier() : AccessControlApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::ACCESS_CONTROL);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::ACCESS_CONTROL);
     }
 
-    protected function createTextFilterHandler() : TextFilterHandler
+    protected function createTextFilterApplier() : TextFilterApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::TEXT_FILTER);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::TEXT_FILTER);
     }
 
-    protected function createPrimaryFilterHandler() : PrimaryFilterHandler
+    protected function createPrimaryFilterApplier() : PrimaryFilterApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::PRIMARY_FILTER);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::PRIMARY_FILTER);
     }
 
-    protected function createBoolFilterListHandler() : BoolFilterListHandler
+    protected function createBoolFilterListApplier() : BoolFilterListApplier
     {
-        return $this->handlerFactory->create($this->entityType, HandlerFactory::BOOL_FILTER_LIST);
+        return $this->applierFactory->create($this->entityType, $this->userId, ApplierFactory::BOOL_FILTER_LIST);
     }
 }

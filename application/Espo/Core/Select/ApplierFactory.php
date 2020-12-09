@@ -35,7 +35,7 @@ use Espo\Core\{
     Utils\Metadata,
 };
 
-class HandlerFactory
+class ApplierFactory
 {
     const SELECT = 'select';
     const WHERE = 'where';
@@ -55,13 +55,13 @@ class HandlerFactory
         $this->metadata = $metadata;
     }
 
-    public function create(string $entityType, string $type) : object
+    public function create(string $entityType, ?string $userId, string $type) : object
     {
         $className = $this->metadata->get(
             [
                 'selectDefs',
                 $this->entityType,
-                $type . 'HandlerClassName',
+                $type . 'ApplierClassName',
             ]
         ) ?? $this->getDefaultClassName($type);
 
@@ -71,12 +71,13 @@ class HandlerFactory
 
         return $this->injectableFactory->createWith($className, [
             'entityType' => $entityType,
+            'userId' => $userId,
         ]);
     }
 
-    protected function getDefaultClassName(string $type) : ?string
+    protected function getDefaultClassName(string $type) : string
     {
-        $className = 'Espo\\Core\\Select\\Handler\\' . ucfirst($type) . 'Handler';
+        $className = 'Espo\\Core\\Select\\Appliers\\' . ucfirst($type) . 'Applier';
 
         return $className;
     }
