@@ -55,7 +55,7 @@ class PrimaryFilterFactory
         $className = $this->getClassName($entityType, $name);
 
         if (!$className) {
-            throw new Error("Primary filter '{$name}' forn '{$entityType}' does not exist.");
+            throw new Error("Primary filter '{$name}' for '{$entityType}' does not exist.");
         }
 
         return $this->injectableFactory->createWith($className, [
