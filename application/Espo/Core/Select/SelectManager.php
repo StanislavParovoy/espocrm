@@ -1998,6 +1998,9 @@ class SelectManager
         return false;
     }
 
+    /**
+     * Fallback for backward compatibiltiy.
+     */
     public function applyPrimaryFilterToQueryBuilder(OrmSelectBuilder $queryBuilder, string $filter)
     {
         $result = $queryBuilder->build()->getRawParams();

@@ -27,64 +27,80 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select;
+namespace Espo\Core\Select\Factory;
 
 use Espo\Core\{
     Exceptions\Error,
-    InjectableFactory,
-    Utils\Metadata,
-    SelectManagerFactory,
+    Select\PrimaryFilters\PrimaryFilter,
 };
 
 use Espo\{
     Entities\User,
 };
 
-class ApplierFactory
+class PrimaryFilterFactory
 {
-    const SELECT = 'select';
-    const WHERE = 'where';
-    const ORDER = 'order';
-    const LIMIT = 'limit';
-    const ACCESS_CONTROL = 'accessControl';
-    const TEXT_FILTER = 'textFilter';
-    const PRIMARY_FILTER = 'primaryFilter';
-    const BOOL_FILTER_LIST = 'boolFilterList';
-
     protected $injectableFactory;
     protected $metadata;
-    protected $selectManagerFactory;
 
     public function __construct(
-        InjectableFactory $injectableFactory, Metadata $metadata, SelectManagerFactory $selectManagerFactory
+        InjectableFactory $injectableFactory, Metadata $metadata
     ) {
         $this->injectableFactory = $injectableFactory;
         $this->metadata = $metadata;
-        $this->selectManagerFactory = $selectManagerFactory;
     }
 
-    public function create(string $entityType, User $user, string $type) : object
+    public function create(string $entityType, User $user, string $name) : PrimaryFilter
     {
-        $className = $this->metadata->get(
-            [
-                'selectDefs',
-                $entityType,
-                $type . 'ApplierClassName',
-            ]
-        ) ?? $this->getDefaultClassName($type);
+        $className = $this->getClassName($entityType, $name);
 
-        $selectManager = $this->selectManagerFactory->create($entityType, $user);
+        if (!$className) {
+            throw new Error("Primary filter '{$name}' forn '{$entityType}' does not exist.");
+        }
 
         return $this->injectableFactory->createWith($className, [
             'entityType' => $entityType,
             'user' => $user,
-            'selectManager' => $selectManager, // to use for backward compatibility
         ]);
     }
 
-    protected function getDefaultClassName(string $type) : string
+    public function has(string $entityType, string $name) : bool
     {
-        $className = 'Espo\\Core\\Select\\Appliers\\' . ucfirst($type) . 'Applier';
+        return (bool) $this->getClassName();
+    }
+
+    protected function getClassName(string $entityType, string $name) : ?string
+    {
+        if (!$name) {
+            throw new Error("Empty primary filter name.");
+        }
+
+        $className = $this->metadata->get(
+            [
+                'selectDefs',
+                $entityType,
+                'primaryFilters',
+                $name,
+                'className',
+            ]
+        );
+
+        if ($className) {
+            return $className;
+        }
+
+        $className = $this->getDefaultClassName();
+
+        if (!class_exists($className)) {
+            return null;
+        }
+
+        return $className;
+    }
+
+    protected function getDefaultClassName(string $name) : string
+    {
+        $className = 'Espo\\Core\\Select\\PrimaryFilters\\' . ucfirst($name) . 'PrimaryFilter';
 
         return $className;
     }

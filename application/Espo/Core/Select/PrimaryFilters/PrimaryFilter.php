@@ -27,52 +27,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers\PrimaryFilterApplier;
-
-use Espo\Core\{
-    Exceptions\Error,
-    Select\SelectManager,
-    Select\Factory\PrimaryFilterFactory,
-};
+namespace Espo\Core\Select\PrimaryFilters;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    Entities\User,
 };
 
-class PrimaryFilterApplier
+interface PrimaryFilter
 {
-    protected $entityType;
-    protected $user;
-    protected $selectManager;
-    protected $primaryFilterFactory;
-
-    public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, PrimaryFilterFactory $primaryFilterFactory
-    ) {
-        $this->entityType = $entityType;
-        $this->user = $user;
-        $this->selectManager = $selectManager;
-        $this->primaryFilterFactory = $primaryFilterFactory;
-    }
-
-    public function apply(QueryBuilder $queryBuilder, string $filterName)
-    {
-        if ($this->primaryFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->primaryFilterFactory->create($this->entityType, $user, $filterName);
-
-            $filter->apply($queryBuilder);
-
-            return;
-        }
-
-        // For backward compatibility.
-        if ($selectManager->hasPrimaryFilter($filterName)) {
-            $selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
-
-            return;
-        }
-
-        throw new Error("No primary filter '{$filterName}' for '{$entityType}'.");
-    }
+    public function apply(QueryBuilder $queryBuilder);
 }
