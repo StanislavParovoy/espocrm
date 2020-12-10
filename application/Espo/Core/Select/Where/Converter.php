@@ -27,16 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
-
-use Espo\Core\{
-    Exceptions\Error,
-    //Select\SelectManager,
-    Select\Where\Params,
-    Select\Where\Converter,
-    Select\Factory\WhereConverterFactory,
-    Select\Factory\WhereItemConverterFactory,
-};
+namespace Espo\Core\Select\Where;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
@@ -44,35 +35,24 @@ use Espo\{
     Entities\User,
 };
 
-class WhereApplier
+class Converter
 {
     protected $entityType;
     protected $user;
-    //protected $selectManager;
-    protected $converterFactory;
+    protected $itemConverter;
+    protected $dateTimeItemConverter;
 
     public function __construct(
-        string $entityType, User $user, /*SelectManager $selectManager, */WhereConverterFactory $cnverterFactory
+        string $entityType, User $user, ItemConverter $itemConverter, DateTimeItemConverter $dateTimeItemConverter
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        //$this->selectManager = $selectManager;
-        $this->converterFactory = $converterFactory;
+        $this->itemConverter = $itemConverter;
+        $this->dateTimeItemConverter = $dateTimeItemConverter;
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public function process(QueryBuilder $queryBuilder, array $where) : WhereClause
     {
-        // applyLeftJoinsFromWhere in separate class ?
-        // Where\Scanner($entityManager, $entityType) WhereScanner::applyLeftJoins($queryBuilder, $where)
 
-        // check where permissions here
-
-        $converter = $this->converterFactory->create($this->entityType, $this->user);
-
-        $whereClause = $converter->process($queryBuilder, $where);
-
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
     }
 }
