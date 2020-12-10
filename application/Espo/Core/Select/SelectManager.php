@@ -1979,6 +1979,36 @@ class SelectManager
     /**
      * Fallback for backward compatibiltiy.
      */
+    public function hasBoolFilter(string $filter) : bool
+    {
+        $method = 'boolFilter' . ucfirst($filter);
+
+        return method_exists($this, $method);
+    }
+
+    /**
+     * Fallback for backward compatibiltiy.
+     */
+    public function applyBoolFilterToQueryBuilder(OrmSelectBuilder $queryBuilder, string $filter) : array
+    {
+        $result = $queryBuilder->build()->getRawParams();
+
+        $method = 'boolFilter' . ucfirst($filter);
+
+        if (method_exists($this, $method)) {
+            return [];
+        }
+
+        $rawWhereClause = $this->$method($result) ?? [];
+
+        $queryBuilder->setRawParams($result);
+
+        return $rawWhereClause;
+    }
+
+    /**
+     * Fallback for backward compatibiltiy.
+     */
     public function hasPrimaryFilter(string $filter) : bool
     {
         if (

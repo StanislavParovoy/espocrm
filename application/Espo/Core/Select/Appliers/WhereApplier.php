@@ -32,66 +32,47 @@ namespace Espo\Core\Select\Appliers;
 use Espo\Core\{
     Exceptions\Error,
     Select\SelectManager,
-    Select\Factory\BoolFilterFactory,
+    //Select\Factory\PrimaryFilterFactory,
 };
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\Where\OrGroup,
     ORM\QueryParams\Parts\WhereClause,
     Entities\User,
 };
 
-class BoolFilterListApplier
+class WhereApplier
 {
     protected $entityType;
     protected $user;
     protected $selectManager;
-    protected $boolFilterFactory;
+    protected $primaryFilterFactory;
 
     public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, BoolFilterFactory $boolFilterFactory
+        string $entityType, User $user, SelectManager $selectManager/*, PrimaryFilterFactory $primaryFilterFactory*/
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->selectManager = $selectManager;
-        $this->boolFilterFactory = $boolFilterFactory;
+        //$this->primaryFilterFactory = $primaryFilterFactory;
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $boolFilterNameList)
+    public function apply(QueryBuilder $queryBuilder, string $filterName)
     {
-        $orGroup = new OrGroup();
-
-        foreach ($boolFilterNameList as $filterName) {
-            $itemWhereClause = $this->applyBoolFilter($queryBuilder, $filterName);
-
-            $orGroup->add($itemWhereClause);
-        }
 
         $whereClause = new WhereClause();
-
-        $whereClause->add($orGroup);
 
         $queryBuilder->where(
             $whereClause->getRaw()
         );
-    }
-
-    protected function applyBoolFilter(QueryBuilder $queryBuilder, array $filterName) : WhereClause
-    {
-        if ($this->boolFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->boolFilterFactory->create($this->entityType, $user, $filterName);
-
-            return $filter->apply($queryBuilder);
-        }
 
         // For backward compatibility.
-        if ($selectManager->hasBoolFilter($filterName)) {
-            $rawWhereClause = $selectManager->applyBoolFilterToQueryBuilder($queryBuilder, $filterName);
+        /*if ($selectManager->hasPrimaryFilter($filterName)) {
+            $selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
 
-            return WhereClause::fromRaw($rawWhereClause);
+            return;
         }
 
-        throw new Error("No bool filter '{$filterName}' for '{this->entityType}'.");
+        throw new Error("No primary filter '{$filterName}' for '{$this->entityType}'.");*/
     }
 }
