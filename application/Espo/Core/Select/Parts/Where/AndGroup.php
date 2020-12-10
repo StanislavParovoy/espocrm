@@ -27,17 +27,14 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select;
+namespace Espo\ORM\QueryParams\Parts\Where;
 
+use Espo\ORM\QueryParams\Parts\WhereClause;
 
 /**
- * Move to Espo\ORM\QueryParams\Parts\Where\WhereItem.
+ * Move to Espo\ORM\QueryParams\Parts\Where\OrGroup.
  */
-interface WhereItem
+class AndGroup extends WhereClause
 {
 
-    // Uncomment when PHP 8.0 is a min supported version.
-    //public function getRawValue() : mixed;
-
-    public function getRawKey() : string;
 }

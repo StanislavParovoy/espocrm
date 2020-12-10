@@ -27,34 +27,16 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select;
+namespace Espo\ORM\QueryParams\Parts\Where;
 
 /**
- * Move to Espo\ORM\QueryParams\Parts\Where\OrGroup.
+ * Move to Espo\ORM\QueryParams\Parts\Where\WhereItem.
  */
-class OrGroup implements WhereItem
+interface WhereItem
 {
-    protected $raw = [];
 
-    public function __construct()
-    {
-    }
+    // Uncomment when PHP 8.0 is a min supported version.
+    //public function getRawValue() : mixed;
 
-    public function getRawValue() : array
-    {
-        return $this->getRaw();
-    }
-
-    public function getRawKey() : string
-    {
-        return 'OR';
-    }
-
-    public function add(WhereItem $item)
-    {
-        $key = $item->getKey();
-        $value = $item->getRawValue();
-
-        $this->raw[] = [$key => $value];
-    }
+    public function getRawKey() : string;
 }
