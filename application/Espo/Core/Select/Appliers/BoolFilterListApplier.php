@@ -71,7 +71,7 @@ class BoolFilterListApplier
 
         $whereClause->add($orGroup);
 
-        $queryBuilder->where($whereClause);
+        $queryBuilder->where($whereClause->getRaw());
     }
 
     protected function applyBoolFilter(QueryBuilder $queryBuilder, array $filterName) : WhereClause
