@@ -31,9 +31,11 @@ namespace Espo\Core\Select\Appliers;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\SelectManager,
+    //Select\SelectManager,
     Select\Where\Params,
-    //Select\Factory\PrimaryFilterFactory,
+    Select\Where\Converter,
+    Select\Factory\WhereConverterFactory,
+    Select\Factory\WhereItemConverterFactory,
 };
 
 use Espo\{
@@ -46,21 +48,26 @@ class WhereApplier
 {
     protected $entityType;
     protected $user;
-    protected $selectManager;
-    protected $primaryFilterFactory;
+    //protected $selectManager;
+    protected $converterFactory;
 
     public function __construct(
-        string $entityType, User $user, SelectManager $selectManager/*, PrimaryFilterFactory $primaryFilterFactory*/
+        string $entityType, User $user, /*SelectManager $selectManager, */WhereConverterFactory $cnverterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->selectManager = $selectManager;
-        //$this->primaryFilterFactory = $primaryFilterFactory;
+        //$this->selectManager = $selectManager;
+        $this->converterFactory = $converterFactory;
     }
 
     public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
     {
-        $whereClause = new WhereClause();
+        // applyLeftJoinsFromWhere in separate class ?
+        // Where\Scanner($entityManager, $entityType) WhereScanner::applyLeftJoins($queryBuilder, $where)
+
+        $converter = $this->converterFactory->create($this->entityType, $this->user);
+
+        $whereClause = $converter->process($queryBuilder, $where, $params);
 
         $queryBuilder->where(
             $whereClause->getRaw()
