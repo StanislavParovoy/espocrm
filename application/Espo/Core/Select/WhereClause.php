@@ -65,7 +65,7 @@ class WhereClause implements WhereItem
         return $this->getRaw();
     }
 
-    public function getKey() : string
+    public function getRawKey() : string
     {
         return 'AND';
     }
@@ -78,7 +78,7 @@ class WhereClause implements WhereItem
             return;
         }
 
-        $key = $item->getKey();
+        $key = $item->getRawKey();
         $value = $item->getRawValue();
 
         $this->raw[] = [$key => $value];

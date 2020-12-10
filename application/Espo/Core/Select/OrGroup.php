@@ -45,7 +45,7 @@ class OrGroup implements WhereItem
         return $this->getRaw();
     }
 
-    public function getKey() : string
+    public function getRawKey() : string
     {
         return 'OR';
     }
