@@ -74,5 +74,7 @@ class WhereApplier
         $queryBuilder->where(
             $whereClause->getRaw()
         );
+
+        // apply left joins from where
     }
 }

@@ -171,8 +171,38 @@ class SearchParams
         $rawParams['textFilter'] = $textFilter;
         $rawParams['where'] = $where;
 
+        if ($where) {
+            $this->adjustParams($rawParams);
+        }
+
         $object->rawParams = $rawParams;
 
         return $object;
+    }
+
+    /**
+     * For compatibility with the legacy definition.
+     */
+    protected function adjustParams(array &$params)
+    {
+        if (!$params['where']) {
+            return;
+        }
+
+        foreach ($params['where'] as $item) {
+            $type = $item['type'] ?? null;
+            $value = $item['value'] ?? null;
+
+            if ($type == 'bool' && !empty($value) && is_array($value)) {
+                $params['boolFilterList'] = $value;
+            }
+            else if ($type == 'textFilter' && $value) {
+                $params['textFilter'] = $value;
+
+            }
+            else if ($type == 'primary' && $value) {
+                $params['primaryFilter'] = $value;
+            }
+        }
     }
 }
