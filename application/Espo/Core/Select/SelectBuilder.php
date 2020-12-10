@@ -43,6 +43,7 @@ use Espo\Core\Select\{
     Applier\PrimaryFilterApplier,
     Applier\BoolFilterListApplier,
     Applier\TextFilterApplier,
+    Where\Params as WhereParams,
 };
 
 use Espo\{
@@ -279,7 +280,7 @@ class SelectBuilder
         ) {
             // @todo move to class
             $params = [
-                'complexExpressions' => $this->applyComplexExpressions,
+                'allowComplexExpressions' => $this->applyComplexExpressions,
             ];
 
             $this->createOrderApplier()
@@ -309,11 +310,10 @@ class SelectBuilder
         }
 
         if ($this->searchParams->getWhere()) {
-            // @todo move to class
-            $params = [
-                'wherePermissionsCheck' => $this->applyWherePermissionsCheck,
-                'complexExpressions' => $this->applyComplexExpressions, // reversed
-            ];
+            $params = WhereParams::fromArray([
+                'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
+                'allowComplexExpressions' => $this->applyComplexExpressions, // reversed ?
+            ]);
 
             $this->createWhereApplier()
                 ->apply(

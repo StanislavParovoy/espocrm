@@ -27,43 +27,35 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
+namespace Espo\Core\Select\Where;
 
-use Espo\Core\{
-    Exceptions\Error,
-    Select\SelectManager,
-    Select\Where\Params,
-    //Select\Factory\PrimaryFilterFactory,
-};
-
-use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
-    Entities\User,
-};
-
-class WhereApplier
+class Params
 {
-    protected $entityType;
-    protected $user;
-    protected $selectManager;
-    protected $primaryFilterFactory;
+    private $applyWherePermissionsCheck = false;
 
-    public function __construct(
-        string $entityType, User $user, SelectManager $selectManager/*, PrimaryFilterFactory $primaryFilterFactory*/
-    ) {
-        $this->entityType = $entityType;
-        $this->user = $user;
-        $this->selectManager = $selectManager;
-        //$this->primaryFilterFactory = $primaryFilterFactory;
+    private $allowComplexExpressions = false;
+
+    private function __construct()
+    {
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public static function fromArray(array $params) : self
     {
-        $whereClause = new WhereClause();
+        $object = new self();
 
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
+        $object->applyWherePermissionsCheck = $params['applyWherePermissionsCheck'] ?? false;
+        $object->allowComplexExpressions = $params['allowComplexExpressions'] ?? false;
+
+        return $self;
+    }
+
+    public function applyWherePermissionsCheck() : bool
+    {
+        return $this->applyWherePermissionsCheck;
+    }
+
+    public function allowComplexExpressions() : bool
+    {
+        return $this->allowComplexExpressions;
     }
 }
