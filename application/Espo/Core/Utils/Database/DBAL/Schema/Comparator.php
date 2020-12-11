@@ -31,15 +31,16 @@ namespace Espo\Core\Utils\Database\DBAL\Schema;
 
 use Espo\Core\Utils\Database\DBAL\Traits\Schema\Comparator as ComparatorTrait;
 use Doctrine\DBAL\{
+    Types,
     Schema\Table,
     Schema\Column,
     Schema\TableDiff,
     Schema\ColumnDiff,
     Schema\Index,
-    Types\TextType,
+    Schema\Comparator as OriginalComparator,
 };
 
-class Comparator extends \Doctrine\DBAL\Schema\Comparator
+class Comparator extends OriginalComparator
 {
     // Espo
     use ComparatorTrait;
@@ -90,10 +91,6 @@ class Comparator extends \Doctrine\DBAL\Schema\Comparator
             }*/
             if ($length2 > $length1) {
                 $changedProperties[] = 'length';
-            }
-            if ($length1 > $length2) {
-                $changedProperties[] = 'length';
-                $column2->setLength($length1);
             }
             // Espo: end
 
