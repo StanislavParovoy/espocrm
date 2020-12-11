@@ -124,6 +124,9 @@ class ItemConverter
             return $this->$methodName($queryBuilder, $attribute, $value);
         }
 
+        // @todo
+        // Load converter class if defined in metadata. For a specific type.
+
         throw new Error("Unknown where item type.");
     }
 
@@ -838,8 +841,77 @@ class ItemConverter
                 $alias . '.id' => $value,
             ];
         }
-        else {
-            throw new Error("Bad where item 'linkedWith'. Not supported relation type.");
+
+        throw new Error("Bad where item 'linkedWith'. Not supported relation type.");
+    }
+
+    protected function processNotLinkedWith(QueryBuilder $queryBuilder, string $attribute, $value) : array
+    {
+        $link = $attribute;
+
+        $defs = $this->entityManager->getMetadata($this->entityType, ['relations', $link]);
+
+        if (!$defs) {
+            throw new Error("Bad where item 'notLinkedWith'. Relation does not exist.");
         }
+
+        $alias =  $link . 'NotLinkedWithFilter' . strval(rand(10000, 99999));
+
+        if (is_null($value)) {
+            throw new Error("Bad where item 'notLinkedWith'. Empty value.");
+        }
+
+        $relationType = $defs['type'] ?? null;
+
+        $queryBuilder->distinct();
+
+        if ($relationType == 'manyMany') {
+            $key = $defs['midKeys'][1] ?? null;
+
+            if (!$key) {
+                throw new Error("Bad where item 'notLinkedWith'. Bad relation.");
+            }
+
+            $queryBuilder->leftJoin(
+                $link,
+                $alias,
+                [$key => $value]
+            );
+
+            return [
+                $alias . 'Middle.' . $key => null,
+            ];
+        }
+        else if ($relationType == 'hasMany') {
+            $queryBuilder->leftJoin(
+                $link,
+                $alias,
+                ['id' => $value]
+            );
+
+            return [
+                $alias . '.id' => null,
+            ];
+        }
+        else if ($relationType == 'belongsTo') {
+            $key = $defs['key'] ?? null;
+
+            if (!$key) {
+                throw new Error("Bad where item 'notLinkedWith'. Bad relation.");
+            }
+
+            return [
+                $key . '!=' => $value,
+            ];
+        }
+        else if ($relationType == 'hasOne') {
+            $queryBuilder->leftJoin($link, $alias);
+
+            return [
+                $alias . '.id!=' => $value,
+            ];
+        }
+
+        throw new Error("Bad where item 'linkedWith'. Not supported relation type.");
     }
 }
