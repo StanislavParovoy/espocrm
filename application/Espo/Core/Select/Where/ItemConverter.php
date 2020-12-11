@@ -116,6 +116,14 @@ class ItemConverter
             case 'columnNotEquals':
 
                 return $this->groupProcessColumn($queryBuilder, $type, $attribute, $value);
+
+            case 'arrayAnyOf':
+            case 'arrayNoneOf':
+            case 'arrayIsEmpty':
+            case 'arrayIsNotEmpty':
+            case 'arrayAllOf':
+
+                // @todo
         }
 
         $methodName = 'process' .  ucfirst($type);
