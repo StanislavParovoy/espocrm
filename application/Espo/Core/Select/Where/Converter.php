@@ -64,7 +64,7 @@ class Converter
         $this->entityManager = $entityManager;
     }
 
-    public function process(QueryBuilder $queryBuilder, array $where) : WhereClause
+    public function convert(QueryBuilder $queryBuilder, array $where) : WhereClause
     {
         $whereClause = [];
 
