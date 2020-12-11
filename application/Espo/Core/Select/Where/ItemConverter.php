@@ -100,13 +100,22 @@ class ItemConverter
             case 'or':
             case 'and':
 
-                return $this->processAndOr($queryBuilder, $type, $attribute, $value);
+                return $this->groupProcessAndOr($queryBuilder, $type, $attribute, $value);
 
             case 'not':
             case 'subQueryNotIn':
             case 'subQueryIn':
 
-                return $this->processSubQuery($queryBuilder, $type, $attribute, $value);
+                return $this->groupProcessSubQuery($queryBuilder, $type, $attribute, $value);
+
+            case 'columnLike':
+            case 'columnIn':
+            case 'columnNotIn':
+            case 'columnIsNotNull':
+            case 'columnEquals':
+            case 'columnNotEquals':
+
+                return $this->groupProcessColumn($queryBuilder, $type, $attribute, $value);
         }
 
         $methodName = 'process' .  ucfirst($type);
@@ -118,10 +127,10 @@ class ItemConverter
         throw new Error("Unknown where item type.");
     }
 
-    protected function processAndOr(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
+    protected function groupProcessAndOr(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
     {
         if (!is_array($value)) {
-            throw new Error("Bad 'where' item.");
+            throw new Error("Bad where item.");
         }
 
         $whereClause = [];
@@ -143,10 +152,10 @@ class ItemConverter
         ];
     }
 
-    protected function processSubQuery(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
+    protected function groupProcessSubQuery(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
     {
         if (!is_array($value)) {
-            throw new Error("Bad 'where' item.");
+            throw new Error("Bad where item.");
         }
 
         $whereClause = [];
@@ -184,6 +193,69 @@ class ItemConverter
                 ],
             ],
         ];
+    }
+
+    protected function groupProcessColumn(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
+    {
+        $link = $this->metadata->get(['entityDefs', $this->entityType, 'fields', $attribute, 'link']);
+
+        $column = $this->metadata->get(['entityDefs', $this->entityType, 'fields', $attribute, 'column']);
+
+        $alias =  $link . 'ColumnFilter' . strval(rand(10000, 99999));
+
+        $queryBuilder->distinct();
+
+        $queryBuilder->leftJoin([
+            $link,
+            $alias,
+        ]);
+
+
+        $columnKey = $alias . 'Middle.' . $column;
+
+        if ($type === 'columnLike') {
+            return [
+                $columnKey . '*' => $value,
+            ];
+        }
+
+        if ($type === 'columnIn') {
+            return [
+                $columnKey . '=' => $value,
+            ];
+        }
+
+        if ($type === 'columnEquals') {
+            return [
+                $columnKey . '=' => $value,
+            ];
+        }
+
+        if ($type === 'columnNotEquals') {
+            return [
+                $columnKey . '!=' => $value,
+            ];
+        }
+
+        if ($type === 'columnNotIn') {
+            return [
+                $columnKey . '!=' => $value,
+            ];
+        }
+
+        if ($type === 'columnIsNull') {
+            return [
+                $columnKey . '=' => null,
+            ];
+        }
+
+        if ($type === 'columnIsNotNull') {
+            return [
+                $columnKey . '!=' => null,
+            ];
+        }
+
+        throw new Error("Bad where item 'column'.");
     }
 
     /**
@@ -309,7 +381,7 @@ class ItemConverter
     protected function processIn(QueryBuilder $queryBuilder, string $attribute, $value) : array
     {
         if (!is_array($value)) {
-            throw new Error("Bad 'where' item 'in'.");
+            throw new Error("Bad where item 'in'.");
         }
 
         return [
@@ -320,7 +392,7 @@ class ItemConverter
     protected function processNotIn(QueryBuilder $queryBuilder, string $attribute, $value) : array
     {
         if (!is_array($value)) {
-            throw new Error("Bad 'where' item 'notIn'.");
+            throw new Error("Bad where item 'notIn'.");
         }
 
         return [
@@ -331,7 +403,7 @@ class ItemConverter
     protected function processBetween(QueryBuilder $queryBuilder, string $attribute, $value) : array
     {
         if (!is_array($value) || count($value) < 2) {
-            throw new Error("Bad 'where' item 'between'.");
+            throw new Error("Bad where item 'between'.");
         }
 
         return [
@@ -642,7 +714,7 @@ class ItemConverter
         return [
             'AND' => [
                 $attribute . '>=' => $dt->format('Y-m-d'),
-                $attribute . '<' => $dt->add(new DateInterval('P3M'))->format('Y-m-d')
+                $attribute . '<' => $dt->add(new DateInterval('P3M'))->format('Y-m-d'),
             ]
         ];
     }
@@ -674,9 +746,100 @@ class ItemConverter
         return [
             'AND' => [
                 $attribute . '>=' => $dt->format('Y-m-d'),
-                $attribute . '<' => $dt->add(new DateInterval('P3M'))->format('Y-m-d')
+                $attribute . '<' => $dt->add(new DateInterval('P3M'))->format('Y-m-d'),
             ]
         ];
     }
 
+    protected function processIsNotLinked(QueryBuilder $queryBuilder, string $attribute, $value) : array
+    {
+        return [
+            'id!=s' => [
+                'selectParams' =>  [
+                    'select' => ['id'],
+                    'joins' => [$attribute],
+                ]
+            ]
+        ];
+    }
+
+    protected function processIsLinked(QueryBuilder $queryBuilder, string $attribute, $value) : array
+    {
+        $link = $attribute;
+
+        $alias = $link . 'IsLinkedFilter' . strval(rand(10000, 99999));
+
+        $queryBuilder->distinct();
+
+        $queryBuilder->leftJoin($link, $alias);
+
+        return [
+            $alias . '.id!=' => null,
+        ];
+    }
+
+    protected function processLinkedWith(QueryBuilder $queryBuilder, string $attribute, $value) : array
+    {
+        $link = $attribute;
+
+        $defs = $this->entityManager->getMetadata($this->entityType, ['relations', $link]);
+
+        if (!$defs) {
+            throw new Error("Bad where item 'linkedWith'. Relation does not exist.");
+        }
+
+        $alias =  $link . 'LinkedWithFilter' . strval(rand(10000, 99999));
+
+        if (is_null($value) || !$value && !is_array($value)) {
+            throw new Error("Bad where item 'linkedWith'. Empty value.");
+        }
+
+        $relationType = $defs['type'] ?? null;
+
+        $queryBuilder->distinct();
+
+        if ($relationType == 'manyMany') {
+            $queryBuilder->leftJoin($link, $alias);
+
+            $midKeys = $defs['midKeys'] ?? null;
+
+            if (!$midKeys) {
+                throw new Error("Bad where item 'linkedWith'. Bad relation.");
+            }
+
+            $key = $midKeys[1];
+
+            return [
+                $alias . 'Middle.' . $key => $value,
+            ];
+        }
+        else if ($relationType == 'hasMany') {
+            $queryBuilder->leftJoin($link, $alias);
+
+            return [
+                $alias . '.id' => $value,
+            ];
+        }
+        else if ($relationType == 'belongsTo') {
+            $key = $defs['key'] ?? null;
+
+            if (!$key) {
+                throw new Error("Bad where item 'linkedWith'. Bad relation.");
+            }
+
+            return [
+                $key => $value,
+            ];
+        }
+        else if ($relationType == 'hasOne') {
+            $queryBuilder->leftJoin($link, $alias);
+
+            return [
+                $alias . '.id' => $value,
+            ];
+        }
+        else {
+            throw new Error("Bad where item 'linkedWith'. Not supported relation type.");
+        }
+    }
 }
