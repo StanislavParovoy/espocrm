@@ -805,13 +805,11 @@ class ItemConverter
         if ($relationType == 'manyMany') {
             $queryBuilder->leftJoin($link, $alias);
 
-            $midKeys = $defs['midKeys'] ?? null;
+            $key = $defs['midKeys'][1] ?? null;
 
-            if (!$midKeys) {
+            if (!$key) {
                 throw new Error("Bad where item 'linkedWith'. Bad relation.");
             }
-
-            $key = $midKeys[1];
 
             return [
                 $alias . 'Middle.' . $key => $value,
@@ -913,6 +911,6 @@ class ItemConverter
             ];
         }
 
-        throw new Error("Bad where item 'linkedWith'. Not supported relation type.");
+        throw new Error("Bad where item 'notLinkedWith'. Not supported relation type.");
     }
 }
