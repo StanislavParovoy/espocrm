@@ -126,6 +126,7 @@ class ItemConverter
 
         // @todo
         // Load converter class if defined in metadata. For a specific type.
+        // Use whereItemTypeConverterFactory
 
         throw new Error("Unknown where item type.");
     }
