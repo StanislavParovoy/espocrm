@@ -270,6 +270,157 @@ class ItemConverter
         throw new Error("Bad where item 'column'.");
     }
 
+    protected function groupProcessArray(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
+    {
+        $arrayValueAlias = 'arrayFilter' . strval(rand(10000, 99999));
+
+        $arrayAttribute = $attribute;
+        $arrayEntityType = $this->entityType;
+        $idPart = 'id';
+
+        $seed = $this->entityManager->getEntity($this->entityType);
+
+        $isForeign = strpos($attribute, '.') > 0;
+
+        $isForeignType = false;
+
+        if (!$isForeign) {
+            $isForeignType = $isForeign = $seed->getAttributeType($attribute) === 'foreign';
+        }
+
+        if ($isForeign) {
+            if ($isForeignType) {
+                $arrayAttributeLink = $seed->getAttributeParam($attribute, 'relation');
+                $arrayAttribute = $seed->getAttributeParam($attribute, 'foreign');
+            } else {
+                list($arrayAttributeLink, $arrayAttribute) = explode('.', $attribute);
+            }
+
+            $arrayEntityType = $seed->getRelationParam($arrayAttributeLink, 'entity');
+
+            $arrayLinkAlias = $arrayAttributeLink . 'ArrayFilter' . strval(rand(10000, 99999));
+
+            $idPart = $arrayLinkAlias . '.id';
+
+            $queryBuilder->leftJoin($arrayAttributeLink, $arrayLinkAlias);
+
+            $relationType = $seed->getRelationType($arrayAttributeLink);
+
+            if ($relationType === 'manyMany' || $relationType === 'hasMany') {
+                $queryBuilder->distinct();
+            }
+        }
+
+        if ($type === 'arrayAnyOf') {
+            if (is_null($value) || !$value && !is_array($value)) {
+                throw new Error("Bad where item 'array'. No value.");
+            }
+
+            $queryBuilder->leftJoin(
+                'ArrayValue',
+                $arrayValueAlias,
+                [
+                    $arrayValueAlias . '.entityId:' => $idPart,
+                    $arrayValueAlias . '.entityType' => $arrayEntityType,
+                    $arrayValueAlias . '.attribute' => $arrayAttribute,
+                ]
+            );
+
+            $queryBuilder->distinct();
+
+            return [
+                $arrayValueAlias . '.value' => $value,
+            ];
+        }
+
+        if ($type === 'arrayNoneOf') {
+            if (is_null($value) || !$value && !is_array($value)) {
+                throw new Error("Bad where item 'array'. No value.");
+            };
+
+            $queryBuilder->leftJoin(
+                'ArrayValue',
+                $arrayValueAlias,
+                [
+                    $arrayValueAlias . '.entityId:' => $idPart,
+                    $arrayValueAlias . '.entityType' => $arrayEntityType,
+                    $arrayValueAlias . '.attribute' => $arrayAttribute,
+                    $arrayValueAlias . '.value=' => $value,
+                ]
+            );
+
+            $queryBuilder->distinct();
+
+            return [
+                $arrayValueAlias . '.id' => null,
+            ];
+        }
+
+        if ($type === 'arrayIsEmpty') {
+            $queryBuilder->distinct();
+
+            $queryBuilder->leftJoin(
+                'ArrayValue',
+                $arrayValueAlias,
+                [
+                    $arrayValueAlias . '.entityId:' => $idPart,
+                    $arrayValueAlias . '.entityType' => $arrayEntityType,
+                    $arrayValueAlias . '.attribute' => $arrayAttribute,
+                ]
+            );
+
+            return [
+                $arrayValueAlias . '.id' => null,
+            ];
+        }
+
+        if ($type === 'arrayIsNotEmpty') {
+            $queryBuilder->distinct();
+
+            $queryBuilder->leftJoin(
+                'ArrayValue',
+                $arrayValueAlias,
+                [
+                    $arrayValueAlias . '.entityId:' => $idPart,
+                    $arrayValueAlias . '.entityType' => $arrayEntityType,
+                    $arrayValueAlias . '.attribute' => $arrayAttribute,
+                ]
+            );
+
+            return [
+                $arrayValueAlias . '.id!=' => null,
+            ];
+        }
+
+        if ($type === 'arrayAllOf') {
+            if (is_null($value) || !$value && !is_array($value)) {
+                throw new Error("Bad where item 'array'. No value.");
+            }
+
+            if (!is_array($value)) {
+                $value = [$value];
+            }
+
+            foreach ($value as $arrayValue) {
+                return [
+                    $idPart .'=s' => [
+                        'entityType' => 'ArrayValue',
+                        'selectParams' => [
+                            'select' => ['entityId'],
+                            'whereClause' => [
+                                'value' => $arrayValue,
+                                'attribute' => $arrayAttribute,
+                                'entityType' => $arrayEntityType,
+                            ],
+                        ],
+                    ]
+                ];
+            }
+        }
+
+        throw new Error("Bad where item 'array'.");
+    }
+
     /**
      * A complex expression w/o a value.
      */
