@@ -27,51 +27,50 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
+namespace Espo\Core\Select\Where;
 
 use Espo\Core\{
     Exceptions\Error,
-    //Select\SelectManager,
-    Select\Where\Params,
-    Select\Where\Converter,
-    Select\Where\ConverterFactory,
 };
 
 use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
     Entities\User,
 };
 
-class WhereApplier
+class ItemTypedConverterFactory
 {
-    protected $entityType;
-    protected $user;
-    protected $converterFactory;
+    protected $injectableFactory;
+    protected $metadata;
 
-    public function __construct(
-        string $entityType, User $user, ConverterFactory $converterFactory
-    ) {
-        $this->entityType = $entityType;
-        $this->user = $user;
-        $this->converterFactory = $converterFactory;
+    public function __construct(InjectableFactory $injectableFactory, Metadata $metadata)
+    {
+        $this->injectableFactory = $injectableFactory;
+        $this->metadata = $metadata;
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public function has(string $type) : bool
     {
-        // applyLeftJoinsFromWhere in separate class ?
-        // Where\Scanner($entityManager, $entityType) WhereScanner::applyLeftJoins($queryBuilder, $where)
+        return (bool) $this->getClassName($type);
+    }
 
-        // check where permissions here
+    public function create(string $type, string $entityType, User $user) : ItemTypedConverter
+    {
+        $className = $this->getClassName($type);
 
-        $converter = $this->converterFactory->create($this->entityType, $this->user);
+        if (!$className) {
+            throw new Error("Where item type class name is not defined.");
+        }
 
-        $whereClause = $converter->process($queryBuilder, $where);
+        return $this->injectableFactory->createWith($className, [
+            'entityType' => $entityType,
+            'user' => $user,
+        ]);
+    }
 
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
-
-        // apply left joins from where
+    protected function getClassName(string $type) : ?string
+    {
+        return $this->metadata->get([
+            'app', 'select', 'whereItemTypes', $type, 'converterClassName'
+        ]);
     }
 }

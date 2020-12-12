@@ -27,20 +27,17 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Factory;
+namespace Espo\Core\Select\Where;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\Where\Converter,
-    Select\Where\ItemConverter,
-    Select\Where\DateTimeItemTransformer,
 };
 
 use Espo\{
     Entities\User,
 };
 
-class WhereConverterFactory
+class ConverterFactory
 {
     protected $injectableFactory;
     protected $metadata;

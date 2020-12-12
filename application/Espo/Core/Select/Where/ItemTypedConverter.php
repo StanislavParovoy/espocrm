@@ -27,51 +27,16 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
-
-use Espo\Core\{
-    Exceptions\Error,
-    //Select\SelectManager,
-    Select\Where\Params,
-    Select\Where\Converter,
-    Select\Where\ConverterFactory,
-};
+namespace Espo\Core\Select\Where;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
-    Entities\User,
 };
 
-class WhereApplier
+/**
+ * Converts a where item of a specific type to a where clause (for ORM).
+ */
+interface ItemTypedConverter
 {
-    protected $entityType;
-    protected $user;
-    protected $converterFactory;
-
-    public function __construct(
-        string $entityType, User $user, ConverterFactory $converterFactory
-    ) {
-        $this->entityType = $entityType;
-        $this->user = $user;
-        $this->converterFactory = $converterFactory;
-    }
-
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
-    {
-        // applyLeftJoinsFromWhere in separate class ?
-        // Where\Scanner($entityManager, $entityType) WhereScanner::applyLeftJoins($queryBuilder, $where)
-
-        // check where permissions here
-
-        $converter = $this->converterFactory->create($this->entityType, $this->user);
-
-        $whereClause = $converter->process($queryBuilder, $where);
-
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
-
-        // apply left joins from where
-    }
+    public function convert(QueryBuilder $queryBuilder, array $item) : array;
 }

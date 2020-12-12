@@ -53,6 +53,7 @@ class ItemConverter
     protected $entityManager;
     protected $config;
     protected $scanner;
+    protected $itemTypedConverterFactory;
 
     public function __construct(
         string $entityType,
@@ -60,7 +61,8 @@ class ItemConverter
         DateTimeItemTransformer $dateTimeItemTransformer,
         EntityManager $entityManager,
         Config $config,
-        Scanner $scanner
+        Scanner $scanner,
+        ItemTypedConverterFactory $itemTypedConverterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
@@ -68,6 +70,7 @@ class ItemConverter
         $this->entityManager = $entityManager;
         $this->config = $config;
         $this->scanner = $scanner;
+        $this->itemTypedConverterFactory = $itemTypedConverterFactory;
     }
 
     public function convert(QueryBuilder $queryBuilder, array $item) : array
@@ -130,7 +133,7 @@ class ItemConverter
             case 'arrayIsNotEmpty':
             case 'arrayAllOf':
 
-                // @todo
+                return $this->groupProcessArray($queryBuilder, $type, $attribute, $value);
         }
 
         $methodName = 'process' .  ucfirst($type);
@@ -139,11 +142,13 @@ class ItemConverter
             return $this->$methodName($queryBuilder, $attribute, $value);
         }
 
-        // @todo
-        // Load converter class if defined in metadata. For a specific type.
-        // Use whereItemTypeConverterFactory
+        if (!$this->itemTypedConverterFactory->has($type)) {
+            throw new Error("Unknown where item type.");
+        }
 
-        throw new Error("Unknown where item type.");
+        $converter = $this->itemTypedConverterFactory->create($type, $this->entityType, $this->user);
+
+        return $converter->convert($queryBuilder, $item);
     }
 
     protected function groupProcessAndOr(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
