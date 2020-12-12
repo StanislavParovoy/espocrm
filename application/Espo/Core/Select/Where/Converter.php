@@ -37,6 +37,9 @@ use Espo\{
     Entities\User,
 };
 
+/**
+ * Converts a search where (passed from frontend) to a where clause (for ORM).
+ */
 class Converter
 {
     protected $additionalFilterTypeList = [

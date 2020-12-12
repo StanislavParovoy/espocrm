@@ -33,6 +33,9 @@ use Espo\Core\{
     Exceptions\Error,
 };
 
+/**
+ * Search parameters.
+ */
 class SearchParams
 {
     protected $rawParams;

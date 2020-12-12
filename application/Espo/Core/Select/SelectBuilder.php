@@ -52,6 +52,10 @@ use Espo\{
     Entities\User,
 };
 
+/**
+ * Builds select queries for ORM.
+ * Applies search parameters (passed from frontend), ACL restrictions, filters, etc.
+ */
 class SelectBuilder
 {
     protected $entityType;
