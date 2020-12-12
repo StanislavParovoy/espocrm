@@ -34,7 +34,7 @@ use Espo\Core\{
 };
 
 use Espo\Core\Select\{
-    ApplierFactory,
+    Factory\ApplierFactory,
     Applier\WhereApplier,
     Applier\SelectApplier,
     Applier\OrderApplier,
