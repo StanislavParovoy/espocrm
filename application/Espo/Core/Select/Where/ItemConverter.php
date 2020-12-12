@@ -42,11 +42,14 @@ use DateTime;
 use DateTimeZone;
 use DateInterval;
 
+/**
+ * Converts a where item to a where clause (for ORM).
+ */
 class ItemConverter
 {
     protected $entityType;
     protected $user;
-    protected $dateTimeItemConverter;
+    protected $dateTimeItemTransformer;
     protected $entityManager;
     protected $config;
     protected $scanner;
@@ -54,14 +57,14 @@ class ItemConverter
     public function __construct(
         string $entityType,
         User $user,
-        DateTimeItemConverter $dateTimeItemConverter,
+        DateTimeItemTransformer $dateTimeItemTransformer,
         EntityManager $entityManager,
         Config $config,
         Scanner $scanner
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->dateTimeItemConverter = $dateTimeItemConverter;
+        $this->dateTimeItemTransformer = $dateTimeItemTransformer;
         $this->entityManager = $entityManager;
         $this->config = $config;
         $this->scanner = $scanner;
@@ -79,19 +82,23 @@ class ItemConverter
         }
 
         if ($isDateTime) {
-            return $this->dateTimeItemConverter->convert($queryBuilder, $item);
+            return $this->convert(
+                $this->dateTimeItemTransformer->transform($item)
+            );
         }
 
         if (!$type) {
-            throw new Error("No 'type' in where item.");
+            throw new Error("Bad where item. No 'type'.");
         }
 
-        if ($attribute) {
-            $methodName = 'convert' . ucfirst($attribute) . ucfirst($type);
+        if (!$attribute) {
+            throw new Error("Bad where item. No 'attribute'.");
+        }
 
-            if (method_exists($this, $methodName)) {
-                return $this->$methodName($queryBuilder, $value);
-            }
+        $methodName = 'convert' . ucfirst($attribute) . ucfirst($type);
+
+        if (method_exists($this, $methodName)) {
+            return $this->$methodName($queryBuilder, $value);
         }
 
         $part = [];

@@ -33,7 +33,7 @@ use Espo\Core\{
     Exceptions\Error,
     Select\Where\Converter,
     Select\Where\ItemConverter,
-    Select\Where\DateTimeItemConverter,
+    Select\Where\DateTimeItemTransformer,
 };
 
 use Espo\{
@@ -60,9 +60,9 @@ class WhereConverterFactory
             'user' => $user,
         ]);
 
-        $dateTimeItemConverterClassName = $this->getDateTimeItemConverterClassName($entityType, $name);
+        $dateTimeItemTransformerClassName = $this->getDateTimeItemTransformerClassName($entityType, $name);
 
-        $dateTimeItemConverter = $this->injectableFactory->createWith($dateTimeItemConverterClassName, [
+        $dateTimeItemTransformer = $this->injectableFactory->createWith($dateTimeItemTransformerClassName, [
             'entityType' => $entityType,
             'user' => $user,
         ]);
@@ -71,7 +71,7 @@ class WhereConverterFactory
             'entityType' => $entityType,
             'user' => $user,
             'itemConverter' => $itemConverter,
-            'dateTimeItemConverter' => $dateTimeItemConverter,
+            'dateTimeItemTransformer' => $dateTimeItemTransformer,
         ]);
     }
 
@@ -86,14 +86,14 @@ class WhereConverterFactory
         return ItemConverter::class;
     }
 
-    protected function getDateTimeItemConverterClassName(string $entityType) : string
+    protected function getDateTimeItemTransformerClassName(string $entityType) : string
     {
-        $className = $this->metadata->get(['selectDefs', $entityType, 'whereDateTimeItemConverterClassName']);
+        $className = $this->metadata->get(['selectDefs', $entityType, 'whereDateTimeItemTransformerClassName']);
 
         if ($className) {
             return $className;
         }
 
-        return DateTimeItemConverter::class;
+        return DateTimeItemTransformer::class;
     }
 }
