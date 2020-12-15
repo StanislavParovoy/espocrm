@@ -138,7 +138,6 @@ class PermissionsChecker
             }
 
             return;
-
         }
 
         if (in_array($attribute, $this->acl->getScopeForbiddenAttributeList($entityType))) {

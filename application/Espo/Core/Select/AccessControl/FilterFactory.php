@@ -32,6 +32,7 @@ namespace Espo\Core\Select\AccessControl;
 use Espo\Core\{
     Exceptions\Error,
     Select\Filters\AccessControlFilter,
+    Select\Helpers\FieldHelper,
 };
 
 use Espo\{
@@ -57,9 +58,14 @@ class FilterFactory
             throw new Error("Access control filter '{$name}' for '{$entityType}' does not exist.");
         }
 
+        $fieldHelper = $this->injectableFactory->createWith(FieldHelper::class, [
+            'entityType' => $entityType,
+        ]);
+
         return $this->injectableFactory->createWith($className, [
             'entityType' => $entityType,
             'user' => $user,
+            'fieldHelper' => $fieldHelper,
         ]);
     }
 
