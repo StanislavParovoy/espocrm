@@ -39,7 +39,7 @@ use Espo\Core\Select\{
     Applier\SelectApplier,
     Applier\OrderApplier,
     Applier\LimitApplier,
-    Applier\AccessControlApplier,
+    Applier\AccessControlFilterApplier,
     Applier\PrimaryFilterApplier,
     Applier\BoolFilterListApplier,
     Applier\TextFilterApplier,
@@ -66,7 +66,7 @@ class SelectBuilder
 
     protected $searchParams = null;
 
-    protected $applyAccessControl = false;
+    protected $applyAccessControlFilter = false;
 
     protected $applyDefaultOrder = false;
 
@@ -78,7 +78,7 @@ class SelectBuilder
 
     protected $applyWherePermissionsCheck = false;
 
-    protected $applyComplexExpressions = false;
+    protected $applyComplexExpressionsForbidden = false;
 
     protected $applierFactory;
 
@@ -149,8 +149,8 @@ class SelectBuilder
             $this->applyTextFilter();
         }
 
-        if ($this->applyAccessControl) {
-            $this->applyAccessControl();
+        if ($this->applyAccessControlFilter) {
+            $this->applyAccessControlFilter();
         }
 
         return $this->queryBuilder->build();
@@ -163,9 +163,21 @@ class SelectBuilder
         return $this;
     }
 
-    public function withAccessControl() : self
+    /**
+     * Applies maximum restrictions for a user.
+     */
+    public function withStrictAccessControl() : self
     {
-        $this->applyAccessControl = true;
+        $this->withAccessControlFilter();
+        $this->withWherePermissionsCheck();
+        $this->withComplexExpressionsForbidden();
+
+        return $this;
+    }
+
+    public function withAccessControlFilter() : self
+    {
+        $this->applyAccessControlFilter = true;
 
         return $this;
     }
@@ -184,19 +196,12 @@ class SelectBuilder
         return $this;
     }
 
-    public function withComplexExpressions() : self
+    public function withComplexExpressionsForbidden() : self
     {
-        $this->applyComplexExpressions = true;
+        $this->applyComplexExpressionsForbidden = true;
 
         return $this;
     }
-
-    /*public function withInCategoryFilter(string $field, string $categoryId) : self
-    {
-        $this->inCategoryFilter = [$field => $categoryId];
-
-        return $this;
-    }*/
 
     public function withTextFilter(string $textFilter) : self
     {
@@ -253,9 +258,9 @@ class SelectBuilder
             );
     }
 
-    protected function applyAccessControl()
+    protected function applyAccessControlFilter()
     {
-        $this->createAccessControlApplier()
+        $this->createAccessControlFilterApplier()
             ->apply(
                 $this->queryBuilder
             );
@@ -284,7 +289,7 @@ class SelectBuilder
         ) {
             // @todo move to class
             $params = [
-                'allowComplexExpressions' => $this->applyComplexExpressions,
+                'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
             ];
 
             $this->createOrderApplier()
@@ -316,7 +321,7 @@ class SelectBuilder
         if ($this->searchParams->getWhere()) {
             $params = WhereParams::fromArray([
                 'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
-                'allowComplexExpressions' => $this->applyComplexExpressions, // reversed ?
+                'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
             ]);
 
             $this->createWhereApplier()
@@ -348,9 +353,9 @@ class SelectBuilder
         return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::LIMIT);
     }
 
-    protected function createAccessControlApplier() : AccessControlApplier
+    protected function createAccessControlFilterApplier() : AccessControlFilterApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::ACCESS_CONTROL);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::ACCESS_CONTROL_FILTER);
     }
 
     protected function createTextFilterApplier() : TextFilterApplier

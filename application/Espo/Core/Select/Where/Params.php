@@ -33,7 +33,7 @@ class Params
 {
     private $applyWherePermissionsCheck = false;
 
-    private $allowComplexExpressions = false;
+    private $forbidComplexExpressions = false;
 
     private function __construct()
     {
@@ -44,7 +44,7 @@ class Params
         $object = new self();
 
         $object->applyWherePermissionsCheck = $params['applyWherePermissionsCheck'] ?? false;
-        $object->allowComplexExpressions = $params['allowComplexExpressions'] ?? false;
+        $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
 
         return $self;
     }
@@ -54,8 +54,8 @@ class Params
         return $this->applyWherePermissionsCheck;
     }
 
-    public function allowComplexExpressions() : bool
+    public function forbidComplexExpressions() : bool
     {
-        return $this->allowComplexExpressions;
+        return $this->forbidComplexExpressions;
     }
 }

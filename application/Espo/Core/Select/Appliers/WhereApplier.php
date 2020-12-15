@@ -66,7 +66,7 @@ class WhereApplier
     {
         if (
             $params->applyWherePermissionsCheck() ||
-            !$params->allowComplexExpressions()
+            $params->forbidComplexExpressions()
         ) {
             $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
 

@@ -70,7 +70,7 @@ class PermissionsChecker
         $type = $item['type'] ?? null;
         $value = $item['value'] ?? null;
 
-        $forbidComplexExpressions = !$params->allowComplexExpressions();
+        $forbidComplexExpressions = $params->forbidComplexExpressions();
         $checkWherePermission = $params->applyWherePermissionsCheck();
 
         if ($forbidComplexExpressions) {

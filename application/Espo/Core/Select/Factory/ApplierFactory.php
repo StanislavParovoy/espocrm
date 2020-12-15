@@ -46,7 +46,7 @@ class ApplierFactory
     const WHERE = 'where';
     const ORDER = 'order';
     const LIMIT = 'limit';
-    const ACCESS_CONTROL = 'accessControl';
+    const ACCESS_CONTROL_FILTER = 'accessControlFilter';
     const TEXT_FILTER = 'textFilter';
     const PRIMARY_FILTER = 'primaryFilter';
     const BOOL_FILTER_LIST = 'boolFilterList';
