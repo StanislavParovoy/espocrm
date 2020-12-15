@@ -27,15 +27,19 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Where;
+namespace Espo\Core\Select\Order;
 
 use InvalidArgumentException;
 
 class Params
 {
-    private $applyWherePermissionsCheck = false;
-
     private $forbidComplexExpressions = false;
+
+    private $forceDefault = false;
+
+    private $orderBy = false;
+
+    private $order = false;
 
     private function __construct()
     {
@@ -45,8 +49,10 @@ class Params
     {
         $object = new self();
 
-        $object->applyWherePermissionsCheck = $params['applyWherePermissionsCheck'] ?? false;
         $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
+        $object->forceDefault = $params['forceDefault'] ?? false;
+        $object->orderBy = $params['orderBy'] ?? null;
+        $object->order = $params['order'] ?? null;
 
         foreach ($params as $key => $value) {
             if (!property_exists($object, $item)) {
@@ -57,13 +63,18 @@ class Params
         return $self;
     }
 
-    public function applyWherePermissionsCheck() : bool
-    {
-        return $this->applyWherePermissionsCheck;
-    }
-
     public function forbidComplexExpressions() : bool
     {
         return $this->forbidComplexExpressions;
+    }
+
+    public function forceDefault() : bool
+    {
+        return $this->forceDefault;
+    }
+
+    public function getOrder() : ?string
+    {
+        return $this->order;
     }
 }

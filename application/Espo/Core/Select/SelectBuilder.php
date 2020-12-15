@@ -44,6 +44,7 @@ use Espo\Core\Select\{
     Applier\BoolFilterListApplier,
     Applier\TextFilterApplier,
     Where\Params as WhereParams,
+    Order\Params as OrderParams,
 };
 
 use Espo\{
@@ -268,10 +269,21 @@ class SelectBuilder
 
     protected function applyDefaultOrder()
     {
-        // if null, null then apply default
+        $order = null;
+
+        if ($this->searchParams) {
+            $order = $this->searchParams->getOrder();
+        }
+
+        $params = OrderParams::fromArray([
+            'forceDefault' => true,
+            'order' => $order,
+        ]);
+
         $this->createOrderApplier()
             ->apply(
-                $this->queryBuilder
+                $this->queryBuilder,
+                $params
             );
     }
 
@@ -287,16 +299,15 @@ class SelectBuilder
                 $this->searchParams->getOrderBy() || $this->searchParams->getOrder()
             )
         ) {
-            // @todo move to class
-            $params = [
+            $params = OrderParams::fromArray([
                 'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
-            ];
+                'orderBy' => $this->searchParams->getOrderBy(),
+                'order' => $this->searchParams->getOrder(),
+            ]);
 
             $this->createOrderApplier()
                 ->apply(
                     $this->queryBuilder,
-                    $this->searchParams->getOrderBy(),
-                    $this->searchParams->getOrder(),
                     $params
                 );
         }
