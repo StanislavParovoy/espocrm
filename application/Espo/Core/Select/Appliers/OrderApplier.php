@@ -180,7 +180,7 @@ class OrderApplier
         }
 
         if (
-            $orderBy != 'id' &&
+            $orderBy !== 'id' &&
             (
                 !$orderByAttribute ||
                 !$this->getSeed()->getAttributeParam($orderByAttribute, 'unique')
