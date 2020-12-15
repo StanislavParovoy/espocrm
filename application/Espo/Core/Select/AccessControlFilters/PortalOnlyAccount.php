@@ -36,7 +36,7 @@ use Espo\{
     Enities\User,
 };
 
-class OnlyTeam implements AccessControlFilter
+class PortalOnlyAccount implements AccessControlFilter
 {
     protected $entityType;
     protected $user;
@@ -51,36 +51,63 @@ class OnlyTeam implements AccessControlFilter
 
     public function apply(QueryBuilder $queryBuilder)
     {
-        if (!$this->fieldHelper->hasTeamsField()) {
-            return;
+        $orGroup = [];
+
+        $accountIdList = $this->user->getLinkMultipleIdList('accounts');
+        $contactId = $this->user->get('contactId');
+
+        if (count($accountIdList)) {
+            if ($this->fieldHelper->hasAccountField()) {
+                $orGroup['accountId'] = $accountIdList;
+            }
+
+            if ($this->fieldHelper->hasAccountsRelation()) {
+                $queryBuilder
+                    ->leftJoin('accounts', 'accountsAccess')
+                    ->distinct();
+
+                $orGroup['accountsAccess.id'] = $accountIdList;
+            }
+
+            if ($this->fieldHelper->hasParentField()) {
+                $orGroup[] = [
+                    'parentType' => 'Account',
+                    'parentId' => $accountIdList
+                ];
+
+                if ($contactId) {
+                    $orGroup[] = [
+                        'parentType' => 'Contact',
+                        'parentId' => $contactId,
+                    ];
+                }
+            }
         }
 
-        $queryBuilder->distinct();
+        if ($contactId) {
+            if ($this->fieldHelper->hasContactField()) {
+                $orGroup['contactId'] = $contactId;
+            }
 
-        $queryBuilder->leftJoin('teams', 'teamsAccess');
+            if ($this->fieldHelper->hasContactsRelation()) {
+                $queryBuilder
+                    ->leftJoin('contacts', 'contactsAccess')
+                    ->distinct();
 
-        if ($this->fieldHelper->hasAssignedUsersField()) {
-            $queryBuilder->leftJoin('assignedUsers', 'assignedUsersAccess');
+                $orGroup['contactsAccess.id'] = $contactId;
+            }
+        }
 
+        if ($this->fieldHelper->hasCreatedByField()) {
+            $orGroup['createdById'] = $this->user->id;
+        }
+
+        if (empty($orGroup)) {
             $queryBuilder->where([
-                'OR' => [
-                    'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
-                    'assignedUsersAccess.id' => $this->user->id,
-                ]
+                'id' => null,
             ]);
 
             return;
-        }
-
-        $orGroup = [
-            'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
-        ];
-
-        if ($this->fieldHelper->hasAssignedUserField()) {
-            $orGroup['assignedUserId'] = $this->user->id;
-        }
-        else if ($this->fieldHelper->hasCreatedByField()) {
-            $orGroup['createdById'] = $this->user->id;
         }
 
         $queryBuilder->where([

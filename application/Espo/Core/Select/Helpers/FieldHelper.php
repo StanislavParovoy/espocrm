@@ -92,4 +92,39 @@ class FieldHelper
 
         return false;
     }
+
+    public function hasContactField() : bool
+    {
+        return
+            $this->getSeed()->hasAttribute('contactId') &&
+            $this->getSeed()->getRelationParam('contact', 'entity') === 'Contact';
+    }
+
+    public function hasContactsRelation() : bool
+    {
+        return
+            $this->getSeed()->hasRelation('contacts') &&
+            $this->getSeed()->getRelationParam('contacts', 'entity') === 'Contact';
+    }
+
+    public function hasParentField() : bool
+    {
+        return
+            $this->getSeed()->hasAttribute('parentId') &&
+            $this->getSeed()->hasRelation('parent');
+    }
+
+    public function hasAccountField() : bool
+    {
+        return
+            $this->getSeed()->hasAttribute('accountId') &&
+            $this->getSeed()->getRelationParam('account', 'entity') === 'Account';
+    }
+
+    public function hasAccountsRelation() : bool
+    {
+        return
+            $this->getSeed()->hasRelation('accounts') &&
+            $this->getSeed()->getRelationParam('accounts', 'entity') === 'Account';
+    }
 }

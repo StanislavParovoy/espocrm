@@ -36,7 +36,7 @@ use Espo\{
     Enities\User,
 };
 
-class OnlyTeam implements AccessControlFilter
+class PortalOnlyOwn implements AccessControlFilter
 {
     protected $entityType;
     protected $user;
@@ -51,40 +51,16 @@ class OnlyTeam implements AccessControlFilter
 
     public function apply(QueryBuilder $queryBuilder)
     {
-        if (!$this->fieldHelper->hasTeamsField()) {
-            return;
-        }
-
-        $queryBuilder->distinct();
-
-        $queryBuilder->leftJoin('teams', 'teamsAccess');
-
-        if ($this->fieldHelper->hasAssignedUsersField()) {
-            $queryBuilder->leftJoin('assignedUsers', 'assignedUsersAccess');
-
+        if ($this->fieldHelper->hasCreatedByField()) {
             $queryBuilder->where([
-                'OR' => [
-                    'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
-                    'assignedUsersAccess.id' => $this->user->id,
-                ]
+                'createdById' => $this->user->id,
             ]);
 
             return;
         }
 
-        $orGroup = [
-            'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
-        ];
-
-        if ($this->fieldHelper->hasAssignedUserField()) {
-            $orGroup['assignedUserId'] = $this->user->id;
-        }
-        else if ($this->fieldHelper->hasCreatedByField()) {
-            $orGroup['createdById'] = $this->user->id;
-        }
-
         $queryBuilder->where([
-            'OR' => $orGroup,
+            'id' => null,
         ]);
     }
 }

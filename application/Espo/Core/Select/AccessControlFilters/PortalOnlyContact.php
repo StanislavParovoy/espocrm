@@ -36,7 +36,7 @@ use Espo\{
     Enities\User,
 };
 
-class OnlyTeam implements AccessControlFilter
+class PortalOnlyContact implements AccessControlFilter
 {
     protected $entityType;
     protected $user;
@@ -51,36 +51,41 @@ class OnlyTeam implements AccessControlFilter
 
     public function apply(QueryBuilder $queryBuilder)
     {
-        if (!$this->fieldHelper->hasTeamsField()) {
-            return;
+        $orGroup = [];
+
+        $contactId = $this->user->get('contactId');
+
+        if ($contactId) {
+            if ($this->fieldHelper->hasContactField()) {
+                $orGroup['contactId'] = $contactId;
+            }
+
+            if ($this->fieldHelper->hasContactsRelation()) {
+                $queryBuilder
+                    ->leftJoin('contacts', 'contactsAccess')
+                    ->distinct();
+
+                $orGroup['contactsAccess.id'] = $contactId;
+            }
+
+            if ($this->fieldHelper->hasParentField()) {
+                $orGroup[] = [
+                    'parentType' => 'Contact',
+                    'parentId' => $contactId,
+                ];
+            }
         }
 
-        $queryBuilder->distinct();
+        if ($this->fieldHelper->hasCreatedByField()) {
+            $orGroup['createdById'] = $this->user->id;
+        }
 
-        $queryBuilder->leftJoin('teams', 'teamsAccess');
-
-        if ($this->fieldHelper->hasAssignedUsersField()) {
-            $queryBuilder->leftJoin('assignedUsers', 'assignedUsersAccess');
-
+        if (empty($orGroup)) {
             $queryBuilder->where([
-                'OR' => [
-                    'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
-                    'assignedUsersAccess.id' => $this->user->id,
-                ]
+                'id' => null,
             ]);
 
             return;
-        }
-
-        $orGroup = [
-            'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
-        ];
-
-        if ($this->fieldHelper->hasAssignedUserField()) {
-            $orGroup['assignedUserId'] = $this->user->id;
-        }
-        else if ($this->fieldHelper->hasCreatedByField()) {
-            $orGroup['createdById'] = $this->user->id;
         }
 
         $queryBuilder->where([
