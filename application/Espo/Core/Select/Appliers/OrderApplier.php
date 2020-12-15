@@ -102,16 +102,20 @@ class OrderApplier
 
     protected function applyDefaultOrder(QueryBuilder $queryBuilder, ?string $order)
     {
-        $orderBy = $this->metadata->get(['entityDefs', $this->entityType, 'collection', 'orderBy']);
+        $orderBy = $this->metadata->get([
+            'entityDefs', $this->entityType, 'collection', 'orderBy'
+        ]);
 
         if (!$orderBy) {
-            $queryBuilder->order('id');
+            $queryBuilder->order('id', $order);
 
             return;
         }
 
         if (!$order && !is_array($orderBy)) {
-            $order = $this->metadata->get(['entityDefs', $this->entityType, 'collection', 'order']) ?? null;
+            $order = $this->metadata->get([
+                'entityDefs', $this->entityType, 'collection', 'order'
+            ]) ?? null;
 
             if ($order === true || strtolower($order) === 'desc') {
                 $order = SearchParams::ORDER_DESC;
