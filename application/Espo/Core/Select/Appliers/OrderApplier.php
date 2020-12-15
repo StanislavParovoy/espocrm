@@ -145,7 +145,8 @@ class OrderApplier
             'entityDefs', $this->entityType, 'fields', $orderBy, 'type'
         ]);
 
-        // @todo Order handler by type and entity type ?
+        // @todo Order handler by entity type and field name.
+        // @todo Order handler by field type.
 
         if (in_array($type, ['link', 'file', 'image', 'linkOne'])) {
             $resultOrderBy .= 'Name';
