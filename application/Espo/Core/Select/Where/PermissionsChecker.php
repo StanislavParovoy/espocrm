@@ -148,6 +148,6 @@ class PermissionsChecker
 
     protected function getSeed() : Entity
     {
-        return $this->seed ?? $this->entityManager->getEntity($this->entityType)
+        return $this->seed ?? $this->entityManager->getEntity($this->entityType);
     }
 }

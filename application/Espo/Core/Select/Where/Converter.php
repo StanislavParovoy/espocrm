@@ -210,7 +210,7 @@ class Converter
             ->getMetadata()
             ->get($this->entityType, 'relations') ?? [];
 
-        $defs = $relDefs[$link] ?? null
+        $defs = $relDefs[$link] ?? null;
 
         if (!$defs) {
             throw new Error("Can't apply isUserFromTeams for link {$link}.");

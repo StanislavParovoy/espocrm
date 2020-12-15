@@ -687,7 +687,7 @@ class ItemConverter
 
         $dt2->modify('+' . $number . ' days');
 
-        return
+        return [
             'AND' => [
                 $attribute . '>=' => $dt1->format('Y-m-d'),
                 $attribute . '<=' => $dt2->format('Y-m-d'),
@@ -716,7 +716,7 @@ class ItemConverter
 
         $dt->modify('+' . $number . ' days');
 
-        return
+        return [
             $attribute . '>' => $dt->format('Y-m-d'),
         ];
     }

@@ -29,14 +29,9 @@
 
 namespace Espo\ORM\QueryParams\Parts\Where;
 
-/**
- * Move to Espo\ORM\QueryParams\Parts\Where\WhereItem.
- */
-interface WhereItem
+use Espo\ORM\QueryParams\Parts\WhereClause;
+
+class AndGroup extends WhereClause
 {
 
-    // Uncomment when PHP 8.0 is a min supported version.
-    //public function getRawValue() : mixed;
-
-    public function getRawKey() : string;
 }

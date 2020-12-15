@@ -31,9 +31,6 @@ namespace Espo\ORM\QueryParams\Parts\Where;
 
 use Espo\ORM\QueryParams\Parts\WhereClause;
 
-/**
- * Move to Espo\ORM\QueryParams\Parts\Where\OrGroup.
- */
 class OrGroup implements WhereItem
 {
     protected $raw = [];

@@ -27,60 +27,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select;
+namespace Espo\ORM\QueryParams\Parts\Where;
 
-use Espo\{
-    ORM\QueryParams\Parts\Where\WhereItem,
-};
-
-/**
- * To be extended from ORM WhereClause when one is written.
- * Or change usage to ORM WhereClause.
- * Move to Espo\ORM\QueryParams\Parts\WhereClause.
- */
-class WhereClause implements WhereItem
+interface WhereItem
 {
-    protected $raw = [];
 
-    public function __construct()
-    {
-    }
+    // Uncomment when PHP 8.0 is a min supported version.
+    //public function getRawValue() : mixed;
 
-    public static function fromRaw(array $whereClause) : self
-    {
-        $object = new self();
-
-        $object->raw = $whereClause;
-
-        return $self;
-    }
-
-    public function getRaw() : array
-    {
-        return $this->raw;
-    }
-
-    public function getRawValue() : array
-    {
-        return $this->getRaw();
-    }
-
-    public function getRawKey() : string
-    {
-        return 'AND';
-    }
-
-    public function add(WhereItem $item)
-    {
-        if ($item instanceof WhereClause) {
-            $this->raw[] = $item->getRaw();
-
-            return;
-        }
-
-        $key = $item->getRawKey();
-        $value = $item->getRawValue();
-
-        $this->raw[] = [$key => $value];
-    }
+    public function getRawKey() : string;
 }

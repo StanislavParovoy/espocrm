@@ -27,14 +27,55 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams\Parts\Where;
+namespace Espo\ORM\QueryParams\Parts;
 
-use Espo\ORM\QueryParams\Parts\WhereClause;
+use Espo\{
+    ORM\QueryParams\Parts\Where\WhereItem,
+};
 
-/**
- * Move to Espo\ORM\QueryParams\Parts\Where\OrGroup.
- */
-class AndGroup extends WhereClause
+class WhereClause implements WhereItem
 {
+    protected $raw = [];
 
+    public function __construct()
+    {
+    }
+
+    public static function fromRaw(array $whereClause) : self
+    {
+        $object = new self();
+
+        $object->raw = $whereClause;
+
+        return $self;
+    }
+
+    public function getRaw() : array
+    {
+        return $this->raw;
+    }
+
+    public function getRawValue() : array
+    {
+        return $this->getRaw();
+    }
+
+    public function getRawKey() : string
+    {
+        return 'AND';
+    }
+
+    public function add(WhereItem $item)
+    {
+        if ($item instanceof WhereClause) {
+            $this->raw[] = $item->getRaw();
+
+            return;
+        }
+
+        $key = $item->getRawKey();
+        $value = $item->getRawValue();
+
+        $this->raw[] = [$key => $value];
+    }
 }
