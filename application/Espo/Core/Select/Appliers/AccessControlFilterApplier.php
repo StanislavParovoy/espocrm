@@ -31,53 +31,70 @@ namespace Espo\Core\Select\Appliers;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\Where\Params,
-    Select\Where\Converter,
-    Select\Where\ConverterFactory,
+    AclManager,
+    Select\SelectManager,
+    Select\AccessContror\FilterFactory as AccessControlFilterFactory,
+    Select\AccessContror\FilterResolverFactory as AccessControlFilterResolverFactory,
 };
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
     Entities\User,
 };
 
-class WhereApplier
+class AccessControlFilterApplier
 {
+    protected $acl;
+
     protected $entityType;
     protected $user;
-    protected $converterFactory;
-    protected $permissionsCheckerFactory;
+    protected $accessControlFilterFactory;
+    protected $accessControlFilterResolverFactory;
+    protected $aclManager;
+    protected $selectManager;
 
     public function __construct(
         string $entityType,
         User $user,
-        ConverterFactory $converterFactory,
-        PermissionsCheckerFactory $permissionsCheckerFactory
+        AccessControlFilterFactory $accessControlFilterFactory,
+        AccessControlFilterResolverFactory $accessControlFilterResolverFactory,
+        AclManager $aclManager,
+        SelectManager $selectManager
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->converterFactory = $converterFactory;
-        $this->permissionsCheckerFactory = $permissionsCheckerFactory;
+        $this->accessControlFilterFactory = $accessControlFilterFactory;
+        $this->aclManager = $aclManager;
+        $this->selectManager = $selectManager;
+
+        $this->acl = $this->aclManager->createUserAcl($this->user);
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public function apply(QueryBuilder $queryBuilder)
     {
-        if (
-            $params->applyWherePermissionsCheck() ||
-            $params->forbidComplexExpressions()
-        ) {
-            $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
+        $accessControlFilterResolver = $this->accessControlFilterResolverFactory->create($this->entityType, $this->user);
 
-            $permissionsChecker->check($where, $params);
+        $filterName = $accessControlFilterResolver->resolve();
+
+        if (!$filterName) {
+            return;
         }
 
-        $converter = $this->converterFactory->create($this->entityType, $this->user);
+        // For backward compatibility.
+        if ($selectManager->hasAccessControlFilter($filterName)) {
+            $selectManager->applyAccessControlFilterToQueryBuilder($queryBuilder, $filterName);
 
-        $whereClause = $converter->convert($queryBuilder, $where);
+            return;
+        }
 
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
+        if ($this->accessControlFilterFactory->has($this->entityType, $filterName)) {
+            $filter = $this->accessControlFilterFactory->create($this->entityType, $user, $filterName);
+
+            $filter->apply($queryBuilder);
+
+            return;
+        }
+
+        throw new Error("No access filter '{$filterName}' for '{$this->entityType}'.");
     }
 }

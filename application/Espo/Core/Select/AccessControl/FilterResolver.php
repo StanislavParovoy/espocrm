@@ -27,57 +27,65 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
-
-use Espo\Core\{
-    Exceptions\Error,
-    Select\Where\Params,
-    Select\Where\Converter,
-    Select\Where\ConverterFactory,
-};
+namespace Espo\Core\Select\AccessControl;
 
 use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
+    Core\Acl,
     Entities\User,
 };
 
-class WhereApplier
+class FilterResolver
 {
     protected $entityType;
     protected $user;
-    protected $converterFactory;
-    protected $permissionsCheckerFactory;
+    protected $acl;
 
-    public function __construct(
-        string $entityType,
-        User $user,
-        ConverterFactory $converterFactory,
-        PermissionsCheckerFactory $permissionsCheckerFactory
-    ) {
+    public function __construct(string $entityType, User $user, Acl $acl)
+    {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->converterFactory = $converterFactory;
-        $this->permissionsCheckerFactory = $permissionsCheckerFactory;
+        $this->acl = $acl;
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public function resolve() : ?string
     {
-        if (
-            $params->applyWherePermissionsCheck() ||
-            $params->forbidComplexExpressions()
-        ) {
-            $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
-
-            $permissionsChecker->check($where, $params);
+        if ($this->user->isAdmin()) {
+            return null;
         }
 
-        $converter = $this->converterFactory->create($this->entityType, $this->user);
+        if ($this->user->isPortal()) {
 
-        $whereClause = $converter->convert($queryBuilder, $where);
+            if ($this->acl->checkReadOnlyOwn($this->entityType)) {
+                return 'portalOnlyOwn';
+            }
 
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
+            if ($this->acl->checkReadOnlyAccount($this->entityType)) {
+                return 'portalOnlyAccount';
+            }
+
+            if ($this->acl->checkReadOnlyContact($this->entityType)) {
+                return 'portalOnlyContact';
+            }
+
+            if ($this->acl->checkReadNo($this->entityType)) {
+                return 'no';
+            }
+
+            return null;
+        }
+
+        if ($this->acl->checkReadOnlyOwn($this->entityType)) {
+            return 'onlyOwn';
+        }
+
+        if ($this->acl->checkReadOnlyTeam($this->entityType)) {
+            return 'onlyTeam';
+        }
+
+        if ($this->acl->checkReadNo($this->entityType)) {
+            return 'no';
+        }
+
+        return null;
     }
 }

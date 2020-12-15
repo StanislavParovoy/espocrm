@@ -27,57 +27,49 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Appliers;
+namespace Espo\Core\Select\AccessControl;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\Where\Params,
-    Select\Where\Converter,
-    Select\Where\ConverterFactory,
+    InjectableFactory,
+    AclManager,
+    Utils\Metadata,
 };
 
 use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
     Entities\User,
 };
 
-class WhereApplier
+class FilterResolverFactory
 {
-    protected $entityType;
-    protected $user;
-    protected $converterFactory;
-    protected $permissionsCheckerFactory;
+    protected $injectableFactory;
+    protected $metadata;
+    protected $aclManager;
 
-    public function __construct(
-        string $entityType,
-        User $user,
-        ConverterFactory $converterFactory,
-        PermissionsCheckerFactory $permissionsCheckerFactory
-    ) {
-        $this->entityType = $entityType;
-        $this->user = $user;
-        $this->converterFactory = $converterFactory;
-        $this->permissionsCheckerFactory = $permissionsCheckerFactory;
+    public function __construct(InjectableFactory $injectableFactory, Metadata $metadata, AclManager $aclManager)
+    {
+        $this->injectableFactory = $injectableFactory;
+        $this->metadata = $metadata;
+        $this->aclManager = $aclManager;
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public function create(string $entityType, User $user) : FilterResolver
     {
-        if (
-            $params->applyWherePermissionsCheck() ||
-            $params->forbidComplexExpressions()
-        ) {
-            $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
+        $className = $this->getClassName($entityType);
 
-            $permissionsChecker->check($where, $params);
-        }
+        $acl = $this->aclManager->createUserAcl($user);
 
-        $converter = $this->converterFactory->create($this->entityType, $this->user);
+        return $this->injectableFactory->createWith($className, [
+            'entityType' => $entityType,
+            'user' => $user,
+            'acl' => $acl,
+        ]);
+    }
 
-        $whereClause = $converter->convert($queryBuilder, $where);
-
-        $queryBuilder->where(
-            $whereClause->getRaw()
-        );
+    protected function getClassName(string $entityType) : string
+    {
+        return $this->metadata->get([
+            'selectDefs', $entityType, 'accessControlFilterResolverClassName'
+        ]) ?? FilterResolver::class;
     }
 }
