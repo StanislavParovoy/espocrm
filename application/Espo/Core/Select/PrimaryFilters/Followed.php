@@ -31,7 +31,7 @@ namespace Espo\Core\Select\PrimaryFilters;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    Core\Select\PrimaryFilter,
+    Core\Select\Filters\PrimaryFilter,
     Enities\User,
 };
 

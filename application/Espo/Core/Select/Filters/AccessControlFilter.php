@@ -27,42 +27,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\BoolFilters;
+namespace Espo\Core\Select;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\QueryParams\Parts\WhereClause,
-    Core\Select\Filters\BoolFilter,
-    Enities\User,
 };
 
-class Followed implements BoolFilter
+interface AccessControlFilter
 {
-    protected $entityType;
-    protected $user;
-
-    public function __construct(string $entityType, User $user)
-    {
-        $this->entityType = $entityType;
-        $this->user = $user;
-    }
-
-    public function apply(QueryBuilder $queryBuilder) : WhereClause
-    {
-        $alias = 'subscriptionFollowedBoolFilter';
-
-        $queryBuilder->join(
-            'Subscription',
-            $alias,
-            [
-                $alias . '.entityType' => $this->entityType,
-                $alias . '.entityId=:' => 'id',
-                $alias . '.userId' => $this->user->id,
-            ]
-        );
-
-        return WhereClause::fromRaw([
-            $alias . '.id!=' => null,
-        ]);
-    }
+    public function apply(QueryBuilder $queryBuilder);
 }

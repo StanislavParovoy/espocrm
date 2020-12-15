@@ -31,7 +31,7 @@ namespace Espo\Core\Select\Factory;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\BoolFilter,
+    Select\Filters\BoolFilter,
 };
 
 use Espo\{

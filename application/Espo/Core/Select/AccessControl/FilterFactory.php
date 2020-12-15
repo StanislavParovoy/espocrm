@@ -27,18 +27,18 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Factory;
+namespace Espo\Core\Select\AccessControl;
 
 use Espo\Core\{
     Exceptions\Error,
-    Select\Filters\PrimaryFilter,
+    Select\Filters\AccessControlFilter,
 };
 
 use Espo\{
     Entities\User,
 };
 
-class PrimaryFilterFactory
+class FilterFactory
 {
     protected $injectableFactory;
     protected $metadata;
@@ -49,12 +49,12 @@ class PrimaryFilterFactory
         $this->metadata = $metadata;
     }
 
-    public function create(string $entityType, User $user, string $name) : PrimaryFilter
+    public function create(string $entityType, User $user, string $name) : AccessControlFilter
     {
         $className = $this->getClassName($entityType, $name);
 
         if (!$className) {
-            throw new Error("Primary filter '{$name}' for '{$entityType}' does not exist.");
+            throw new Error("Access control filter '{$name}' for '{$entityType}' does not exist.");
         }
 
         return $this->injectableFactory->createWith($className, [
@@ -71,14 +71,14 @@ class PrimaryFilterFactory
     protected function getClassName(string $entityType, string $name) : ?string
     {
         if (!$name) {
-            throw new Error("Empty primary filter name.");
+            throw new Error("Empty access control filter name.");
         }
 
         $className = $this->metadata->get(
             [
                 'selectDefs',
                 $entityType,
-                'primaryFilters',
+                'accessControlFilters',
                 $name,
                 'className',
             ]
@@ -99,7 +99,7 @@ class PrimaryFilterFactory
 
     protected function getDefaultClassName(string $name) : string
     {
-        $className = 'Espo\\Core\\Select\\PrimaryFilters\\' . ucfirst($name);
+        $className = 'Espo\\Core\\Select\\AccessControlFilters\\' . ucfirst($name);
 
         return $className;
     }
