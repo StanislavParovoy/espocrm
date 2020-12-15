@@ -48,26 +48,34 @@ class WhereApplier
     protected $entityType;
     protected $user;
     protected $converterFactory;
+    protected $permissionsCheckerFactory;
 
     public function __construct(
-        string $entityType, User $user, ConverterFactory $converterFactory
+        string $entityType,
+        User $user,
+        ConverterFactory $converterFactory,
+        PermissionsCheckerFactory $permissionsCheckerFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->converterFactory = $converterFactory;
+        $this->permissionsCheckerFactory = $permissionsCheckerFactory;
     }
 
     public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
     {
-        // check where permissions here
+        if (
+            $params->applyWherePermissionsCheck() ||
+            !$params->allowComplexExpressions()
+        ) {
+            $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
 
-        if ($params->applyWherePermissionsCheck()) {
-
+            $permissionsChecker->check($where, $params);
         }
 
         $converter = $this->converterFactory->create($this->entityType, $this->user);
 
-        $whereClause = $converter->process($queryBuilder, $where);
+        $whereClause = $converter->convert($queryBuilder, $where);
 
         $queryBuilder->where(
             $whereClause->getRaw()

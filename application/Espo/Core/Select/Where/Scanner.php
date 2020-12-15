@@ -67,22 +67,20 @@ class Scanner
         $value = $item['value'] ?? null;
         $attribute = $item['attribute'] ?? null;
 
-        if ($type) {
-            if (in_array($type, ['subQueryNotIn', 'subQueryIn', 'not'])) {
+        if (in_array($type, ['subQueryNotIn', 'subQueryIn', 'not'])) {
+            return;
+        }
+
+        if (in_array($type, ['or', 'and', 'having'])) {
+            if (!is_array($value)) {
                 return;
             }
 
-            if (in_array($type, ['or', 'and', 'having'])) {
-                if (!is_array($value)) {
-                    return;
-                }
-
-                foreach ($value as $subItem) {
-                    $this->applyLeftJoinsFromItem($selectBuilder, $subItem, $entityType);
-                }
-
-                return;
+            foreach ($value as $subItem) {
+                $this->applyLeftJoinsFromItem($selectBuilder, $subItem, $entityType);
             }
+
+            return;
         }
 
         if (!$attribute) {
