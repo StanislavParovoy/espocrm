@@ -314,7 +314,7 @@ class SelectBuilder
             $this->createSelectApplier()
                 ->apply(
                     $this->queryBuilder,
-                    $this->searchParams->getSelect()
+                    $this->searchParams
                 );
         }
 
