@@ -36,7 +36,6 @@ use Espo\{
 /**
  * Need access to raw params for backward compatiblity.
  * The legacy select manager operates with raw params.
- * Also added hasLeftJoin method to be used by Where\Scanner.
  */
 class OrmSelectBuilder extends QueryBuilder
 {
@@ -44,21 +43,4 @@ class OrmSelectBuilder extends QueryBuilder
     {
         $this->params = $params;
     }
-
-    /*public function hasLeftJoin(string $alias) : bool
-    {
-        if (in_array($alias, $this->params['leftJoins'])) {
-            return true;
-        }
-
-        foreach ($this->params['leftJoins'] as $item) {
-            if (is_array($item) && count($item) > 1) {
-                if ($item[1] === $alias) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }*/
 }

@@ -52,19 +52,22 @@ class Converter
     protected $itemConverter;
     protected $dateTimeItemConverter;
     protected $entityManager;
+    protected $scanner;
 
     public function __construct(
         string $entityType,
         User $user,
         ItemConverter $itemConverter,
         DateTimeItemConverter $dateTimeItemConverter,
-        EntityManager $entityManager
+        EntityManager $entityManager,
+        Scanner $scanner
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->itemConverter = $itemConverter;
         $this->dateTimeItemConverter = $dateTimeItemConverter;
         $this->entityManager = $entityManager;
+        $this->scanner = $scanner;
     }
 
     public function convert(QueryBuilder $queryBuilder, array $where) : WhereClause
@@ -80,6 +83,8 @@ class Converter
 
             $whereClause[] = $part;
         }
+
+        $this->scanner->applyLeftJoins($queryBuilder, $where);
 
         return WhereClause::fromRaw($whereClause);
     }

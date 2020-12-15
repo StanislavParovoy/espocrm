@@ -59,11 +59,11 @@ class WhereApplier
 
     public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
     {
-        // applyLeftJoinsFromWhere in separate class ?
-        // Where\Scanner($entityManager, $entityType) WhereScanner::applyLeftJoins($queryBuilder, $where)
-        // or  WhereScanner::applyLeftJoins($queryBuilder, $where, $entityType)
-
         // check where permissions here
+
+        if ($params->applyWherePermissionsCheck()) {
+
+        }
 
         $converter = $this->converterFactory->create($this->entityType, $this->user);
 
@@ -72,7 +72,5 @@ class WhereApplier
         $queryBuilder->where(
             $whereClause->getRaw()
         );
-
-        // apply left joins from where
     }
 }
