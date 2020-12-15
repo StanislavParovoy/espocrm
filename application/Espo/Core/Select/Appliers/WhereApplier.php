@@ -61,6 +61,7 @@ class WhereApplier
     {
         // applyLeftJoinsFromWhere in separate class ?
         // Where\Scanner($entityManager, $entityType) WhereScanner::applyLeftJoins($queryBuilder, $where)
+        // or  WhereScanner::applyLeftJoins($queryBuilder, $where, $entityType)
 
         // check where permissions here
 
