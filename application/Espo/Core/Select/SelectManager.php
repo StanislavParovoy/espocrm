@@ -54,6 +54,8 @@ use DateTime;
 use DateTimeZone;
 use DateInterval;
 
+use ReflectionMethod;
+
 /**
  * Used for generating and managing select parameters which subsequently will be feed to ORM.
  */
@@ -1974,6 +1976,58 @@ class SelectManager
     {
         $this->prepareResult($result);
         $this->limit($offset, $maxSize, $result);
+    }
+
+    /**
+     * Fallback for backward compatibiltiy.
+     */
+    public function hasInheritedAccessMethod() : bool
+    {
+        $method = new ReflectionMethod($this, 'access');
+
+        return $method->getDeclaringClass()->getName() !== SelectManager::class;
+    }
+
+    /**
+     * Fallback for backward compatibiltiy.
+     */
+    public function applyAccessToQueryBuilder(OrmSelectBuilder $queryBuilder)
+    {
+        $result = $queryBuilder->build()->getRawParams();
+
+        $this->access($result);
+
+        $queryBuilder->setRawParams($result);
+    }
+
+    /**
+     * Fallback for backward compatibiltiy.
+     */
+    public function hasInheritedAccessFilterMethod(string $filterName) : bool
+    {
+        $methodName = 'access' . ucfirst($filterName);
+
+        if (!method_exists($this, $methodName)) {
+            return false;
+        }
+
+        $method = new ReflectionMethod($this, $methodName);
+
+        return $method->getDeclaringClass()->getName() !== SelectManager::class;
+    }
+
+    /**
+     * Fallback for backward compatibiltiy.
+     */
+    public function applyAccessFilterToQueryBuilder(OrmSelectBuilder $queryBuilder)
+    {
+        $methodName = 'access' . ucfirst($filterName);
+
+        $result = $queryBuilder->build()->getRawParams();
+
+        $this->$methodName($result);
+
+        $queryBuilder->setRawParams($result);
     }
 
     /**

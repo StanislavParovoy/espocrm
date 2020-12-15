@@ -72,6 +72,13 @@ class AccessControlFilterApplier
 
     public function apply(QueryBuilder $queryBuilder)
     {
+        // For backward compatibility.
+        if ($this->selectManager->hasInheritedAccessMethod()) {
+            $this->selectManager->applyAccessToQueryBuilder($queryBuilder);
+
+            return;
+        }
+
         $accessControlFilterResolver = $this->accessControlFilterResolverFactory->create($this->entityType, $this->user);
 
         $filterName = $accessControlFilterResolver->resolve();
@@ -81,8 +88,8 @@ class AccessControlFilterApplier
         }
 
         // For backward compatibility.
-        if ($selectManager->hasAccessControlFilter($filterName)) {
-            $selectManager->applyAccessControlFilterToQueryBuilder($queryBuilder, $filterName);
+        if ($selectManager->hasInheritedAccessFilterMethod($filterName)) {
+            $selectManager->applyAccessFilterToQueryBuilder($queryBuilder, $filterName);
 
             return;
         }
