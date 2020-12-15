@@ -93,13 +93,11 @@ class OrderApplier
                 'entityDefs', $this->entityType, 'collection', 'orderBy'
             ]);
 
-        $order = $params->getOrder();
-
         if (!$orderBy) {
             return;
         }
 
-        $this->applyOrder($queryBuilder, $orderBy, $order);
+        $this->applyOrder($queryBuilder, $orderBy, $params->getOrder());
     }
 
     protected function applyDefaultOrder(QueryBuilder $queryBuilder, ?string $order)
