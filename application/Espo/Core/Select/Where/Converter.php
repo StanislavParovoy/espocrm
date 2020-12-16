@@ -57,7 +57,7 @@ class Converter
     public function __construct(
         string $entityType,
         User $user,
-        ItemConverter $itemConverter,
+        ItemGeneralConverter $itemConverter,
         DateTimeItemConverter $dateTimeItemConverter,
         EntityManager $entityManager,
         Scanner $scanner

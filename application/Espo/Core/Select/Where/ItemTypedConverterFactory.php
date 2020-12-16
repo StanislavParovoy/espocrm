@@ -31,6 +31,8 @@ namespace Espo\Core\Select\Where;
 
 use Espo\Core\{
     Exceptions\Error,
+    InjectableFactory,
+    Utils\Metadata,
 };
 
 use Espo\{
@@ -53,7 +55,7 @@ class ItemTypedConverterFactory
         return (bool) $this->getClassName($type);
     }
 
-    public function create(string $type, string $entityType, User $user) : ItemTypedConverter
+    public function create(string $type, string $entityType, User $user) : ItemConverter
     {
         $className = $this->getClassName($type);
 

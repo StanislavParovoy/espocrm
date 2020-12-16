@@ -27,16 +27,24 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Where;
+namespace Espo\Core\Select\Order;
 
-use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
+use Espo\Core\{
+    Select\Order\ItemConverter,
+    Select\Order\Item,
 };
 
-/**
- * Converts a where item of a specific type to a where clause (for ORM).
- */
-interface ItemTypedConverter
+class AddressType implements ItemConverter
 {
-    public function convert(QueryBuilder $queryBuilder, array $item) : array;
+    public function convert(Item $item) : array
+    {
+        $orderBy = $item->getOrderBy();
+        $order = $item->getOrder();
+
+        return [
+            [$orderBy . 'Country', $order],
+            [$orderBy . 'City', $order],
+            [$orderBy . 'Street', $order],
+        ];
+    }
 }

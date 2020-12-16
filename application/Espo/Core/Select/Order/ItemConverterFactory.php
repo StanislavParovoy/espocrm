@@ -27,17 +27,15 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Where;
+namespace Espo\Core\Select\Order;
 
 use Espo\Core\{
     Exceptions\Error,
+    InjectableFactory,
+    Utils\Metadata,
 };
 
-use Espo\{
-    Entities\User,
-};
-
-class ConverterFactory
+class ItemConverterFactory
 {
     protected $injectableFactory;
     protected $metadata;
@@ -48,49 +46,56 @@ class ConverterFactory
         $this->metadata = $metadata;
     }
 
-    public function create(string $entityType, User $user) : Converter
+    public function has(string $entityType, string $field) : bool
     {
-        $itemConverterClassName = $this->getItemConverterClassName($entityType, $name);
+        return (bool) $this->getClassName($entityType, $field);
+    }
 
-        $itemConverter = $this->injectableFactory->createWith($itemConverterClassName, [
+    public function create(string $entityType, string $field) : ItemConverter
+    {
+        $className = $this->getClassName($type);
+
+        if (!$className) {
+            throw new Error("Order item converter class name is not defined.");
+        }
+
+        return $this->injectableFactory->createWith($className, [
             'entityType' => $entityType,
-            'user' => $user,
-        ]);
-
-        $dateTimeItemTransformerClassName = $this->getDateTimeItemTransformerClassName($entityType, $name);
-
-        $dateTimeItemTransformer = $this->injectableFactory->createWith($dateTimeItemTransformerClassName, [
-            'entityType' => $entityType,
-            'user' => $user,
-        ]);
-
-        return $this->injectableFactory->createWith(Converter::class, [
-            'entityType' => $entityType,
-            'user' => $user,
-            'itemConverter' => $itemConverter,
-            'dateTimeItemTransformer' => $dateTimeItemTransformer,
         ]);
     }
 
-    protected function getItemConverterClassName(string $entityType) : string
+    protected function getClassName(string $entityType, string $field) : ?string
     {
-        $className = $this->metadata->get(['selectDefs', $entityType, 'whereItemConverterClassName']);
+        $className = $this->metadata->get([
+            'selectDefs', $entityType, 'orderItemConverterClassNameMap', $field
+        ]);
 
         if ($className) {
             return $className;
         }
 
-        return ItemGeneralConverter::class;
-    }
+        $type = $this->metadata->get([
+            'entityDefs', $entityType, 'fields', $field, 'type'
+        ]);
 
-    protected function getDateTimeItemTransformerClassName(string $entityType) : string
-    {
-        $className = $this->metadata->get(['selectDefs', $entityType, 'whereDateTimeItemTransformerClassName']);
+        if (!$type) {
+            return null;
+        }
+
+        $className = $this->metadata->get([
+            'app', 'select', 'orderItemConverterClassNameMap', $type
+        ]);
 
         if ($className) {
             return $className;
         }
 
-        return DateTimeItemTransformer::class;
+        $className = 'Espo\\Core\\Select\\Order\\ItemConverters\\' . ucfirst($type) . 'Type';
+
+        if (class_exists($className)) {
+            return $className;
+        }
+
+        return null;
     }
 }

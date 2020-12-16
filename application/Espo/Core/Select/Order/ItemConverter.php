@@ -29,57 +29,7 @@
 
 namespace Espo\Core\Select\Order;
 
-use InvalidArgumentException;
-
-class Params
+interface ItemConverter
 {
-    private $forbidComplexExpressions = false;
-
-    private $forceDefault = false;
-
-    private $orderBy = false;
-
-    private $order = false;
-
-    private function __construct()
-    {
-    }
-
-    public static function fromArray(array $params) : self
-    {
-        $object = new self();
-
-        $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
-        $object->forceDefault = $params['forceDefault'] ?? false;
-        $object->orderBy = $params['orderBy'] ?? null;
-        $object->order = $params['order'] ?? null;
-
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $item)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
-        }
-
-        return $self;
-    }
-
-    public function forbidComplexExpressions() : bool
-    {
-        return $this->forbidComplexExpressions;
-    }
-
-    public function forceDefault() : bool
-    {
-        return $this->forceDefault;
-    }
-
-    public function getOrderBy() : ?string
-    {
-        return $this->orderBy;
-    }
-
-    public function getOrder() : ?string
-    {
-        return $this->order;
-    }
+    public function convert(Item $item) : array;
 }

@@ -31,12 +31,8 @@ namespace Espo\Core\Select\Order;
 
 use InvalidArgumentException;
 
-class Params
+class Item
 {
-    private $forbidComplexExpressions = false;
-
-    private $forceDefault = false;
-
     private $orderBy = false;
 
     private $order = false;
@@ -49,8 +45,6 @@ class Params
     {
         $object = new self();
 
-        $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
-        $object->forceDefault = $params['forceDefault'] ?? false;
         $object->orderBy = $params['orderBy'] ?? null;
         $object->order = $params['order'] ?? null;
 
@@ -61,16 +55,6 @@ class Params
         }
 
         return $self;
-    }
-
-    public function forbidComplexExpressions() : bool
-    {
-        return $this->forbidComplexExpressions;
-    }
-
-    public function forceDefault() : bool
-    {
-        return $this->forceDefault;
     }
 
     public function getOrderBy() : ?string

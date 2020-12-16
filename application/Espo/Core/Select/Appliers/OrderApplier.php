@@ -34,6 +34,7 @@ use Espo\Core\{
     Exceptions\Forbidden,
     Select\SearchParams,
     Select\Order\Params as OrderParams,
+    Select\Order\ItemConverterFactory,
 };
 
 use Espo\{
@@ -44,8 +45,6 @@ use Espo\{
 
 class OrderApplier
 {
-    protected $selectAttributesDependancyMap = [];
-
     private $seed = null;
 
     protected $entityType;
@@ -53,17 +52,20 @@ class OrderApplier
     protected $user;
     protected $entityManager;
     protected $metadata;
+    protected $itemConverterFactory;
 
     public function __construct(
         string $entityType,
         User $user,
         EntityManager $entityManager,
-        Metadata $metadata
+        Metadata $metadata,
+        ItemConverterFactory $itemConverterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->entityManager = $entityManager;
         $this->metadata = $metadata;
+        $this->itemConverterFactory = $itemConverterFactory;
     }
 
     public function apply(QueryBuilder $queryBuilder, OrderParams $params)
@@ -84,7 +86,7 @@ class OrderApplier
                 ||
                 strpos($orderBy, ':') !== false
             ) {
-                throw new Forbidden("Complex expressions are forbidden in orderBy.");
+                throw new Forbidden("Complex expressions are forbidden in 'orderBy'.");
             }
         }
 
@@ -112,7 +114,7 @@ class OrderApplier
             return;
         }
 
-        if (!$order && !is_array($orderBy)) {
+        if (!$order) {
             $order = $this->metadata->get([
                 'entityDefs', $this->entityType, 'collection', 'order'
             ]) ?? null;
@@ -145,22 +147,23 @@ class OrderApplier
             'entityDefs', $this->entityType, 'fields', $orderBy, 'type'
         ]);
 
-        // @todo Order handler by entity type and field name.
-        // @todo Order handler by field type.
+        $hasItemConverter = $this->itemConverterFactory->has($this->entityType, $orderBy);
 
-        if (in_array($type, ['link', 'file', 'image', 'linkOne'])) {
+        if ($hasItemConverter) {
+            $converter = $this->itemConverterFactory->create($this->entityType, $orderBy);
+
+            $resultOrderBy = $converter->convert(
+                Item::fromArray([
+                    'orderBy' => $orderBy,
+                    'order' => $order,
+                ])
+            );
+        }
+        else if (in_array($type, ['link', 'file', 'image', 'linkOne'])) {
             $resultOrderBy .= 'Name';
         }
         else if ($type === 'linkParent') {
             $resultOrderBy .= 'Type';
-        }
-        else if ($type === 'address') {
-            $resultOrderBy = $this->getAddressOrderBy($orderBy, $order);
-        }
-        else if ($type === 'enum') {
-            $resultOrderBy =
-                $this->getEnumOrderBy($orderBy, $order) ??
-                $resultOrderBy;
         }
         else {
             if (strpos($orderBy, '.') === false && strpos($orderBy, ':') === false) {
@@ -192,48 +195,6 @@ class OrderApplier
         }
 
         $queryBuilder->order($resultOrderBy);
-    }
-
-    protected function getAddressOrderBy(string $orderBy, string $order) : array
-    {
-        return [
-            [$orderBy . 'Country', $order],
-            [$orderBy . 'City', $order],
-            [$orderBy . 'Street', $order],
-        ];
-    }
-
-    protected function getEnumOrderBy(string $orderBy, string $order) : ?array
-    {
-        $list = $this->metadata->get([
-            'entityDefs', $this->entityType, 'fields', $orderBy, 'options'
-        ]);
-
-        if (!$list || !is_array($list) || !count($list)) {
-            return null;
-        }
-
-        $isSorted = $this->metadata->get([
-            'entityDefs', $this->entityType, 'fields', $orderBy, 'isSorted'
-        ]);
-
-        if ($isSorted) {
-            asort($list);
-        }
-
-        if ($order === SearchParams::ORDER_DESC) {
-            $list = array_reverse($list);
-        }
-
-        foreach ($list as $i => $listItem) {
-            $list[$i] = str_replace(',', '_COMMA_', $listItem);
-        }
-
-        return [
-            [
-                'LIST:' . $orderBy . ':' . implode(',', $list)
-            ]
-        ];
     }
 
     protected function getSeed() : Entity

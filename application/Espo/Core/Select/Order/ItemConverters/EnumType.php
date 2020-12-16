@@ -29,57 +29,62 @@
 
 namespace Espo\Core\Select\Order;
 
-use InvalidArgumentException;
+use Espo\Core\{
+    Select\Order\ItemConverter,
+    Select\Order\Item,
+    Select\SearchParams,
+    Utils\Metadata,
+};
 
-class Params
+class EnumType implements ItemConverter
 {
-    private $forbidComplexExpressions = false;
+    protected $entityType;
 
-    private $forceDefault = false;
+    protected $metadata;
 
-    private $orderBy = false;
-
-    private $order = false;
-
-    private function __construct()
-    {
+    public function __construct(
+        string $entityType,
+        Metadata $metadata
+    ) {
+        $this->entityType = $entityType;
+        $this->metadata = $metadata;
     }
 
-    public static function fromArray(array $params) : self
+    public function convert(Item $item) : array
     {
-        $object = new self();
+        $orderBy = $item->getOrderBy();
+        $order = $item->getOrder();
 
-        $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
-        $object->forceDefault = $params['forceDefault'] ?? false;
-        $object->orderBy = $params['orderBy'] ?? null;
-        $object->order = $params['order'] ?? null;
+        $list = $this->metadata->get([
+            'entityDefs', $this->entityType, 'fields', $orderBy, 'options'
+        ]);
 
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $item)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
+        if (!$list || !is_array($list) || !count($list)) {
+            return [
+                [$orderBy, $order]
+            ];
         }
 
-        return $self;
-    }
+        $isSorted = $this->metadata->get([
+            'entityDefs', $this->entityType, 'fields', $orderBy, 'isSorted'
+        ]);
 
-    public function forbidComplexExpressions() : bool
-    {
-        return $this->forbidComplexExpressions;
-    }
+        if ($isSorted) {
+            asort($list);
+        }
 
-    public function forceDefault() : bool
-    {
-        return $this->forceDefault;
-    }
+        if ($order === SearchParams::ORDER_DESC) {
+            $list = array_reverse($list);
+        }
 
-    public function getOrderBy() : ?string
-    {
-        return $this->orderBy;
-    }
+        foreach ($list as $i => $listItem) {
+            $list[$i] = str_replace(',', '_COMMA_', $listItem);
+        }
 
-    public function getOrder() : ?string
-    {
-        return $this->order;
+        return [
+            [
+                'LIST:' . $orderBy . ':' . implode(',', $list)
+            ]
+        ];
     }
 }
