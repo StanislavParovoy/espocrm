@@ -54,15 +54,15 @@ class DateTimeItemTransformer
         $this->user = $user;
     }
 
-    public function transform(array $item) : array
+    public function transform(Item $item) : Item
     {
         $format = 'Y-m-d H:i:s';
 
-        $type = $item['type'] ?? null;
-        $value = $item['value'] ?? null;
-        $attribute = $item['attribute'] ?? $item['field'] ?? null;
-        $isDateTime = $item['dateTime'] ?? false;
-        $timeZone = $item['timeZone'] ?? 'UTC';
+        $type = $item->getType();
+        $value = $item->getValue();
+        $attribute = $item->getAttribute();
+        $isDateTime = $item->isDateTime();
+        $timeZone =  $item->getTimeZone() ?? 'UTC';
 
         if (!$isDateTime) {
             throw new Error("Bad where item.");
@@ -159,7 +159,7 @@ class DateTimeItemTransformer
 
                 $to = $dt->format($format);
 
-                $number = strval(intval($item['value']));
+                $number = strval(intval($value));
 
                 $dtFrom->modify('-'.$number.' day');
                 $dtFrom->setTime(0, 0, 0);
@@ -180,7 +180,7 @@ class DateTimeItemTransformer
 
                 $from = $dt->format($format);
 
-                $number = strval(intval($item['value']));
+                $number = strval(intval($value));
 
                 $dtTo->modify('+'.$number.' day');
                 $dtTo->setTime(24, 59, 59);
@@ -196,7 +196,7 @@ class DateTimeItemTransformer
 
                 $where['type'] = 'before';
 
-                $number = strval(intval($item['value']));
+                $number = strval(intval($value));
 
                 $dt->modify('-'.$number.' day');
                 $dt->setTime(0, 0, 0);
@@ -210,7 +210,7 @@ class DateTimeItemTransformer
 
                 $where['type'] = 'after';
 
-                $number = strval(intval($item['value']));
+                $number = strval(intval($value));
 
                 $dt->modify('+'.$number.' day');
                 $dt->setTime(0, 0, 0);
@@ -380,7 +380,10 @@ class DateTimeItemTransformer
                 $dt = clone $dtToday;
                 $fiscalYearShift = $this->getConfig()->get('fiscalYearShift', 0);
 
-                $dt->modify('first day of January this year')->modify('+' . $fiscalYearShift . ' months')->setTime(0, 0, 0);
+                $dt
+                    ->modify('first day of January this year')
+                    ->modify('+' . $fiscalYearShift . ' months')
+                    ->setTime(0, 0, 0);
 
                 if (intval($dtToday->format('m')) < $fiscalYearShift + 1) {
                     $dt->modify('-1 year');
@@ -415,7 +418,10 @@ class DateTimeItemTransformer
 
                 $fiscalYearShift = $this->getConfig()->get('fiscalYearShift', 0);
 
-                $dt->modify('first day of January this year')->modify('+' . $fiscalYearShift . ' months')->setTime(0, 0, 0);
+                $dt
+                    ->modify('first day of January this year')
+                    ->modify('+' . $fiscalYearShift . ' months')
+                    ->setTime(0, 0, 0);
 
                 $month = intval($dtToday->format('m'));
 
@@ -423,10 +429,10 @@ class DateTimeItemTransformer
 
                 if ($quarterShift) {
                     if ($quarterShift >= 0) {
-                        $dt->add(new DateInterval('P'.($quarterShift * 3).'M'));
+                        $dt->add(new DateInterval('P' . ($quarterShift * 3) . 'M'));
                     } else {
                         $quarterShift *= -1;
-                        $dt->sub(new DateInterval('P'.($quarterShift * 3).'M'));
+                        $dt->sub(new DateInterval('P' . ($quarterShift * 3) . 'M'));
                     }
                 }
 
@@ -453,6 +459,6 @@ class DateTimeItemTransformer
                 $where['type'] = $type;
         }
 
-        return $where;
+        return Item::fromArray($where);
     }
 }

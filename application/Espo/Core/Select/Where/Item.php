@@ -27,16 +27,69 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Where;
+namespace Espo\Core\Select\Order;
 
-use Espo\{
-    ORM\QueryParams\SelectBuilder as QueryBuilder,
-};
+use InvalidArgumentException;
 
-/**
- * Converts a where item to a where clause (for ORM).
- */
-interface ItemConverter
+class Item
 {
-    public function convert(QueryBuilder $queryBuilder, Item $item) : array;
+    private $type = null;
+
+    private $attribute = null;
+
+    private $value = null;
+
+    private $dateTime = null;
+
+    private $timeZone = null;
+
+    private function __construct()
+    {
+    }
+
+    public static function fromArray(array $params) : self
+    {
+        $object = new self();
+
+        $object->type = $params['type'] ?? null;
+        $object->attribute = $params['attribute'] ?? $params['field'] ?? null;
+        $object->value = $params['value'] ?? null;
+        $object->dateTime = $params['dateTime'] ?? false;
+        $object->timeZone = $params['timeZone'] ?? false;
+
+        unset($params['field']);
+
+        foreach ($params as $key => $value) {
+            if (!property_exists($object, $item)) {
+                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
+            }
+        }
+
+        return $self;
+    }
+
+    public function getType() : ?string
+    {
+        return $this->type;
+    }
+
+    public function getAttribute() : ?string
+    {
+        return $this->attribute;
+    }
+
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    public function isDateTime() : bool
+    {
+        return $this->dateTime;
+    }
+
+    public function timeZone() : ?string
+    {
+        return $this->timeZone;
+    }
 }

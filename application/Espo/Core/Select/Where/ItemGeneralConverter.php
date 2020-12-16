@@ -73,12 +73,12 @@ class ItemGeneralConverter
         $this->itemTypedConverterFactory = $itemTypedConverterFactory;
     }
 
-    public function convert(QueryBuilder $queryBuilder, array $item) : array
+    public function convert(QueryBuilder $queryBuilder, Item $item) : array
     {
-        $type = $item['type'] ?? null;
-        $value = $item['value'] ?? null;
-        $attribute = $item['attribute'] ?? $item['field'] ?? null;
-        $isDateTime = $item['dateTime'] ?? false;
+        $type = $item->getType();
+        $value = $item->getValue();
+        $attribute = $item->getAttribute();
+        $isDateTime = $item->isDateTime();
 
         if ($attribute && !is_string($attribute)) {
             throw new Error("Bad 'attribute' in where item.");
@@ -160,7 +160,7 @@ class ItemGeneralConverter
         $whereClause = [];
 
         foreach ($value as $item) {
-            $subPart = $this->convert($queryBuilder, $item);
+            $subPart = $this->convert($queryBuilder, Item::fromArray($item));
 
             foreach ($subPart as $left => $right) {
                 if (!empty($right) || is_null($right) || $right === '' || $right === 0 || $right === false) {
@@ -190,7 +190,7 @@ class ItemGeneralConverter
             ->from($this->entityType);
 
         foreach ($value as $item) {
-            $part = $this->convert($sqQueryBuilder, $item);
+            $part = $this->convert($sqQueryBuilder, Item::fromArray($item));
 
             foreach ($part as $left => $right) {
                 if (!empty($right) || is_null($right) || $right === '' || $right === 0 || $right === false) {

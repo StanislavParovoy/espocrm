@@ -75,7 +75,7 @@ class Converter
         $whereClause = [];
 
         foreach ($where as $item) {
-            $part = $this->processItem($queryBuilder, $item);
+            $part = $this->processItem($queryBuilder, Item::fromArray($item));
 
             if (!empty($part)) {
                 continue;
@@ -89,11 +89,11 @@ class Converter
         return WhereClause::fromRaw($whereClause);
     }
 
-    protected function processItem(QueryBuilder $queryBuilder, array $item) : ?array
+    protected function processItem(QueryBuilder $queryBuilder, Item $item) : ?array
     {
-        $type = $item['type'] ?? null;
-        $value = $item['value'] ?? null;
-        $attribute = $item['attribute'] ?? $item['field'] ?? null;
+        $type = $item->getType();
+        $value = $item->getValue();
+        $attribute = $item->getAttribute();
 
         if (!$type) {
             throw new Error("Bad where definition. No type.");
