@@ -45,6 +45,7 @@ use Espo\Core\Select\{
     Applier\TextFilterApplier,
     Where\Params as WhereParams,
     Order\Params as OrderParams,
+    Text\FilterParams as TextFilterParams,
 };
 
 use Espo\{
@@ -252,10 +253,19 @@ class SelectBuilder
 
     protected function applyTextFilter()
     {
+        $noFullTextSearch = false;
+
+        if ($this->searchParams && $this->searchParams->noFullTextSearch()) {
+            $noFullTextSearch = true;
+        }
+
         $this->createTextFilterApplier()
             ->apply(
                 $this->queryBuilder,
-                $this->textFilter
+                $this->textFilter,
+                TextFilterParams::fromRaw([
+                    'noFullTextSearch' => $noFullTextSearch,
+                ])
             );
     }
 

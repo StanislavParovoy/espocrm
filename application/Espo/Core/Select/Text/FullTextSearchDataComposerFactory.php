@@ -27,62 +27,39 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams;
+namespace Espo\Core\Select\Text;
 
-use RuntimeException;
+use Espo\Core\{
+    InjectableFactory,
+    Utils\Metadata,
+};
 
-/**
- * Select parameters.
- *
- * @todo Add validation and normalization (from ORM\DB\BaseQuery).
- */
-class Select implements Query, Selecting
+class FullTextSearchDataComposerFactory
 {
-    use SelectingTrait;
-    use BaseTrait;
+    protected $injectableFactory;
+    protected $metadata;
 
-    const ORDER_ASC = 'ASC';
-    const ORDER_DESC = 'DESC';
-
-    /**
-     * Get an entity type.
-     */
-    public function getFrom() : ?string
+    public function __construct(InjectableFactory $injectableFactory, Metadata $metadata)
     {
-        return $this->params['from'] ?? null;
+        $this->injectableFactory = $injectableFactory;
+        $this->metadata = $metadata;
     }
 
-    /**
-     * Get select items.
-     */
-    public function getSelect() : array
+    public function create(string $entityType) : FullTextSearchDataComposer
     {
-        return $this->params['select'] ?? [];
+        $className = $this->getClassName($entityType);
+
+        return $this->injectableFactory->createWith($className, [
+            'entityType' => $entityType,
+        ]);
     }
 
-    /**
-     * Get order.
-     */
-    public function getOrder() : array
+    protected function getClassName(string $entityType) : string
     {
-        return $this->params['orderBy'] ?? [];
-    }
-
-    protected function validateRawParams(array $params)
-    {
-        $this->validateRawParamsSelecting($params);
-
-        if (
-            (
-                !empty($params['joins']) ||
-                !empty($params['leftJoins']) ||
-                !empty($params['whereClause']) ||
-                !empty($params['orderBy'])
-            )
-            &&
-            empty($params['from']) && empty($params['fromQuery'])
-        ) {
-            throw new RuntimeException("Select params: Missing 'from'.");
-        }
+        return
+            $this->metadata->get([
+                'selectDefs', $entityType, 'fullTextSearchDataComposerClassName'
+            ]) ??
+            FullTextSearchDataComposer::class;
     }
 }

@@ -27,62 +27,51 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams;
+namespace Espo\Core\Select\Text;
 
-use RuntimeException;
+use InvalidArgumentException;
 
-/**
- * Select parameters.
- *
- * @todo Add validation and normalization (from ORM\DB\BaseQuery).
- */
-class Select implements Query, Selecting
+class FullTextSearchData
 {
-    use SelectingTrait;
-    use BaseTrait;
+    private $expression = null;
 
-    const ORDER_ASC = 'ASC';
-    const ORDER_DESC = 'DESC';
+    private $fieldList = null;
 
-    /**
-     * Get an entity type.
-     */
-    public function getFrom() : ?string
+    private $columnList = false;
+
+    private function __construct()
     {
-        return $this->params['from'] ?? null;
     }
 
-    /**
-     * Get select items.
-     */
-    public function getSelect() : array
+    public static function fromArray(array $params) : self
     {
-        return $this->params['select'] ?? [];
-    }
+        $object = new self();
 
-    /**
-     * Get order.
-     */
-    public function getOrder() : array
-    {
-        return $this->params['orderBy'] ?? [];
-    }
+        $object->expression = $params['expression'] ?? null;
+        $object->fieldList = $params['fieldList'] ?? [];
+        $object->columnList = $params['columnList'] ?? [];
 
-    protected function validateRawParams(array $params)
-    {
-        $this->validateRawParamsSelecting($params);
-
-        if (
-            (
-                !empty($params['joins']) ||
-                !empty($params['leftJoins']) ||
-                !empty($params['whereClause']) ||
-                !empty($params['orderBy'])
-            )
-            &&
-            empty($params['from']) && empty($params['fromQuery'])
-        ) {
-            throw new RuntimeException("Select params: Missing 'from'.");
+        foreach ($params as $key => $value) {
+            if (!property_exists($object, $item)) {
+                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
+            }
         }
+
+        return $self;
+    }
+
+    public function getExpression() : string
+    {
+        return $this->expression;
+    }
+
+    public function getFieldList() : array
+    {
+        return $this->fieldList;
+    }
+
+    public function getColumnList() : array
+    {
+        return $this->columnList;
     }
 }

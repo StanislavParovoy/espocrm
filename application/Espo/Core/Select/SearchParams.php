@@ -105,6 +105,11 @@ class SearchParams
         return $this->rawParams['where'] ?? null;
     }
 
+    public function noFullTextSearch() : bool
+    {
+        return $rawParams['noFullTextSearch'];
+    }
+
     public static function fromRaw(array $params) : self
     {
         $object = new self();
@@ -173,6 +178,8 @@ class SearchParams
         $rawParams['primaryFilter'] = $primaryFilter;
         $rawParams['textFilter'] = $textFilter;
         $rawParams['where'] = $where;
+
+        $rawParams['noFullTextSearch'] = isset($params['q']);
 
         if ($where) {
             $this->adjustParams($rawParams);

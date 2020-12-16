@@ -27,62 +27,43 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams;
+namespace Espo\Core\Select\Text;
 
-use RuntimeException;
+use InvalidArgumentException;
 
-/**
- * Select parameters.
- *
- * @todo Add validation and normalization (from ORM\DB\BaseQuery).
- */
-class Select implements Query, Selecting
+class FilterParams
 {
-    use SelectingTrait;
-    use BaseTrait;
+    private $noFullTextSearch = false;
 
-    const ORDER_ASC = 'ASC';
-    const ORDER_DESC = 'DESC';
+    private $forceFullTextSearch = false;
 
-    /**
-     * Get an entity type.
-     */
-    public function getFrom() : ?string
+    private function __construct()
     {
-        return $this->params['from'] ?? null;
     }
 
-    /**
-     * Get select items.
-     */
-    public function getSelect() : array
+    public static function fromArray(array $params) : self
     {
-        return $this->params['select'] ?? [];
-    }
+        $object = new self();
 
-    /**
-     * Get order.
-     */
-    public function getOrder() : array
-    {
-        return $this->params['orderBy'] ?? [];
-    }
+        $object->noFullTextSearch = $params['noFullTextSearch'] ?? false;
+        $object->forceFullTextSearch = $params['forceFullTextSearch'] ?? false;
 
-    protected function validateRawParams(array $params)
-    {
-        $this->validateRawParamsSelecting($params);
-
-        if (
-            (
-                !empty($params['joins']) ||
-                !empty($params['leftJoins']) ||
-                !empty($params['whereClause']) ||
-                !empty($params['orderBy'])
-            )
-            &&
-            empty($params['from']) && empty($params['fromQuery'])
-        ) {
-            throw new RuntimeException("Select params: Missing 'from'.");
+        foreach ($params as $key => $value) {
+            if (!property_exists($object, $item)) {
+                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
+            }
         }
+
+        return $self;
+    }
+
+    public function noFullTextSearch() : bool
+    {
+        return $this->noFullTextSearch;
+    }
+
+    public function forceFullTextSearch() : bool
+    {
+        return $this->forceFullTextSearch;
     }
 }
