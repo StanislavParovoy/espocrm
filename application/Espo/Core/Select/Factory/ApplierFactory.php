@@ -50,6 +50,7 @@ class ApplierFactory
     const TEXT_FILTER = 'textFilter';
     const PRIMARY_FILTER = 'primaryFilter';
     const BOOL_FILTER_LIST = 'boolFilterList';
+    const ADDITIONAL = 'additional';
 
     protected $injectableFactory;
     protected $metadata;

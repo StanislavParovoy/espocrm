@@ -43,6 +43,7 @@ use Espo\Core\Select\{
     Applier\PrimaryFilterApplier,
     Applier\BoolFilterListApplier,
     Applier\TextFilterApplier,
+    Applier\AdditionalApplier,
     Where\Params as WhereParams,
     Order\Params as OrderParams,
     Text\FilterParams as TextFilterParams,
@@ -154,6 +155,8 @@ class SelectBuilder
         if ($this->applyAccessControlFilter) {
             $this->applyAccessControlFilter();
         }
+
+        $this->applyAdditional();
 
         return $this->queryBuilder->build();
     }
@@ -354,6 +357,14 @@ class SelectBuilder
         }
     }
 
+    protected function applyAdditional()
+    {
+        $this->createAdditionalApplier->apply(
+            $this->queryBuilder,
+            $this->searchParams
+        );
+    }
+
     protected function createWhereApplier() : WhereApplier
     {
         return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::WHERE);
@@ -390,6 +401,11 @@ class SelectBuilder
     }
 
     protected function createBoolFilterListApplier() : BoolFilterListApplier
+    {
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::BOOL_FILTER_LIST);
+    }
+
+    protected function createAdditionalApplier() : AdditionalApplier
     {
         return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::BOOL_FILTER_LIST);
     }
