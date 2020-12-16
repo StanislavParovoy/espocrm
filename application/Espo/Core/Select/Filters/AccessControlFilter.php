@@ -27,7 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select;
+namespace Espo\Core\Select\Filters;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,

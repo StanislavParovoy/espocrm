@@ -78,7 +78,7 @@ class TextFilterApplier
         User $user,
         Config $config,
         Metadata $metadata,
-        EntityManager $entityManager
+        EntityManager $entityManager,
         FullTextSearchDataComposerFactory $fullTextSearchDataComposerFactory
     ) {
         $this->entityType = $entityType;
@@ -329,7 +329,7 @@ class TextFilterApplier
     {
         $composer = $this->fullTextSearchDataComposerFactory->create($this->entityType);
 
-        $params = new FullTextSearchDataComposerParams::fromArray([
+        $params = FullTextSearchDataComposerParams::fromArray([
             'isAuxiliaryUse' => $isAuxiliaryUse,
         ]);
 
