@@ -30,80 +30,64 @@
 namespace tests\unit\Espo\Core\Select\AccessControl;
 
 use Espo\Core\{
-    Select\AccessControl\FilterFactory,
-    Select\AccessControlFilters\OnlyOwn,
-    Select\Helpers\FieldHelper,
+    Select\AccessControl\FilterResolverFactory,
+    Select\AccessControl\FilterResolver,
     Utils\Metadata,
     InjectableFactory,
+    AclManager,
+    Acl,
 };
 
 use Espo\{
     Entities\User,
 };
 
-class FilterFactoryTest extends \PHPUnit\Framework\TestCase
+class FilterResolverFactoryTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
         $this->injectableFactory = $this->createMock(InjectableFactory::class);
         $this->metadata = $this->createMock(Metadata::class);
         $this->user = $this->createMock(User::class);
-        $this->fieldHelper = $this->createMock(FieldHelper::class);
+        $this->aclManager = $this->createMock(AclManager::class);
+        $this->acl = $this->createMock(Acl::class);
 
-        $this->factory = new FilterFactory(
+        $this->factory = new FilterResolverFactory(
             $this->injectableFactory,
             $this->metadata,
+            $this->aclManager
         );
+
+        $this->aclManager
+            ->expects($this->any())
+            ->method('createUserAcl')
+            ->with($this->user)
+            ->willReturn($this->acl);
     }
 
     public function testCreate1()
     {
-        $this->prepareFactoryTest(null, OnlyOwn::class, 'onlyOwn');
+        $this->prepareFactoryTest(null);
     }
 
     public function testCreate2()
     {
-        $this->prepareFactoryTest('SomeClass', OnlyOwn::class, 'onlyOwn');
+        $this->prepareFactoryTest('SomeClass');
     }
 
-    protected function prepareFactoryTest(?string $className, string $defaultClassName, string $name)
+    protected function prepareFactoryTest(?string $className)
     {
         $entityType = 'Test';
 
+        $defaultClassName = FilterResolver::class;
+
         $object = $this->createMock($defaultClassName);
 
-        $this->injectableFactory
-            ->expects($this->at(0))
-            ->method('createWith')
-            ->with(
-                FieldHelper::class,
-                [
-                    'entityType' => $entityType,
-                ]
-            )
-            ->willReturn($this->fieldHelper);
-
         $this->metadata
             ->expects($this->at(0))
             ->method('get')
             ->with([
-                'selectDefs',
-                $entityType,
-                'accessControlFilters',
-                $name,
-                'className',
-            ])
-            ->willReturn($className);
-
-        $this->metadata
-            ->expects($this->at(1))
-            ->method('get')
-            ->with([
-                'selectDefs',
-                $entityType,
-                'accessControlFilters',
-                $name,
-                'className',
+                'selectDefs', $entityType, 'accessControlFilterResolverClassName'
             ])
             ->willReturn($className);
 
@@ -112,44 +96,20 @@ class FilterFactoryTest extends \PHPUnit\Framework\TestCase
         $object = $this->createMock($defaultClassName);
 
         $this->injectableFactory
-            ->expects($this->at(1))
+            ->expects($this->once())
             ->method('createWith')
             ->with(
                 $className,
                 [
                     'entityType' => $entityType,
                     'user' => $this->user,
-                    'fieldHelper' => $this->fieldHelper,
+                    'acl' => $this->acl,
                 ]
             )
             ->willReturn($object);
 
-        $resultObject = $this->factory->create(
-            $entityType,
-            $this->user,
-            $name
-        );
+        $resultObject = $this->factory->create($entityType, $this->user);
 
         $this->assertEquals($object, $resultObject);
-
-        $this->assertTrue(
-            $this->factory->has($entityType, $name)
-        );
-
-        $this->metadata
-            ->expects($this->at(0))
-            ->method('get')
-            ->with([
-                'selectDefs',
-                $entityType,
-                'accessControlFilters',
-                'badName',
-                'className',
-            ])
-            ->willReturn(null);
-
-        $this->assertFalse(
-            $this->factory->has($entityType, 'badName')
-        );
     }
 }
