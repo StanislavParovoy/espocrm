@@ -39,7 +39,7 @@ use Espo\{
     Entities\User,
 };
 
-class ItemTypedConverterFactory
+class ItemConverterFactory
 {
     protected $injectableFactory;
     protected $metadata;
@@ -60,7 +60,7 @@ class ItemTypedConverterFactory
         $className = $this->getClassName($type);
 
         if (!$className) {
-            throw new Error("Where item type class name is not defined.");
+            throw new Error("Where item converter class name is not defined.");
         }
 
         return $this->injectableFactory->createWith($className, [
@@ -72,7 +72,7 @@ class ItemTypedConverterFactory
     protected function getClassName(string $type) : ?string
     {
         return $this->metadata->get([
-            'app', 'select', 'whereItemTypes', $type, 'converterClassName'
+            'app', 'select', 'whereItemConverterClassNameMap', $type
         ]);
     }
 }

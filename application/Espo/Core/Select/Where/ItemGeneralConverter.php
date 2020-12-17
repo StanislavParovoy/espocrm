@@ -53,7 +53,7 @@ class ItemGeneralConverter
     protected $entityManager;
     protected $config;
     protected $scanner;
-    protected $itemTypedConverterFactory;
+    protected $itemConverterFactory;
 
     public function __construct(
         string $entityType,
@@ -62,7 +62,7 @@ class ItemGeneralConverter
         EntityManager $entityManager,
         Config $config,
         Scanner $scanner,
-        ItemTypedConverterFactory $itemTypedConverterFactory
+        ItemConverterFactory $itemConverterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
@@ -70,7 +70,7 @@ class ItemGeneralConverter
         $this->entityManager = $entityManager;
         $this->config = $config;
         $this->scanner = $scanner;
-        $this->itemTypedConverterFactory = $itemTypedConverterFactory;
+        $this->itemConverterFactory = $itemConverterFactory;
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : array
@@ -137,11 +137,11 @@ class ItemGeneralConverter
             return $this->$methodName($queryBuilder, $attribute, $value);
         }
 
-        if (!$this->itemTypedConverterFactory->has($type)) {
+        if (!$this->itemConverterFactory->has($type)) {
             throw new Error("Unknown where item type.");
         }
 
-        $converter = $this->itemTypedConverterFactory->create($type, $this->entityType, $this->user);
+        $converter = $this->itemConverterFactory->create($type, $this->entityType, $this->user);
 
         return $converter->convert($queryBuilder, $item);
     }
@@ -228,7 +228,6 @@ class ItemGeneralConverter
             $link,
             $alias,
         ]);
-
 
         $columnKey = $alias . 'Middle.' . $column;
 
