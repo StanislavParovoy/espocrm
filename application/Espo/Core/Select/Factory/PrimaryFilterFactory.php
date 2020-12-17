@@ -32,6 +32,8 @@ namespace Espo\Core\Select\Factory;
 use Espo\Core\{
     Exceptions\Error,
     Select\Filters\PrimaryFilter,
+    InjectableFactory,
+    Utils\Metadata,
 };
 
 use Espo\{
@@ -65,7 +67,7 @@ class PrimaryFilterFactory
 
     public function has(string $entityType, string $name) : bool
     {
-        return (bool) $this->getClassName();
+        return (bool) $this->getClassName($entityType, $name);
     }
 
     protected function getClassName(string $entityType, string $name) : ?string
@@ -88,7 +90,7 @@ class PrimaryFilterFactory
             return $className;
         }
 
-        $className = $this->getDefaultClassName();
+        $className = $this->getDefaultClassName($name);
 
         if (!class_exists($className)) {
             return null;
