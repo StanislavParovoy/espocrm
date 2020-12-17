@@ -29,9 +29,7 @@
 
 namespace Espo\Core\Select;
 
-use Espo\Core\{
-    Exceptions\Error,
-};
+use InvalidArgumentException;
 
 /**
  * Search parameters.
@@ -64,15 +62,7 @@ class SearchParams
 
     public function getOrder() : ?string
     {
-        if (is_null($this->rawParams['order'])) {
-            return null;
-        }
-
-        if (strtolower($this->rawParams['order']) === 'desc') {
-            return self::ORDER_DESC;
-        }
-
-        return self::ORDER_ASC;
+        return $this->rawParams['order'];
     }
 
     public function getOffset() : ?int
@@ -107,7 +97,7 @@ class SearchParams
 
     public function noFullTextSearch() : bool
     {
-        return $rawParams['noFullTextSearch'];
+        return $this->rawParams['noFullTextSearch'];
     }
 
     public static function fromRaw(array $params) : self
@@ -130,43 +120,61 @@ class SearchParams
         $where = $params['where'] ?? null;
 
         if ($select && !is_array($select)) {
-            throw new Error("select should be array.");
+            throw new InvalidArgumentException("select should be array.");
+        }
+        else if (is_array($select)) {
+            foreach ($select as $item) {
+                if (!is_string($item)) {
+                    throw new InvalidArgumentException("select has non-string item.");
+                }
+            }
         }
 
         if ($orderBy && !is_string($orderBy)) {
-            throw new Error("orderBy should be string.");
+            throw new InvalidArgumentException("orderBy should be string.");
         }
 
         if ($order && !is_string($order)) {
-            throw new Error("order should be string.");
+            throw new InvalidArgumentException("order should be string.");
         }
 
         if (!is_array($boolFilterList)) {
-            throw new Error("boolFilterList should be array.");
+            throw new InvalidArgumentException("boolFilterList should be array.");
+        }
+        else {
+            foreach ($boolFilterList as $item) {
+                if (!is_string($item)) {
+                    throw new InvalidArgumentException("boolFilterList has non-string item.");
+                }
+            }
         }
 
         if ($primaryFilter && !is_string($primaryFilter)) {
-            throw new Error("primaryFilter should be string.");
+            throw new InvalidArgumentException("primaryFilter should be string.");
         }
 
         if ($textFilter && !is_string($textFilter)) {
-            throw new Error("textFilter should be string.");
+            throw new InvalidArgumentException("textFilter should be string.");
         }
 
         if ($where && !is_array($where)) {
-            throw new Error("where should be array.");
+            throw new InvalidArgumentException("where should be array.");
         }
 
         if ($offset && !is_int($offset)) {
-            throw new Error("offset should be int.");
+            throw new InvalidArgumentException("offset should be int.");
         }
 
         if ($maxSize && !is_int($maxSize)) {
-            throw new Error("maxSize should be int.");
+            throw new InvalidArgumentException("maxSize should be int.");
         }
 
         if ($order) {
-            $order = strtolower($order);
+            $order = strtoupper($order);
+
+            if ($order !== self::ORDER_ASC && $order !== self::ORDER_DESC) {
+                throw new InvalidArgumentException("order value is bad.");
+            }
         }
 
         $rawParams['select'] = $select;
@@ -182,7 +190,7 @@ class SearchParams
         $rawParams['noFullTextSearch'] = isset($params['q']);
 
         if ($where) {
-            $this->adjustParams($rawParams);
+            $object->adjustParams($rawParams);
         }
 
         $object->rawParams = $rawParams;
@@ -208,7 +216,6 @@ class SearchParams
             }
             else if ($type == 'textFilter' && $value) {
                 $params['textFilter'] = $value;
-
             }
             else if ($type == 'primary' && $value) {
                 $params['primaryFilter'] = $value;
