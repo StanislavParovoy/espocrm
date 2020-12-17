@@ -30,7 +30,6 @@
 namespace Espo\Core\Select\Factory;
 
 use Espo\Core\{
-    Exceptions\Error,
     InjectableFactory,
     Utils\Metadata,
     Select\SelectManagerFactory,
