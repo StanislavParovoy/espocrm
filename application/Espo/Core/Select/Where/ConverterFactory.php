@@ -50,14 +50,14 @@ class ConverterFactory
 
     public function create(string $entityType, User $user) : Converter
     {
-        $itemConverterClassName = $this->getItemConverterClassName($entityType, $name);
+        $itemConverterClassName = $this->getItemConverterClassName($entityType);
 
         $itemConverter = $this->injectableFactory->createWith($itemConverterClassName, [
             'entityType' => $entityType,
             'user' => $user,
         ]);
 
-        $dateTimeItemTransformerClassName = $this->getDateTimeItemTransformerClassName($entityType, $name);
+        $dateTimeItemTransformerClassName = $this->getDateTimeItemTransformerClassName($entityType);
 
         $dateTimeItemTransformer = $this->injectableFactory->createWith($dateTimeItemTransformerClassName, [
             'entityType' => $entityType,

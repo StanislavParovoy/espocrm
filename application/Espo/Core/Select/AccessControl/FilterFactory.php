@@ -33,6 +33,8 @@ use Espo\Core\{
     Exceptions\Error,
     Select\Filters\AccessControlFilter,
     Select\Helpers\FieldHelper,
+    InjectableFactory,
+    Utils\Metadata,
 };
 
 use Espo\{
@@ -71,7 +73,7 @@ class FilterFactory
 
     public function has(string $entityType, string $name) : bool
     {
-        return (bool) $this->getClassName();
+        return (bool) $this->getClassName($entityType, $name);
     }
 
     protected function getClassName(string $entityType, string $name) : ?string
@@ -94,7 +96,7 @@ class FilterFactory
             return $className;
         }
 
-        $className = $this->getDefaultClassName();
+        $className = $this->getDefaultClassName($name);
 
         if (!class_exists($className)) {
             return null;

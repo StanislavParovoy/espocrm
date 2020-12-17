@@ -27,7 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace tests\unit\Espo\Core\Select;
+namespace tests\unit\Espo\Core\Select\Factory;
 
 use Espo\Core\{
     Select\Factory\PrimaryFilterFactory,

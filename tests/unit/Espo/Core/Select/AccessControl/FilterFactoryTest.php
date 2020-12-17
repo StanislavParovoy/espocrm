@@ -27,11 +27,12 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace tests\unit\Espo\Core\Select\Factory;
+namespace tests\unit\Espo\Core\Select\AccessControl;
 
 use Espo\Core\{
-    Select\Factory\BoolFilterFactory,
-    Select\BoolFilters\Followed,
+    Select\AccessControl\FilterFactory,
+    Select\AccessControlFilters\OnlyOwn,
+    Select\Helpers\FieldHelper,
     Utils\Metadata,
     InjectableFactory,
 };
@@ -40,15 +41,16 @@ use Espo\{
     Entities\User,
 };
 
-class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
+class FilterFactoryTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
         $this->injectableFactory = $this->createMock(InjectableFactory::class);
         $this->metadata = $this->createMock(Metadata::class);
         $this->user = $this->createMock(User::class);
+        $this->fieldHelper = $this->createMock(FieldHelper::class);
 
-        $this->factory = new BoolFilterFactory(
+        $this->factory = new FilterFactory(
             $this->injectableFactory,
             $this->metadata,
         );
@@ -56,12 +58,25 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
 
     public function testCreate1()
     {
-        $this->prepareFactoryTest(null, Followed::class, 'followed');
+        $this->prepareFactoryTest(null, OnlyOwn::class, 'onlyOwn');
     }
 
     protected function prepareFactoryTest(?string $className, string $defaultClassName, string $name)
     {
         $entityType = 'Test';
+
+        $object = $this->createMock($defaultClassName);
+
+        $this->injectableFactory
+            ->expects($this->at(0))
+            ->method('createWith')
+            ->with(
+                FieldHelper::class,
+                [
+                    'entityType' => $entityType,
+                ]
+            )
+            ->willReturn($this->fieldHelper);
 
         $this->metadata
             ->expects($this->at(0))
@@ -69,7 +84,7 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
             ->with([
                 'selectDefs',
                 $entityType,
-                'boolFilters',
+                'accessControlFilters',
                 $name,
                 'className',
             ])
@@ -81,7 +96,7 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
             ->with([
                 'selectDefs',
                 $entityType,
-                'boolFilters',
+                'accessControlFilters',
                 $name,
                 'className',
             ])
@@ -91,15 +106,17 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
 
         $object = $this->createMock($defaultClassName);
 
-        $with = [
-            'entityType' => $entityType,
-            'user' => $this->user,
-        ];
-
         $this->injectableFactory
-            ->expects($this->once())
+            ->expects($this->at(1))
             ->method('createWith')
-            ->with($className, $with)
+            ->with(
+                $className,
+                [
+                    'entityType' => $entityType,
+                    'user' => $this->user,
+                    'fieldHelper' => $this->fieldHelper,
+                ]
+            )
             ->willReturn($object);
 
         $resultObject = $this->factory->create(
@@ -120,7 +137,7 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
             ->with([
                 'selectDefs',
                 $entityType,
-                'boolFilters',
+                'accessControlFilters',
                 'badName',
                 'className',
             ])
