@@ -50,7 +50,7 @@ class PrimaryFilterFactoryTest extends \PHPUnit\Framework\TestCase
 
         $this->factory = new PrimaryFilterFactory(
             $this->injectableFactory,
-            $this->metadata,
+            $this->metadata
         );
     }
 

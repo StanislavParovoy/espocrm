@@ -52,7 +52,7 @@ class FilterFactoryTest extends \PHPUnit\Framework\TestCase
 
         $this->factory = new FilterFactory(
             $this->injectableFactory,
-            $this->metadata,
+            $this->metadata
         );
     }
 

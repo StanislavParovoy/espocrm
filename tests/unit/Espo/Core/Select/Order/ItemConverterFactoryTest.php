@@ -46,7 +46,7 @@ class ItemConverterFactoryTest extends \PHPUnit\Framework\TestCase
 
         $this->factory = new ItemConverterFactory(
             $this->injectableFactory,
-            $this->metadata,
+            $this->metadata
         );
     }
 

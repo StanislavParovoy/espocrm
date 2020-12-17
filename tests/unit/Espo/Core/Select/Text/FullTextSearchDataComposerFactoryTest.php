@@ -27,28 +27,24 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace tests\unit\Espo\Core\Select\Factory;
+namespace tests\unit\Espo\Core\Select\Text;
 
 use Espo\Core\{
-    Select\Factory\BoolFilterFactory,
-    Select\BoolFilters\Followed,
+    Select\Text\FullTextSearchDataComposerFactory,
+    Select\Text\FullTextSearchDataComposer,
     Utils\Metadata,
     InjectableFactory,
 };
 
-use Espo\{
-    Entities\User,
-};
 
-class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
+class FullTextSearchDataComposerFactoryTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
         $this->injectableFactory = $this->createMock(InjectableFactory::class);
         $this->metadata = $this->createMock(Metadata::class);
-        $this->user = $this->createMock(User::class);
 
-        $this->factory = new BoolFilterFactory(
+        $this->factory = new FullTextSearchDataComposerFactory(
             $this->injectableFactory,
             $this->metadata
         );
@@ -56,39 +52,27 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
 
     public function testCreate1()
     {
-        $this->prepareFactoryTest(null, Followed::class, 'followed');
+        $this->prepareFactoryTest(null);
     }
 
     public function testCreate2()
     {
-        $this->prepareFactoryTest('SomeClass', Followed::class, 'followed');
+        $this->prepareFactoryTest('SomeClass');
     }
 
-    protected function prepareFactoryTest(?string $className, string $defaultClassName, string $name)
+    protected function prepareFactoryTest(?string $className)
     {
         $entityType = 'Test';
+
+        $defaultClassName = FullTextSearchDataComposer::class;
+
+        $object = $this->createMock($defaultClassName);
 
         $this->metadata
             ->expects($this->at(0))
             ->method('get')
             ->with([
-                'selectDefs',
-                $entityType,
-                'boolFilters',
-                $name,
-                'className',
-            ])
-            ->willReturn($className);
-
-        $this->metadata
-            ->expects($this->at(1))
-            ->method('get')
-            ->with([
-                'selectDefs',
-                $entityType,
-                'boolFilters',
-                $name,
-                'className',
+                'selectDefs', $entityType, 'fullTextSearchDataComposerClassName'
             ])
             ->willReturn($className);
 
@@ -96,43 +80,19 @@ class BoolFilterFactoryTest extends \PHPUnit\Framework\TestCase
 
         $object = $this->createMock($defaultClassName);
 
-        $with = [
-            'entityType' => $entityType,
-            'user' => $this->user,
-        ];
-
         $this->injectableFactory
             ->expects($this->once())
             ->method('createWith')
-            ->with($className, $with)
+            ->with(
+                $className,
+                [
+                    'entityType' => $entityType,
+                ]
+            )
             ->willReturn($object);
 
-        $resultObject = $this->factory->create(
-            $entityType,
-            $this->user,
-            $name
-        );
+        $resultObject = $this->factory->create($entityType);
 
         $this->assertEquals($object, $resultObject);
-
-        $this->assertTrue(
-            $this->factory->has($entityType, $name)
-        );
-
-        $this->metadata
-            ->expects($this->at(0))
-            ->method('get')
-            ->with([
-                'selectDefs',
-                $entityType,
-                'boolFilters',
-                'badName',
-                'className',
-            ])
-            ->willReturn(null);
-
-        $this->assertFalse(
-            $this->factory->has($entityType, 'badName')
-        );
     }
 }
