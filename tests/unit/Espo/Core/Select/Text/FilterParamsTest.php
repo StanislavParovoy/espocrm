@@ -27,43 +27,62 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Text;
+namespace tests\unit\Espo\Core\Select\Text;
+
+use Espo\Core\{
+    Select\Text\FilterParams,
+};
 
 use InvalidArgumentException;
 
-class FilterParams
+class FilterParamsTest extends \PHPUnit\Framework\TestCase
 {
-    private $noFullTextSearch = false;
-
-    private $forceFullTextSearch = false;
-
-    private function __construct()
+    protected function setUp() : void
     {
     }
 
-    public static function fromArray(array $params) : self
+    public function testFromArray()
     {
-        $object = new self();
+        $item = FilterParams::fromArray([
+            'noFullTextSearch' => true,
+            'forceFullTextSearch' => true,
+        ]);
 
-        $object->noFullTextSearch = $params['noFullTextSearch'] ?? false;
-        $object->forceFullTextSearch = $params['forceFullTextSearch'] ?? false;
+        $this->assertTrue($item->noFullTextSearch());
+        $this->assertTrue($item->forceFullTextSearch());
 
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $key)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
-        }
+        $item = FilterParams::fromArray([
+            'noFullTextSearch' => false,
+            'forceFullTextSearch' => false,
+        ]);
 
-        return $object;
+        $this->assertFalse($item->noFullTextSearch());
+        $this->assertFalse($item->forceFullTextSearch());
+
+        $item = FilterParams::fromArray([
+            'noFullTextSearch' => false,
+            'forceFullTextSearch' => true,
+        ]);
+
+        $this->assertFalse($item->noFullTextSearch());
+        $this->assertTrue($item->forceFullTextSearch());
     }
 
-    public function noFullTextSearch() : bool
+    public function testEmpty()
     {
-        return $this->noFullTextSearch;
+        $item = FilterParams::fromArray([
+        ]);
+
+        $this->assertFalse($item->noFullTextSearch());
+        $this->assertFalse($item->forceFullTextSearch());
     }
 
-    public function forceFullTextSearch() : bool
+    public function testNonExistingParam()
     {
-        return $this->forceFullTextSearch;
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = FilterParams::fromArray([
+            'bad' => 'd',
+        ]);
     }
 }

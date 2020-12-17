@@ -27,43 +27,49 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Text;
+namespace tests\unit\Espo\Core\Select\Text;
+
+use Espo\Core\{
+    Select\Text\FullTextSearchData,
+};
 
 use InvalidArgumentException;
 
-class FilterParams
+class FullTextSearchDataTest extends \PHPUnit\Framework\TestCase
 {
-    private $noFullTextSearch = false;
-
-    private $forceFullTextSearch = false;
-
-    private function __construct()
+    protected function setUp() : void
     {
     }
 
-    public static function fromArray(array $params) : self
+    public function testFromArray()
     {
-        $object = new self();
+        $item = FullTextSearchData::fromArray([
+            'expression' => 'TEST',
+            'fieldList' => ['test'],
+            'columnList' => ['column'],
+        ]);
 
-        $object->noFullTextSearch = $params['noFullTextSearch'] ?? false;
-        $object->forceFullTextSearch = $params['forceFullTextSearch'] ?? false;
-
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $key)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
-        }
-
-        return $object;
+        $this->assertEquals('TEST', $item->getExpression());
+        $this->assertEquals(['test'], $item->getFieldList());
+        $this->assertEquals(['column'], $item->getColumnList());
     }
 
-    public function noFullTextSearch() : bool
+    public function testEmpty()
     {
-        return $this->noFullTextSearch;
+        $item = FullTextSearchData::fromArray([
+            'expression' => 'TEST',
+        ]);
+
+        $this->assertEquals([], $item->getFieldList());
+        $this->assertEquals([], $item->getColumnList());
     }
 
-    public function forceFullTextSearch() : bool
+    public function testNonExistingParam()
     {
-        return $this->forceFullTextSearch;
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = FullTextSearchData::fromArray([
+            'bad' => 'd',
+        ]);
     }
 }

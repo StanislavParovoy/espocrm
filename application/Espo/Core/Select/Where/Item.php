@@ -60,12 +60,20 @@ class Item
         unset($params['field']);
 
         foreach ($params as $key => $value) {
-            if (!property_exists($object, $item)) {
+            if (!property_exists($object, $key)) {
                 throw new InvalidArgumentException("Unknown parameter '{$key}'.");
             }
         }
 
-        return $self;
+        if (!$object->type) {
+            throw new InvalidArgumentException("No 'type' in where item.");
+        }
+
+        if (!$object->attribute) {
+            throw new InvalidArgumentException("No 'attribute' in where item.");
+        }
+
+        return $object;
     }
 
     public function getType() : ?string
@@ -88,7 +96,7 @@ class Item
         return $this->dateTime;
     }
 
-    public function timeZone() : ?string
+    public function getTimeZone() : ?string
     {
         return $this->timeZone;
     }

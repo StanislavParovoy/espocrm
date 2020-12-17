@@ -49,12 +49,12 @@ class Params
         $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
 
         foreach ($params as $key => $value) {
-            if (!property_exists($object, $item)) {
+            if (!property_exists($object, $key)) {
                 throw new InvalidArgumentException("Unknown parameter '{$key}'.");
             }
         }
 
-        return $self;
+        return $object;
     }
 
     public function applyWherePermissionsCheck() : bool

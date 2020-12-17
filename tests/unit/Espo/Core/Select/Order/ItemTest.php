@@ -27,43 +27,64 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Text;
+namespace tests\unit\Espo\Core\Select\Order;
+
+use Espo\Core\{
+    Select\Order\Item,
+};
 
 use InvalidArgumentException;
 
-class FilterParams
+class ItemTest extends \PHPUnit\Framework\TestCase
 {
-    private $noFullTextSearch = false;
-
-    private $forceFullTextSearch = false;
-
-    private function __construct()
+    protected function setUp() : void
     {
     }
 
-    public static function fromArray(array $params) : self
+    public function testFromArray()
     {
-        $object = new self();
+        $item = Item::fromArray([
+            'order' => 'DESC',
+            'orderBy' => 'test',
+        ]);
 
-        $object->noFullTextSearch = $params['noFullTextSearch'] ?? false;
-        $object->forceFullTextSearch = $params['forceFullTextSearch'] ?? false;
-
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $key)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
-        }
-
-        return $object;
+        $this->assertEquals('DESC', $item->getOrder());
+        $this->assertEquals('test', $item->getOrderBy());
     }
 
-    public function noFullTextSearch() : bool
+    public function testEmpty()
     {
-        return $this->noFullTextSearch;
+        $item = Item::fromArray([
+        ]);
+
+        $this->assertEquals(null, $item->getOrder());
+        $this->assertEquals(null, $item->getOrderBy());
     }
 
-    public function forceFullTextSearch() : bool
+    public function testBadOrderBy()
     {
-        return $this->forceFullTextSearch;
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = Item::fromArray([
+            'orderBy' => 1,
+        ]);
+    }
+
+    public function testBadOrder()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = Item::fromArray([
+            'order' => 'd',
+        ]);
+    }
+
+    public function testNonExistingParam()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = Item::fromArray([
+            'bad' => 'd',
+        ]);
     }
 }

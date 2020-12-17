@@ -78,13 +78,8 @@ class ItemGeneralConverter
         $type = $item->getType();
         $value = $item->getValue();
         $attribute = $item->getAttribute();
-        $isDateTime = $item->isDateTime();
 
-        if ($attribute && !is_string($attribute)) {
-            throw new Error("Bad 'attribute' in where item.");
-        }
-
-        if ($isDateTime) {
+        if ($item->isDateTime()) {
             return $this->convert(
                 $this->dateTimeItemTransformer->transform($item)
             );

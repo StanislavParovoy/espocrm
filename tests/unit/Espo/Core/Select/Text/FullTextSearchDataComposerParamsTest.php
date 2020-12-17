@@ -27,43 +27,46 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Text;
+namespace tests\unit\Espo\Core\Select\Text;
+
+use Espo\Core\{
+    Select\Text\FullTextSearchDataComposerParams,
+};
 
 use InvalidArgumentException;
 
-class FilterParams
+class FullTextSearchDataComposerParamsTest extends \PHPUnit\Framework\TestCase
 {
-    private $noFullTextSearch = false;
-
-    private $forceFullTextSearch = false;
-
-    private function __construct()
+    protected function setUp() : void
     {
     }
 
-    public static function fromArray(array $params) : self
+    public function testFromArray()
     {
-        $object = new self();
+        $item = FullTextSearchDataComposerParams::fromArray([
+            'isAuxiliaryUse' => true,
+        ]);
 
-        $object->noFullTextSearch = $params['noFullTextSearch'] ?? false;
-        $object->forceFullTextSearch = $params['forceFullTextSearch'] ?? false;
+        $this->assertTrue($item->isAuxiliaryUse());
 
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $key)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
-        }
+        $item = FullTextSearchDataComposerParams::fromArray([
+            'isAuxiliaryUse' => false,
+        ]);
 
-        return $object;
+        $this->assertFalse($item->isAuxiliaryUse());
+
+        $item = FullTextSearchDataComposerParams::fromArray([
+        ]);
+
+        $this->assertFalse($item->isAuxiliaryUse());
     }
 
-    public function noFullTextSearch() : bool
+    public function testNonExistingParam()
     {
-        return $this->noFullTextSearch;
-    }
+        $this->expectException(InvalidArgumentException::class);
 
-    public function forceFullTextSearch() : bool
-    {
-        return $this->forceFullTextSearch;
+        $params = FullTextSearchDataComposerParams::fromArray([
+            'bad' => 'd',
+        ]);
     }
 }

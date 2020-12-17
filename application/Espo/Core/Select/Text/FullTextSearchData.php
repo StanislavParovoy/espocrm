@@ -52,12 +52,16 @@ class FullTextSearchData
         $object->columnList = $params['columnList'] ?? [];
 
         foreach ($params as $key => $value) {
-            if (!property_exists($object, $item)) {
+            if (!property_exists($object, $key)) {
                 throw new InvalidArgumentException("Unknown parameter '{$key}'.");
             }
         }
 
-        return $self;
+        if (!$object->expression || !is_string($object->expression)) {
+            throw new InvalidArgumentException("Bad expression.");
+        }
+
+        return $object;
     }
 
     public function getExpression() : string

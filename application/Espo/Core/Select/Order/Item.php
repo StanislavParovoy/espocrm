@@ -29,6 +29,8 @@
 
 namespace Espo\Core\Select\Order;
 
+use Espo\Core\Select\SearchParams;
+
 use InvalidArgumentException;
 
 class Item
@@ -49,12 +51,24 @@ class Item
         $object->order = $params['order'] ?? null;
 
         foreach ($params as $key => $value) {
-            if (!property_exists($object, $item)) {
+            if (!property_exists($object, $key)) {
                 throw new InvalidArgumentException("Unknown parameter '{$key}'.");
             }
         }
 
-        return $self;
+        if ($object->orderBy && !is_string($object->orderBy)) {
+            throw new InvalidArgumentException("Bad orderBy.");
+        }
+
+        if (
+            $object->order &&
+            $object->order !== SearchParams::ORDER_ASC &&
+            $object->order !== SearchParams::ORDER_DESC
+        ) {
+            throw new InvalidArgumentException("Bad order.");
+        }
+
+        return $object;
     }
 
     public function getOrderBy() : ?string
