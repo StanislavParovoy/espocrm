@@ -60,15 +60,18 @@ class PermissionsChecker
     public function check(array $where, Params $params)
     {
         foreach ($where as $item) {
-            $this->checkItem($item, $params);
+            $this->checkItem(
+                Item::fromArray($item),
+                $params
+            );
         }
     }
 
-    protected function checkItem(array $item, Params $params)
+    protected function checkItem(Item $item, Params $params)
     {
-        $attribute = $item['attribute'] ?? $item['field'] ?? null;
-        $type = $item['type'] ?? null;
-        $value = $item['value'] ?? null;
+        $type = $item->getType();
+        $attribute = $item->getAttribute();
+        $value = $item->getValue();
 
         $forbidComplexExpressions = $params->forbidComplexExpressions();
         $checkWherePermission = $params->applyWherePermissionsCheck();
@@ -122,7 +125,6 @@ class PermissionsChecker
         }
 
         if (
-            $type &&
             in_array($type, ['isLinked', 'isNotLinked', 'linkedWith', 'notLinkedWith', 'isUserFromTeams'])
         ) {
             if (in_array($attribute, $this->acl->getScopeForbiddenFieldList($entityType))) {

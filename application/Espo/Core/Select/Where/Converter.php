@@ -92,8 +92,8 @@ class Converter
     protected function processItem(QueryBuilder $queryBuilder, Item $item) : ?array
     {
         $type = $item->getType();
-        $value = $item->getValue();
         $attribute = $item->getAttribute();
+        $value = $item->getValue();
 
         if (!$type) {
             throw new Error("Bad where definition. No type.");

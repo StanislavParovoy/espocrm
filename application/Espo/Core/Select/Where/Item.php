@@ -76,12 +76,12 @@ class Item
         return $object;
     }
 
-    public function getType() : ?string
+    public function getType() : string
     {
         return $this->type;
     }
 
-    public function getAttribute() : ?string
+    public function getAttribute() : string
     {
         return $this->attribute;
     }

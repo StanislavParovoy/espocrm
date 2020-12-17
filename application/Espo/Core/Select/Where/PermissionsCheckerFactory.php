@@ -50,7 +50,7 @@ class PermissionsCheckerFactory
     {
         $acl = $this->aclManager->createUserAcl($user);
 
-        $this->injectableFactory->createWith(PermissionsChecker::class, [
+        return $this->injectableFactory->createWith(PermissionsChecker::class, [
             'entityType' => $entityType,
             'acl' => $acl,
         ]);
