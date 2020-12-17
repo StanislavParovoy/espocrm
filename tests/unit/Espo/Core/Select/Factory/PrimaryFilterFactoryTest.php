@@ -59,6 +59,11 @@ class PrimaryFilterFactoryTest extends \PHPUnit\Framework\TestCase
         $this->prepareFactoryTest(null, Followed::class, 'followed');
     }
 
+    public function testCreate2()
+    {
+        $this->prepareFactoryTest('SomeClass', Followed::class, 'followed');
+    }
+
     protected function prepareFactoryTest(?string $className, string $defaultClassName, string $name)
     {
         $entityType = 'Test';

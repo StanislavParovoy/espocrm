@@ -53,7 +53,7 @@ class ItemConverterFactory
 
     public function create(string $entityType, string $field) : ItemConverter
     {
-        $className = $this->getClassName($type);
+        $className = $this->getClassName($entityType, $field);
 
         if (!$className) {
             throw new Error("Order item converter class name is not defined.");

@@ -27,7 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Order;
+namespace Espo\Core\Select\Order\ItemConverters;
 
 use Espo\Core\{
     Select\Order\ItemConverter,
