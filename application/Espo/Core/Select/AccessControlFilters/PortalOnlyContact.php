@@ -33,7 +33,7 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     Core\Select\Filters\AccessControlFilter,
     Core\Select\Helpers\FieldHelper,
-    Enities\User,
+    Entities\User,
 };
 
 class PortalOnlyContact implements AccessControlFilter

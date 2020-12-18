@@ -33,7 +33,7 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     Core\Select\Filters\AccessControlFilter,
     Core\Select\Helpers\FieldHelper,
-    Enities\User,
+    Entities\User,
 };
 
 class OnlyOwn implements AccessControlFilter
@@ -63,7 +63,7 @@ class OnlyOwn implements AccessControlFilter
             return;
         }
 
-        if ($this->hasAssignedUserField()) {
+        if ($this->fieldHelper->hasAssignedUserField()) {
             $queryBuilder->where([
                 'assignedUserId' => $this->user->id,
             ]);
@@ -71,7 +71,7 @@ class OnlyOwn implements AccessControlFilter
             return;
         }
 
-        if ($this->hasCreatedByField()) {
+        if ($this->fieldHelper->hasCreatedByField()) {
             $queryBuilder->where([
                 'createdById' => $this->user->id,
             ]);

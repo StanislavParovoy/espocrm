@@ -33,7 +33,7 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     Core\Select\Filters\AccessControlFilter,
     Core\Select\Helpers\FieldHelper,
-    Enities\User,
+    Entities\User,
 };
 
 class OnlyTeam implements AccessControlFilter
@@ -64,7 +64,7 @@ class OnlyTeam implements AccessControlFilter
 
             $queryBuilder->where([
                 'OR' => [
-                    'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
+                    'teamsAccess.id' => $this->user->getTeamIdList(),
                     'assignedUsersAccess.id' => $this->user->id,
                 ]
             ]);
@@ -73,7 +73,7 @@ class OnlyTeam implements AccessControlFilter
         }
 
         $orGroup = [
-            'teamsAccess.id' => $this->user->getLinkMultipleIdList('teams'),
+            'teamsAccess.id' => $this->user->getTeamIdList(),
         ];
 
         if ($this->fieldHelper->hasAssignedUserField()) {
