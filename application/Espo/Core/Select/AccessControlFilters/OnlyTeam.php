@@ -52,6 +52,10 @@ class OnlyTeam implements AccessControlFilter
     public function apply(QueryBuilder $queryBuilder)
     {
         if (!$this->fieldHelper->hasTeamsField()) {
+            $queryBuilder->where([
+                'id' => null,
+            ]);
+
             return;
         }
 

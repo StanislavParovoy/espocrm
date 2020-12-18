@@ -289,6 +289,221 @@ class FiltersTest extends \PHPUnit\Framework\TestCase
         $filter->apply($this->queryBuilder);
     }
 
+    public function testPortalOnlyAccount1()
+    {
+        $filter = $this->createFilter(PortalOnlyAccount::class);
+
+        $this->user
+            ->expects($this->any())
+            ->method('getLinkMultipleIdList')
+            ->with('accounts')
+            ->willReturn(['account-id']);
+
+        $this->user
+            ->expects($this->any())
+            ->method('get')
+            ->with('contactId')
+            ->willReturn('contact-id');
+
+        $this->initHelperMethods([
+            ['hasAccountField', true],
+            ['hasAccountsRelation', true],
+            ['hasParentField', true],
+            ['hasContactField', true],
+            ['hasContactsRelation', true],
+            ['hasCreatedByField', true],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->exactly(2))
+            ->method('distinct')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->expects($this->at(0))
+            ->method('leftJoin')
+            ->with('accounts', 'accountsAccess')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->expects($this->at(2))
+            ->method('leftJoin')
+            ->with('contacts', 'contactsAccess')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'OR' => [
+                    'accountId' => ['account-id'],
+                    'accountsAccess.id' => ['account-id'],
+                    [
+                        'parentType' => 'Account',
+                        'parentId' => ['account-id'],
+                    ],
+                    [
+                        'parentType' => 'Contact',
+                        'parentId' => 'contact-id',
+                    ],
+                    'contactId' => 'contact-id',
+                    'contactsAccess.id' => 'contact-id',
+                    'createdById' => $this->user->id,
+                ],
+            ])
+            ->willReturn($this->queryBuilder);
+
+        $filter->apply($this->queryBuilder);
+    }
+
+    public function testPortalOnlyAccount2()
+    {
+        $filter = $this->createFilter(PortalOnlyAccount::class);
+
+        $this->user
+            ->expects($this->any())
+            ->method('getLinkMultipleIdList')
+            ->with('accounts')
+            ->willReturn([]);
+
+        $this->user
+            ->expects($this->any())
+            ->method('get')
+            ->with('contactId')
+            ->willReturn(null);
+
+        $this->initHelperMethods([
+            ['hasCreatedByField', false],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'id' => null,
+            ]);
+
+        $filter->apply($this->queryBuilder);
+    }
+
+    public function testPortalOnlyContact1()
+    {
+        $filter = $this->createFilter(PortalOnlyContact::class);
+
+        $this->user
+            ->expects($this->any())
+            ->method('get')
+            ->with('contactId')
+            ->willReturn('contact-id');
+
+        $this->initHelperMethods([
+            ['hasContactField', true],
+            ['hasContactsRelation', true],
+            ['hasParentField', true],
+            ['hasCreatedByField', true],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('distinct')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('leftJoin')
+            ->with('contacts', 'contactsAccess')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'OR' => [
+                    'contactId' => 'contact-id',
+                    'contactsAccess.id' => 'contact-id',
+                    [
+                        'parentType' => 'Contact',
+                        'parentId' => 'contact-id',
+                    ],
+                    'createdById' => $this->user->id,
+                ],
+            ])
+            ->willReturn($this->queryBuilder);
+
+        $filter->apply($this->queryBuilder);
+    }
+
+    public function testPortalOnlyContact2()
+    {
+        $filter = $this->createFilter(PortalOnlyContact::class);
+
+        $this->user
+            ->expects($this->any())
+            ->method('get')
+            ->with('contactId')
+            ->willReturn(null);
+
+        $this->initHelperMethods([
+            ['hasCreatedByField', false],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->never())
+            ->method('distinct');
+
+        $this->queryBuilder
+            ->expects($this->never())
+            ->method('leftJoin');
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'id' => null,
+            ])
+            ->willReturn($this->queryBuilder);
+
+        $filter->apply($this->queryBuilder);
+    }
+
+    public function testPortalOnlyOwn1()
+    {
+        $filter = $this->createFilter(PortalOnlyOwn::class);
+
+        $this->initHelperMethods([
+            ['hasCreatedByField', true],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'createdById' => $this->user->id,
+            ])
+            ->willReturn($this->queryBuilder);
+
+        $filter->apply($this->queryBuilder);
+    }
+
+    public function testPortalOnlyOwn2()
+    {
+        $filter = $this->createFilter(PortalOnlyOwn::class);
+
+        $this->initHelperMethods([
+            ['hasCreatedByField', false],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'id' => null,
+            ])
+            ->willReturn($this->queryBuilder);
+
+        $filter->apply($this->queryBuilder);
+    }
+
     protected function initHelperMethods(array $map)
     {
         foreach ($map as $i => $item) {

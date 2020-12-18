@@ -72,7 +72,7 @@ class PortalOnlyAccount implements AccessControlFilter
             if ($this->fieldHelper->hasParentField()) {
                 $orGroup[] = [
                     'parentType' => 'Account',
-                    'parentId' => $accountIdList
+                    'parentId' => $accountIdList,
                 ];
 
                 if ($contactId) {
