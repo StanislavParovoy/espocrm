@@ -33,8 +33,8 @@ use Espo\Core\{
     Exceptions\Error,
     AclManager,
     Select\SelectManager,
-    Select\AccessContror\FilterFactory as AccessControlFilterFactory,
-    Select\AccessContror\FilterResolverFactory as AccessControlFilterResolverFactory,
+    Select\AccessControl\FilterFactory as AccessControlFilterFactory,
+    Select\AccessControl\FilterResolverFactory as AccessControlFilterResolverFactory,
 };
 
 use Espo\{
@@ -64,6 +64,7 @@ class AccessControlFilterApplier
         $this->entityType = $entityType;
         $this->user = $user;
         $this->accessControlFilterFactory = $accessControlFilterFactory;
+        $this->accessControlFilterResolverFactory = $accessControlFilterResolverFactory;
         $this->aclManager = $aclManager;
         $this->selectManager = $selectManager;
 
@@ -88,14 +89,14 @@ class AccessControlFilterApplier
         }
 
         // For backward compatibility.
-        if ($selectManager->hasInheritedAccessFilterMethod($filterName)) {
-            $selectManager->applyAccessFilterToQueryBuilder($queryBuilder, $filterName);
+        if ($this->selectManager->hasInheritedAccessFilterMethod($filterName)) {
+            $this->selectManager->applyAccessFilterToQueryBuilder($queryBuilder, $filterName);
 
             return;
         }
 
         if ($this->accessControlFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->accessControlFilterFactory->create($this->entityType, $user, $filterName);
+            $filter = $this->accessControlFilterFactory->create($this->entityType, $this->user, $filterName);
 
             $filter->apply($queryBuilder);
 
