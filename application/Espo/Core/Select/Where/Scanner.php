@@ -57,15 +57,15 @@ class Scanner
         }
 
         foreach ($where as $item) {
-            $this->applyLeftJoinsFromItem($selectBuilder, $item, $entityType);
+            $this->applyLeftJoinsFromItem($selectBuilder, Item::fromRaw($item), $entityType);
         }
     }
 
-    protected function applyLeftJoinsFromItem(SelectBuilder $selectBuilder, array $where, string $entityType)
+    protected function applyLeftJoinsFromItem(SelectBuilder $selectBuilder, Item $item, string $entityType)
     {
-        $type = $item['type'] ?? null;
-        $value = $item['value'] ?? null;
-        $attribute = $item['attribute'] ?? null;
+        $type = $item->getType();
+        $value = $item->getValue();
+        $attribute = $item->getAttribute();
 
         if (in_array($type, ['subQueryNotIn', 'subQueryIn', 'not'])) {
             return;
@@ -77,7 +77,7 @@ class Scanner
             }
 
             foreach ($value as $subItem) {
-                $this->applyLeftJoinsFromItem($selectBuilder, $subItem, $entityType);
+                $this->applyLeftJoinsFromItem($selectBuilder, Item::fromRaw($subItem), $entityType);
             }
 
             return;
