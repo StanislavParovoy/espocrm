@@ -79,7 +79,7 @@ class FullTextSearchDataComposer
         $useFullTextSearch = false;
 
         if (
-            $this->metadataProvider->hasFullTextSearch($this->entityType);
+            $this->metadataProvider->hasFullTextSearch($this->entityType)
             &&
             !empty($fullTextSearchColumnList)
         ) {
