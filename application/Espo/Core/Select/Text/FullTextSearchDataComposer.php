@@ -31,7 +31,6 @@ namespace Espo\Core\Select\Text;
 
 use Espo\Core\{
     Exceptions\Error,
-    Utils\Metadata,
     Utils\Config,
 };
 
@@ -46,18 +45,18 @@ class FullTextSearchDataComposer
     protected $entityType;
 
     protected $config;
-    protected $metadata;
+    protected $metadataProvider;
     protected $entityManager;
 
     public function __construct(
         string $entityType,
         Config $config,
-        Metadata $metadata,
+        MetadataProvider $metadataProvider,
         EntityManager $entityManager
     ) {
         $this->entityType = $entityType;
         $this->config = $config;
-        $this->metadata = $metadata;
+        $this->metadataProvider = $metadataProvider;
         $this->entityManager = $entityManager;
     }
 
@@ -75,16 +74,12 @@ class FullTextSearchDataComposer
             $filter = str_replace('%', '', $filter);
         }
 
-        $fullTextSearchColumnList = $this->entityManager
-            ->metadata
-            ->get($this->entityType, ['fullTextSearchColumnList']);
+        $fullTextSearchColumnList = $this->metadataProvider->getFullTextSearchColumnList($this->entityType);
 
         $useFullTextSearch = false;
 
         if (
-            $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'fullTextSearch'
-            ])
+            $this->metadataProvider->hasFullTextSearch($this->entityType);
             &&
             !empty($fullTextSearchColumnList)
         ) {
@@ -112,25 +107,11 @@ class FullTextSearchDataComposer
                 continue;
             }
 
-            $defs = $this->metadata->get([
-                'entityDefs', $this->entityType, 'fields', $field
-            ]) ?? [];
-
-            if (empty($defs['type'])) {
+            if ($this->metadataProvider->isFieldNotStorable($this->entityType, $field)) {
                 continue;
             }
 
-            $fieldType = $defs['type'];
-
-            if (!empty($defs['notStorable'])) {
-                continue;
-            }
-
-            if (
-                !$this->metadata->get([
-                    'fields', $fieldType, 'fullTextSearch'
-                ])
-            ) {
+            if (!$this->metadataProvider->isFullTextSearchSupportedForField($this->entityType, $field)) {
                 continue;
             }
 
@@ -210,10 +191,6 @@ class FullTextSearchDataComposer
 
     protected function getTextFilterFieldList() : array
     {
-        return
-            $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'textFilterFields'
-            ]) ??
-            ['name'];
+        return $this->metadataProvider->getTextFilterFieldList($this->entityType) ?? ['name'];
     }
 }

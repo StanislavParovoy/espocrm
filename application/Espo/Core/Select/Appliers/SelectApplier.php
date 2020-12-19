@@ -97,7 +97,7 @@ class SelectApplier
             return null;
         }
 
-        $seed = $this->getSeed();
+        $entityDefs = $this->getEntityDefs();
 
         $attributeList = [];
 
@@ -110,7 +110,7 @@ class SelectApplier
                 continue;
             }
 
-            if (!$seed->hasAttribute($attribute)) {
+            if (!$entityDefs->hasAttribute($attribute)) {
                 continue;
             }
 
@@ -122,7 +122,7 @@ class SelectApplier
                 continue;
             }
 
-            if (!$seed->hasAttribute($attribute)) {
+            if (!$entityDefs->hasAttribute($attribute)) {
                 continue;
             }
 
@@ -142,7 +142,7 @@ class SelectApplier
                     continue;
                 }
 
-                if (!$seed->hasAttribute($attribute)) {
+                if (!$entityDefs->hasAttribute($attribute)) {
                     continue;
                 }
 
@@ -171,7 +171,7 @@ class SelectApplier
         return $attributeList;
     }
 
-    protected function getSeed() : Entity
+    protected function getEntityDefs() : Entity
     {
         return $this->seed ?? $this->entityManager->getEntity($this->entityType);
     }

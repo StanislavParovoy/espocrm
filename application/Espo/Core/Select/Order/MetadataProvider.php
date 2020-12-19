@@ -27,43 +27,39 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Text;
+namespace Espo\Core\Select\Order;
 
-use InvalidArgumentException;
+use Espo\Core\{
+    Utils\Metadata,
+};
 
-class FilterParams
+class MetadataProvider
 {
-    private $noFullTextSearch = false;
+    protected $metadata;
 
-    private $preferFullTextSearch = false;
-
-    private function __construct()
+    private function __construct(Metadata $metadata)
     {
+        $this->metadata = $metadata;
     }
 
-    public static function fromArray(array $params) : self
+    public function getFieldType(string $entityType, string $field) : ?string
     {
-        $object = new self();
-
-        $object->noFullTextSearch = $params['noFullTextSearch'] ?? false;
-        $object->preferFullTextSearch = $params['preferFullTextSearch'] ?? false;
-
-        foreach ($params as $key => $value) {
-            if (!property_exists($object, $key)) {
-                throw new InvalidArgumentException("Unknown parameter '{$key}'.");
-            }
-        }
-
-        return $object;
+        return $this->metadata->get([
+            'entityDefs', $entityType, 'fields', $field, 'type'
+        ]) ?? null;
     }
 
-    public function noFullTextSearch() : bool
+    public function getDefaultOrderBy(string $entityType) : ?string
     {
-        return $this->noFullTextSearch;
+        return $this->metadata->get([
+            'entityDefs', $entityType, 'collection', 'orderBy'
+        ]) ?? null;
     }
 
-    public function preferFullTextSearch() : bool
+    public function getDefaultOrder(string $entityType) : ?string
     {
-        return $this->preferFullTextSearch;
+        return $this->metadata->get([
+            'entityDefs', $entityType, 'collection', 'order'
+        ]) ?? null;
     }
 }

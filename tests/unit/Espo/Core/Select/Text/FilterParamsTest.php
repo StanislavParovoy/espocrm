@@ -45,27 +45,27 @@ class FilterParamsTest extends \PHPUnit\Framework\TestCase
     {
         $item = FilterParams::fromArray([
             'noFullTextSearch' => true,
-            'forceFullTextSearch' => true,
+            'preferFullTextSearch' => true,
         ]);
 
         $this->assertTrue($item->noFullTextSearch());
-        $this->assertTrue($item->forceFullTextSearch());
+        $this->assertTrue($item->preferFullTextSearch());
 
         $item = FilterParams::fromArray([
             'noFullTextSearch' => false,
-            'forceFullTextSearch' => false,
+            'preferFullTextSearch' => false,
         ]);
 
         $this->assertFalse($item->noFullTextSearch());
-        $this->assertFalse($item->forceFullTextSearch());
+        $this->assertFalse($item->preferFullTextSearch());
 
         $item = FilterParams::fromArray([
             'noFullTextSearch' => false,
-            'forceFullTextSearch' => true,
+            'preferFullTextSearch' => true,
         ]);
 
         $this->assertFalse($item->noFullTextSearch());
-        $this->assertTrue($item->forceFullTextSearch());
+        $this->assertTrue($item->preferFullTextSearch());
     }
 
     public function testEmpty()
@@ -74,7 +74,7 @@ class FilterParamsTest extends \PHPUnit\Framework\TestCase
         ]);
 
         $this->assertFalse($item->noFullTextSearch());
-        $this->assertFalse($item->forceFullTextSearch());
+        $this->assertFalse($item->preferFullTextSearch());
     }
 
     public function testNonExistingParam()

@@ -35,6 +35,7 @@ use Espo\Core\{
     Select\SearchParams,
     Select\Order\Params as OrderParams,
     Select\Order\ItemConverterFactory,
+    Select\Order\MetadataProvider,
 };
 
 use Espo\{
@@ -51,20 +52,20 @@ class OrderApplier
 
     protected $user;
     protected $entityManager;
-    protected $metadata;
+    protected $metadataProvider;
     protected $itemConverterFactory;
 
     public function __construct(
         string $entityType,
         User $user,
         EntityManager $entityManager,
-        Metadata $metadata,
+        MetadataProvider $metadataProvider,
         ItemConverterFactory $itemConverterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->entityManager = $entityManager;
-        $this->metadata = $metadata;
+        $this->metadataProvider = $metadataProvider;
         $this->itemConverterFactory = $itemConverterFactory;
     }
 
@@ -90,10 +91,7 @@ class OrderApplier
             }
         }
 
-        $orderBy = $orderBy ??
-            $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'orderBy'
-            ]);
+        $orderBy = $orderBy ?? $this->metadataProvider->getDefaultOrderBy($this->entityType);
 
         if (!$orderBy) {
             return;
@@ -104,9 +102,7 @@ class OrderApplier
 
     protected function applyDefaultOrder(QueryBuilder $queryBuilder, ?string $order)
     {
-        $orderBy = $this->metadata->get([
-            'entityDefs', $this->entityType, 'collection', 'orderBy'
-        ]);
+        $orderBy = $this->metadataProvider->getDefaultOrderBy($this->entityType);
 
         if (!$orderBy) {
             $queryBuilder->order('id', $order);
@@ -115,9 +111,7 @@ class OrderApplier
         }
 
         if (!$order) {
-            $order = $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'order'
-            ]) ?? null;
+            $order = $this->metadataProvider->getDefaultOrder($this->entityType);
 
             if ($order === true || strtolower($order) === 'desc') {
                 $order = SearchParams::ORDER_DESC;
@@ -143,9 +137,7 @@ class OrderApplier
 
         $resultOrderBy = $orderBy;
 
-        $type = $this->metadata->get([
-            'entityDefs', $this->entityType, 'fields', $orderBy, 'type'
-        ]);
+        $type = $this->metadataProvider->getFieldType($this->entityType, $orderBy);
 
         $hasItemConverter = $this->itemConverterFactory->has($this->entityType, $orderBy);
 
@@ -165,12 +157,12 @@ class OrderApplier
         else if ($type === 'linkParent') {
             $resultOrderBy .= 'Type';
         }
-        else {
-            if (strpos($orderBy, '.') === false && strpos($orderBy, ':') === false) {
-                if (!$this->getSeed()->hasAttribute($orderBy)) {
-                    throw new Error("Order by non-existing field '{$orderBy}'.");
-                }
-            }
+        else if (
+            strpos($orderBy, '.') === false &&
+            strpos($orderBy, ':') === false &&
+            !$this->getEntityDefs()->hasAttribute($orderBy)
+        ) {
+            throw new Error("Order by non-existing field '{$orderBy}'.");
         }
 
         $orderByAttribute = null;
@@ -187,9 +179,9 @@ class OrderApplier
             $orderBy !== 'id' &&
             (
                 !$orderByAttribute ||
-                !$this->getSeed()->getAttributeParam($orderByAttribute, 'unique')
+                !$this->getEntityDefs()->getAttributeParam($orderByAttribute, 'unique')
             ) &&
-            $this->getSeed()->hasAttribute('id')
+            $this->getEntityDefs()->hasAttribute('id')
         ) {
             $resultOrderBy[] = ['id', $order];
         }
@@ -197,7 +189,7 @@ class OrderApplier
         $queryBuilder->order($resultOrderBy);
     }
 
-    protected function getSeed() : Entity
+    protected function getEntityDefs() : Entity
     {
         return $this->seed ?? $this->entityManager->getEntity($this->entityType);
     }

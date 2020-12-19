@@ -31,8 +31,8 @@ namespace Espo\Core\Select\Appliers;
 
 use Espo\Core\{
     Exceptions\Error,
-    Utils\Metadata,
     Utils\Config,
+    Select\Text\MetadataProvider,
     Select\Text\FilterParams,
     Select\Text\FullTextSearchData,
     Select\Text\FullTextSearchDataComposerFactory,
@@ -42,6 +42,7 @@ use Espo\Core\{
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\EntityManager,
+    ORM\Entity,
     Entities\User,
 };
 
@@ -69,7 +70,7 @@ class TextFilterApplier
 
     protected $user;
     protected $config;
-    protected $metadata;
+    protected $metadataProvider;
     protected $entityManager;
     protected $fullTextSearchDataComposerFactory;
 
@@ -77,14 +78,14 @@ class TextFilterApplier
         string $entityType,
         User $user,
         Config $config,
-        Metadata $metadata,
+        MetadataProvider $metadataProvider,
         EntityManager $entityManager,
         FullTextSearchDataComposerFactory $fullTextSearchDataComposerFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->config = $config;
-        $this->metadata = $metadata;
+        $this->metadataProvider = $metadataProvider;
         $this->entityManager = $entityManager;
         $this->fullTextSearchDataComposerFactory = $fullTextSearchDataComposerFactory;
     }
@@ -93,39 +94,27 @@ class TextFilterApplier
     {
         $noFullText = $params->noFullTextSearch();
 
-        $fieldList =
-            $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'textFilterFields']
-            ) ??
-            ['name'];
-
-        $orGroup = [];
-
-        $textFilterContainsMinLength =
-            $this->config->get('textFilterContainsMinLength') ??
-            self::MIN_LENGTH_FOR_CONTENT_SEARCH;
-
         $fullTextSearchData = null;
 
         $forceFullTextSearch = false;
 
-        $useFullTextSearch = $params->forceFullTextSearch();
+        $preferFullTextSearch = $params->preferFullTextSearch();
 
-        if (mb_strpos($textFilter, 'ft:') === 0) {
-            $textFilter = mb_substr($textFilter, 3);
+        if (mb_strpos($filter, 'ft:') === 0) {
+            $filter = mb_substr($filter, 3);
 
-            $useFullTextSearch = true;
+            $preferFullTextSearch = true;
             $forceFullTextSearch = true;
         }
 
-        $filterForFullTextSearch = $textFilter;
+        $filterForFullTextSearch = $filter;
 
         $skipWidlcards = false;
 
-        if (mb_strpos($textFilter, '*') !== false) {
+        if (mb_strpos($filter, '*') !== false) {
             $skipWidlcards = true;
 
-            $textFilter = str_replace('*', '%', $textFilter);
+            $filter = str_replace('*', '%', $filter);
         }
 
         $filterForFullTextSearch = str_replace('%', '*', $filterForFullTextSearch);
@@ -148,7 +137,7 @@ class TextFilterApplier
         $fullTextSearchData = null;
 
         if (!$skipFullTextSearch) {
-            $fullTextSearchIsAuxiliary = !$useFullTextSearch;
+            $fullTextSearchIsAuxiliary = !$preferFullTextSearch;
 
             $fullTextSearchData = $this->getFullTextSearchData(
                 $filterForFullTextSearch, $fullTextSearchIsAuxiliary
@@ -183,9 +172,7 @@ class TextFilterApplier
                 'original' => self::FT_ORDER_ORIGINAL,
             ];
 
-            $mOrderType = $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'fullTextSearchOrderType'
-            ]);
+            $mOrderType = $this->metadataProvider->getFullTextSearchOrderType($this->entityType);
 
             if ($mOrderType) {
                 $fullTextOrderType = $orderTypeMap[$mOrderType];
@@ -218,85 +205,30 @@ class TextFilterApplier
             $hasFullTextSearch = true;
         }
 
-        foreach ($fieldList as $field) {
-            if ($useFullTextSearch) {
+        $fieldList = $this->metadataProvider->getTextFilterFieldList($this->entityType) ?? ['name'];
+
+        $fieldList = array_filter(
+            $fieldList,
+            function ($field) use ($fullTextSearchFieldList, $forceFullTextSearch) {
+                if ($forceFullTextSearch) {
+                    return false;
+                }
+
+                // @todo Check this logic.
                 if (in_array($field, $fullTextSearchFieldList)) {
-                    continue;
-                }
-            }
-
-            if ($forceFullTextSearch) {
-                continue;
-            }
-
-            $seed = $this->getSeed();
-
-            $attributeType = null;
-
-            if (strpos($field, '.') !== false) {
-                list($link, $foreignField) = explode('.', $field);
-
-                $foreignEntityType = $seed->getRelationParam($link, 'entity');
-
-                $seed = $this->entityManager->getEntity($foreignEntityType);
-
-                $queryBuilder->leftJoin($link);
-
-                if ($seed->getRelationParam($link, 'type') === $seed::HAS_MANY) {
-                    $queryBuilder->distinct();
+                    return false;
                 }
 
-                $attributeType = $seed->getAttributeType($foreignField);
+                return true;
             }
-            else {
-                $attributeType = $seed->getAttributeType($field);
+        );
 
-                if ($attributeType === 'foreign') {
-                    $link = $seed->getAttributeParam($field, 'relation');
+        $orGroup = [];
 
-                    if ($link) {
-                        $queryBuilder->leftJoin($link);
-                    }
-                }
-            }
-
-            if ($attributeType === 'int') {
-                if (is_numeric($textFilter)) {
-                    $orGroup[$field] = intval($textFilter);
-                }
-
-                continue;
-            }
-
-            if (!$skipWidlcards) {
-                if (
-                    mb_strlen($textFilter) >= $textFilterContainsMinLength
-                    &&
-                    (
-                        $attributeType === 'text'
-                        ||
-                        in_array($field, $this->useContainsAttributeList)
-                        ||
-                        $attributeType === 'varchar' && $this->config->get('textFilterUseContainsForVarchar')
-                    )
-                ) {
-                    $expression = '%' . $textFilter . '%';
-                } else {
-                    $expression = $textFilter . '%';
-                }
-            } else {
-                $expression = $textFilter;
-            }
-
-            if ($fullTextSearchData) {
-                if (!$useFullTextSearch) {
-                    if (in_array($field, $fullTextSearchFieldList)) {
-                        continue;
-                    }
-                }
-            }
-
-            $orGroup[$field . '*'] = $expression;
+        foreach ($fieldList as $field) {
+            $this->applyFieldToOrGroup(
+                $queryBuilder, $filter, $orGroup, $field, $skipWidlcards
+            );
         }
 
         if (!$forceFullTextSearch) {
@@ -320,6 +252,95 @@ class TextFilterApplier
         ]);
     }
 
+    protected function applyFieldToOrGroup(
+        QueryBuilder $queryBuilder,
+        string $filter,
+        array &$orGroup,
+        string $field,
+        bool $skipWidlcards
+    ) {
+        $entityDefs = $this->getEntityDefs();
+
+        $attributeType = null;
+
+        if (strpos($field, '.') !== false) {
+            list($link, $foreignField) = explode('.', $field);
+
+            $foreignEntityType = $entityDefs->getRelationParam($link, 'entity');
+
+            if ($entityDefs->getRelationParam($link, 'type') === Entity::HAS_MANY) {
+                $queryBuilder->distinct();
+            }
+
+            $queryBuilder->leftJoin($link);
+
+            $foreignEntityDefs = $this->entityManager->getEntity($foreignEntityType);
+
+            $attributeType = $foreignEntityDefs->getAttributeType($foreignField);
+        }
+        else {
+            $attributeType = $entityDefs->getAttributeType($field);
+
+            if ($attributeType === 'foreign') {
+                $link = $entityDefs->getAttributeParam($field, 'relation');
+
+                if ($link) {
+                    $queryBuilder->leftJoin($link);
+                }
+            }
+        }
+
+        if ($attributeType === 'int') {
+            if (is_numeric($filter)) {
+                $orGroup[$field] = intval($filter);
+            }
+
+            return;
+        }
+
+        if (!$skipWidlcards) {
+            if ($this->checkWhetherToUseContains($filter, $attributeType)) {
+                $expression = '%' . $filter . '%';
+            }
+            else {
+                $expression = $filter . '%';
+            }
+        }
+        else {
+            $expression = $filter;
+        }
+
+        $orGroup[$field . '*'] = $expression;
+    }
+
+    protected function checkWhetherToUseContains(string $filter, string $attributeType) : bool
+    {
+        $textFilterContainsMinLength =
+            $this->config->get('textFilterContainsMinLength') ??
+            self::MIN_LENGTH_FOR_CONTENT_SEARCH;
+
+        if (mb_strlen($filter) < $textFilterContainsMinLength) {
+            return false;
+        }
+
+        if ($attributeType === 'text') {
+            return true;
+        }
+
+        if (in_array($field, $this->useContainsAttributeList)) {
+            return true;
+        }
+
+        if (
+            $attributeType === 'varchar' &&
+            $this->config->get('textFilterUseContainsForVarchar')
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
     protected function applyCustomToOrGroup(
         QueryBuilder $queryBuilder, string $filter, array &$orGroup, bool $hasFullTextSearch
     ) {
@@ -336,7 +357,7 @@ class TextFilterApplier
         return $composer->compose($filter, $params);
     }
 
-    protected function getSeed() : Entity
+    protected function getEntityDefs() : Entity
     {
         return $this->seed ?? $this->entityManager->getEntity($this->entityType);
     }
