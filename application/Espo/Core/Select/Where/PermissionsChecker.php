@@ -103,47 +103,64 @@ class PermissionsChecker
 
     protected function checkWhereArgument(string $attribute, string $type)
     {
-       $entityType = $this->entityType;
+        $entityType = $this->entityType;
 
         if (strpos($attribute, '.')) {
             list($link, $attribute) = explode('.', $attribute);
 
             if (!$this->getSeed()->hasRelation($link)) {
                 // TODO allow alias
-                throw new Forbidden("Unknown relation '{$link}' in where.");
-            }
-
-            $entityType = $this->getSeed()->getRelationParam($link, 'entity');
-
-            if (!$entityType) {
                 throw new Forbidden("Bad relation '{$link}' in where.");
             }
 
-            if (!$this->acl->checkScope($entityType)) {
-                throw new Forbidden();
+            $foreignEntityType = $this->getSeed()->getRelationParam($link, 'entity');
+
+            if (!$foreignEntityType) {
+                throw new Forbidden("Bad relation '{$link}' in where.");
             }
+
+            if (
+                !$this->acl->checkScope($foreignEntityType) ||
+                in_array($link, $this->acl->getScopeForbiddenLinkList($entityType))
+            ) {
+                throw new Forbidden("Forbidden relation '{$link}' in where.");
+            }
+
+            if (in_array($attribute, $this->acl->getScopeForbiddenAttributeList($foreignEntityType))) {
+                throw new Forbidden("Forbidden attribute '{$link}.{$attribute}' in where.");
+            }
+
+            return;
         }
 
         if (
             in_array($type, ['isLinked', 'isNotLinked', 'linkedWith', 'notLinkedWith', 'isUserFromTeams'])
         ) {
-            if (in_array($attribute, $this->acl->getScopeForbiddenFieldList($entityType))) {
-                throw new Forbidden();
+            $link = $attribute;
+
+            if (!$this->getSeed()->hasRelation($link)) {
+                throw new Forbidden("Bad relation '{$link}' in where.");
+            }
+
+            $foreignEntityType = $this->getSeed()->getRelationParam($link, 'entity');
+
+            if (!$foreignEntityType) {
+                throw new Forbidden("Bad relation '{$link}' in where.");
             }
 
             if (
-                $this->getSeed()->hasRelation($attribute)
-                &&
-                in_array($attribute, $this->acl->getScopeForbiddenLinkList($entityType))
+                in_array($link, $this->acl->getScopeForbiddenFieldList($entityType)) ||
+                !$this->acl->checkScope($foreignEntityType) ||
+                in_array($link, $this->acl->getScopeForbiddenLinkList($entityType))
             ) {
-                throw new Forbidden();
+                throw new Forbidden("Forbidden relation '{$link}' in where.");
             }
 
             return;
         }
 
         if (in_array($attribute, $this->acl->getScopeForbiddenAttributeList($entityType))) {
-            throw new Forbidden();
+            throw new Forbidden("Forbidden attribute '{$attribute}' in where.");
         }
     }
 
