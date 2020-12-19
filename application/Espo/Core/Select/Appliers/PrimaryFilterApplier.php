@@ -48,12 +48,12 @@ class PrimaryFilterApplier
     protected $primaryFilterFactory;
 
     public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, PrimaryFilterFactory $primaryFilterFactory
+        string $entityType, User $user, PrimaryFilterFactory $primaryFilterFactory, SelectManager $selectManager
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->selectManager = $selectManager;
         $this->primaryFilterFactory = $primaryFilterFactory;
+        $this->selectManager = $selectManager;
     }
 
     public function apply(QueryBuilder $queryBuilder, string $filterName)
