@@ -59,7 +59,7 @@ class PrimaryFilterApplier
     public function apply(QueryBuilder $queryBuilder, string $filterName)
     {
         if ($this->primaryFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->primaryFilterFactory->create($this->entityType, $user, $filterName);
+            $filter = $this->primaryFilterFactory->create($this->entityType, $this->user, $filterName);
 
             $filter->apply($queryBuilder);
 

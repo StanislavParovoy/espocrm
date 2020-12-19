@@ -50,12 +50,12 @@ class BoolFilterListApplier
     protected $boolFilterFactory;
 
     public function __construct(
-        string $entityType, User $user, SelectManager $selectManager, BoolFilterFactory $boolFilterFactory
+        string $entityType, User $user, BoolFilterFactory $boolFilterFactory, SelectManager $selectManager
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->selectManager = $selectManager;
         $this->boolFilterFactory = $boolFilterFactory;
+        $this->selectManager = $selectManager;
     }
 
     public function apply(QueryBuilder $queryBuilder, array $boolFilterNameList)
@@ -77,10 +77,10 @@ class BoolFilterListApplier
         );
     }
 
-    protected function applyBoolFilter(QueryBuilder $queryBuilder, array $filterName) : WhereClause
+    protected function applyBoolFilter(QueryBuilder $queryBuilder, string $filterName) : WhereClause
     {
         if ($this->boolFilterFactory->has($this->entityType, $filterName)) {
-            $filter = $this->boolFilterFactory->create($this->entityType, $user, $filterName);
+            $filter = $this->boolFilterFactory->create($this->entityType, $this->user, $filterName);
 
             return $filter->apply($queryBuilder);
         }

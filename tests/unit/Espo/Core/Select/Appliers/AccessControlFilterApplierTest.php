@@ -80,26 +80,26 @@ class AccessControlFilterApplierTest extends \PHPUnit\Framework\TestCase
 
     public function testApply1()
     {
-        $this->initResolverTest(true, true);
+        $this->initApplierTest(true, true);
 
         $this->applier->apply($this->queryBuilder);
     }
 
     public function testApply2()
     {
-        $this->initResolverTest(true, false);
+        $this->initApplierTest(true, false);
 
         $this->applier->apply($this->queryBuilder);
     }
 
     public function testApply3()
     {
-        $this->initResolverTest(false, false);
+        $this->initApplierTest(false, false);
 
         $this->applier->apply($this->queryBuilder);
     }
 
-    protected function initResolverTest(bool $resolve, bool $hasFilter)
+    protected function initApplierTest(bool $resolve, bool $hasFilter)
     {
         $this->selectManager
             ->expects($this->once())

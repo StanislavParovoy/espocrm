@@ -41,7 +41,7 @@ class OrGroup implements WhereItem
 
     public function getRawValue() : array
     {
-        return $this->getRaw();
+        return $this->raw;
     }
 
     public function getRawKey() : string
@@ -55,9 +55,19 @@ class OrGroup implements WhereItem
         $value = $item->getRawValue();
 
         if ($item instanceof WhereClause) {
-            $this->raw[] = [$value];
+            $this->raw[] = $value;
 
             return;
+        }
+
+        if (empty($this->raw)) {
+            $this->raw[$key] = $value;
+
+            return;
+        }
+
+        if (count($this->raw) === 1 && array_keys($this->raw)[0] !== 0) {
+            $this->raw = [$this->raw];
         }
 
         $this->raw[] = [$key => $value];

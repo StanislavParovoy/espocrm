@@ -68,13 +68,23 @@ class WhereClause implements WhereItem
     public function add(WhereItem $item)
     {
         if ($item instanceof WhereClause) {
-            $this->raw[] = $item->getRaw();
+            $this->raw[] = $item->getRawValue();
 
             return;
         }
 
         $key = $item->getRawKey();
         $value = $item->getRawValue();
+
+        if (empty($this->raw)) {
+            $this->raw[$key] = $value;
+
+            return;
+        }
+
+        if (count($this->raw) === 1 && array_keys($this->raw)[0] !== 0) {
+            $this->raw = [$this->raw];
+        }
 
         $this->raw[] = [$key => $value];
     }
