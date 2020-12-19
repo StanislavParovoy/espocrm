@@ -67,8 +67,8 @@ class PrimaryFilterApplier
         }
 
         // For backward compatibility.
-        if ($selectManager->hasPrimaryFilter($filterName)) {
-            $selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
+        if ($this->selectManager->hasPrimaryFilter($filterName)) {
+            $this->selectManager->applyPrimaryFilterToQueryBuilder($queryBuilder, $filterName);
 
             return;
         }

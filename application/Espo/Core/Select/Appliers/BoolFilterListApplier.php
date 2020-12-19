@@ -86,8 +86,8 @@ class BoolFilterListApplier
         }
 
         // For backward compatibility.
-        if ($selectManager->hasBoolFilter($filterName)) {
-            $rawWhereClause = $selectManager->applyBoolFilterToQueryBuilder($queryBuilder, $filterName);
+        if ($this->selectManager->hasBoolFilter($filterName)) {
+            $rawWhereClause = $this->selectManager->applyBoolFilterToQueryBuilder($queryBuilder, $filterName);
 
             return WhereClause::fromRaw($rawWhereClause);
         }

@@ -84,6 +84,43 @@ class BoolFilterListApplierTest extends \PHPUnit\Framework\TestCase
         $this->applier->apply($this->queryBuilder, $boolFilterList);
     }
 
+    public function testApply2()
+    {
+        $boolFilterList = ['test1'];
+
+        $filter1 = $this->createFilterMock(['test' => '1']);
+
+        $this->initApplierTest($boolFilterList, [$filter1], [true]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('where')
+            ->with([
+                'OR' => [
+                    ['test' => '1'],
+                ],
+            ]);
+
+        $this->applier->apply($this->queryBuilder, $boolFilterList);
+    }
+
+    public function testApply3()
+    {
+        $boolFilterList = ['test1'];
+
+        $this->initApplierTest($boolFilterList, [null], [false]);
+
+        $this->selectManager
+            ->expects($this->once())
+            ->method('hasBoolFilter')
+            ->with('test1')
+            ->willReturn(false);
+
+        $this->expectException(Error::class);
+
+        $this->applier->apply($this->queryBuilder, $boolFilterList);
+    }
+
     protected function initApplierTest(array $filterNameList, array $filterList, array $hasList)
     {
         foreach ($filterNameList as $i => $filterName) {
@@ -92,6 +129,10 @@ class BoolFilterListApplierTest extends \PHPUnit\Framework\TestCase
                 ->method('has')
                 ->with($this->entityType, $filterName)
                 ->willReturn($hasList[$i]);
+
+            if (!$hasList[$i]) {
+                continue;
+            }
 
             $this->boolFilterFactory
                 ->expects($this->at($i * 2 + 1))
