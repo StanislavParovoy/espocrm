@@ -45,6 +45,7 @@ use Espo\Core\Select\{
     Applier\TextFilterApplier,
     Applier\AdditionalApplier,
     Where\Params as WhereParams,
+    Where\Item as WhereItem,
     Order\Params as OrderParams,
     Text\FilterParams as TextFilterParams,
 };
