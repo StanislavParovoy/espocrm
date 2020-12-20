@@ -98,29 +98,9 @@ class SelectBuilder
         $this->queryBuilder->from($entityType);
     }
 
-    public function fromSearchParams(Search $searchParams) : self
-    {
-        $this->searchParams = $searchParams;
-
-        $this->withBoolFilterList(
-            $searchParams->getBoolFilterList()
-        );
-
-        $primaryFilter = $searchParams->getPrimaryFilter();
-
-        if ($primaryFilter) {
-            $this->withPrimaryFilter($primaryFilter);
-        }
-
-        $textFilter = $searchParams->getTextFilter();
-
-        if ($textFilter) {
-            $this->withTextFilter($textFilter);
-        }
-
-        return $this;
-    }
-
+    /**
+     * Start building from an existing select query.
+     */
     public function fromQuery(Query $query) : self
     {
         if ($entity->entityType !== $query->getFrom()) {
@@ -132,6 +112,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Build a result query.
+     */
     public function build() : Query
     {
         $this->applyFromSearchParams();
@@ -161,6 +144,9 @@ class SelectBuilder
         return $this->queryBuilder->build();
     }
 
+    /**
+     * Switch a user for whom select query will be built.
+     */
     public function forUser(User $user) : self
     {
         $this->user = $user;
@@ -169,7 +155,33 @@ class SelectBuilder
     }
 
     /**
-     * Applies maximum restrictions for a user.
+     * Apply search params.
+     */
+    public function withSearchParams(Search $searchParams) : self
+    {
+        $this->searchParams = $searchParams;
+
+        $this->withBoolFilterList(
+            $searchParams->getBoolFilterList()
+        );
+
+        $primaryFilter = $searchParams->getPrimaryFilter();
+
+        if ($primaryFilter) {
+            $this->withPrimaryFilter($primaryFilter);
+        }
+
+        $textFilter = $searchParams->getTextFilter();
+
+        if ($textFilter) {
+            $this->withTextFilter($textFilter);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Apply maximum restrictions for a user.
      */
     public function withStrictAccessControl() : self
     {
@@ -180,6 +192,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply an access control filter.
+     */
     public function withAccessControlFilter() : self
     {
         $this->applyAccessControlFilter = true;
@@ -187,6 +202,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply a default order.
+     */
     public function withDefaultOrder() : self
     {
         $this->applyDefaultOrder = true;
@@ -194,6 +212,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Check permissions to where items.
+     */
     public function withWherePermissionsCheck() : self
     {
         $this->applyWherePermissionsCheck = true;
@@ -201,6 +222,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Forbid complex expression usage.
+     */
     public function withComplexExpressionsForbidden() : self
     {
         $this->applyComplexExpressionsForbidden = true;
@@ -208,6 +232,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply a text filter.
+     */
     public function withTextFilter(string $textFilter) : self
     {
         $this->textFilter = $textFilter;
@@ -215,6 +242,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply a primary filter.
+     */
     public function withPrimaryFilter(string $primaryFilter) : self
     {
         $this->primaryFilter = $primaryFilter;
@@ -222,6 +252,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply a bool filter.
+     */
     public function withBoolFilter(string $boolFilter) : self
     {
         $this->boolFilterList[] = $boolFilter;
@@ -229,6 +262,9 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply a list of bool filters.
+     */
     public function withBoolFilterList(array $boolFilterList) : self
     {
         $this->boolFilterList[] = array_merge($this->boolFilterList, $boolFilterList);
