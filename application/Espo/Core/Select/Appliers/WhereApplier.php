@@ -34,6 +34,7 @@ use Espo\Core\{
     Select\Where\Params,
     Select\Where\Converter,
     Select\Where\ConverterFactory,
+    Select\Where\Item as WhereItem,
 };
 
 use Espo\{
@@ -61,7 +62,7 @@ class WhereApplier
         $this->permissionsCheckerFactory = $permissionsCheckerFactory;
     }
 
-    public function apply(QueryBuilder $queryBuilder, array $where, Params $params)
+    public function apply(QueryBuilder $queryBuilder, WhereItem $whereItem, Params $params)
     {
         if (
             $params->applyWherePermissionsCheck() ||
@@ -69,12 +70,12 @@ class WhereApplier
         ) {
             $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
 
-            $permissionsChecker->check($where, $params);
+            $permissionsChecker->check($whereItem, $params);
         }
 
         $converter = $this->converterFactory->create($this->entityType, $this->user);
 
-        $whereClause = $converter->convert($queryBuilder, $where);
+        $whereClause = $converter->convert($queryBuilder, $whereItem);
 
         $queryBuilder->where(
             $whereClause->getRaw()

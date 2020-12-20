@@ -69,11 +69,36 @@ class Item
             throw new InvalidArgumentException("No 'type' in where item.");
         }
 
-        if (!$object->attribute) {
+        if (
+            !$object->attribute &&
+            !in_array($object->type, ['or', 'and', 'having', 'not', 'subQueryNotIn', 'subQueryIn'])
+        ) {
             throw new InvalidArgumentException("No 'attribute' in where item.");
         }
 
         return $object;
+    }
+
+    public function getRaw() : array
+    {
+        $raw = [
+            'type' => $this->type,
+            'value' => $this->value,
+        ];
+
+        if ($this->attribute) {
+            $raw['attribute'] = $this->attribute;
+        }
+
+        if ($this->dateTime) {
+            $raw['dateTime'] = $this->dateTime;
+        }
+
+        if ($this->timeZone) {
+            $raw['timeZone'] = $this->timeZone;
+        }
+
+        return $raw;
     }
 
     public function getType() : string
@@ -81,11 +106,14 @@ class Item
         return $this->type;
     }
 
-    public function getAttribute() : string
+    public function getAttribute() : ?string
     {
         return $this->attribute;
     }
 
+    /**
+     * @return mixed
+     */
     public function getValue()
     {
         return $this->value;

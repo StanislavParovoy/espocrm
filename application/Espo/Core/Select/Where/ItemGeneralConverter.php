@@ -89,19 +89,18 @@ class ItemGeneralConverter
             throw new Error("Bad where item. No 'type'.");
         }
 
-        if (!$attribute) {
-            throw new Error("Bad where item. No 'attribute'.");
-        }
+        if ($attribute) {
+            $methodName = 'convert' . ucfirst($attribute) . ucfirst($type);
 
-        $methodName = 'convert' . ucfirst($attribute) . ucfirst($type);
-
-        if (method_exists($this, $methodName)) {
-            return $this->$methodName($queryBuilder, $value);
+            if (method_exists($this, $methodName)) {
+                return $this->$methodName($queryBuilder, $value);
+            }
         }
 
         $part = [];
 
         switch ($type) {
+
             case 'or':
             case 'and':
 
@@ -112,6 +111,13 @@ class ItemGeneralConverter
             case 'subQueryIn':
 
                 return $this->groupProcessSubQuery($queryBuilder, $type, $attribute, $value);
+        }
+
+        if (!$attribute) {
+            throw new Error("Bad where item. No 'attribute'.");
+        }
+
+        switch ($type) {
 
             case 'columnLike':
             case 'columnIn':
@@ -146,7 +152,7 @@ class ItemGeneralConverter
         return $converter->convert($queryBuilder, $item);
     }
 
-    protected function groupProcessAndOr(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
+    protected function groupProcessAndOr(QueryBuilder $queryBuilder, string $type, ?string $attribute, $value) : array
     {
         if (!is_array($value)) {
             throw new Error("Bad where item.");
@@ -171,7 +177,7 @@ class ItemGeneralConverter
         ];
     }
 
-    protected function groupProcessSubQuery(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
+    protected function groupProcessSubQuery(QueryBuilder $queryBuilder, string $type, ?string $attribute, $value) : array
     {
         if (!is_array($value)) {
             throw new Error("Bad where item.");
@@ -196,7 +202,12 @@ class ItemGeneralConverter
             }
         }
 
-        $this->scanner->applyLeftJoins($sqQueryBuilder, $value);
+        $whereItem = Item::fromArray([
+            'type' => 'and',
+            'value' => $value,
+        ]);
+
+        $this->scanner->applyLeftJoins($sqQueryBuilder, $whereItem);
 
         $rawParams = $sqQueryBuilder->build()->getRawParams();
 

@@ -379,6 +379,11 @@ class SelectBuilder
         }
 
         if ($this->searchParams->getWhere()) {
+            $whereItem = WhereItem::fromRaw([
+                'type' => 'and',
+                'value' => $this->searchParams->getWhere(),
+            ]);
+
             $params = WhereParams::fromArray([
                 'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
                 'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
@@ -387,7 +392,7 @@ class SelectBuilder
             $this->createWhereApplier()
                 ->apply(
                     $this->queryBuilder,
-                    $this->searchParams->getWhere(),
+                    $whereItem,
                     $params
                 );
         }

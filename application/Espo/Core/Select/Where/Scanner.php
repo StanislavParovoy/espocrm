@@ -48,7 +48,7 @@ class Scanner
         $this->entityManager = $entityManager;
     }
 
-    public function applyLeftJoins(SelectBuilder $selectBuilder, array $where)
+    public function applyLeftJoins(SelectBuilder $selectBuilder, Item $item)
     {
         $entityType = $selectBuilder->build()->getFrom();
 
@@ -56,9 +56,7 @@ class Scanner
             throw new Error("No entity type.");
         }
 
-        foreach ($where as $item) {
-            $this->applyLeftJoinsFromItem($selectBuilder, Item::fromRaw($item), $entityType);
-        }
+        $this->applyLeftJoinsFromItem($selectBuilder, $item, $entityType);
     }
 
     protected function applyLeftJoinsFromItem(SelectBuilder $selectBuilder, Item $item, string $entityType)

@@ -85,13 +85,23 @@ class ItemTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testEmptyAttribute()
+    public function testEmptyAttribute1()
     {
         $this->expectException(InvalidArgumentException::class);
 
         $item = Item::fromArray([
             'type' => 'equals',
         ]);
+    }
+
+    public function testEmptyAttribute2()
+    {
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [],
+        ]);
+
+        $this->assertNotNull($item);
     }
 
     public function testEmptyType()
@@ -110,5 +120,36 @@ class ItemTest extends \PHPUnit\Framework\TestCase
         $params = Item::fromArray([
             'bad' => 'd',
         ]);
+    }
+
+    public function testGetRaw1()
+    {
+        $raw = [
+            'type' => 'and',
+            'value' => [],
+        ];
+
+        $item = Item::fromArray($raw);
+
+        $result = $item->getRaw();
+
+        $this->assertEquals($raw, $result);
+    }
+
+    public function testGetRaw2()
+    {
+        $raw = [
+            'type' => 'euqls',
+            'attribute' => 'test',
+            'value' => '2020-12-12',
+            'dateTime' => true,
+            'timeZone' => 'UTC',
+        ];
+
+        $item = Item::fromArray($raw);
+
+        $result = $item->getRaw();
+
+        $this->assertEquals($raw, $result);
     }
 }

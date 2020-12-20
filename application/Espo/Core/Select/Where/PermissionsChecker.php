@@ -57,14 +57,9 @@ class PermissionsChecker
         $this->acl = $acl;
     }
 
-    public function check(array $where, Params $params)
+    public function check(Item $item, Params $params)
     {
-        foreach ($where as $item) {
-            $this->checkItem(
-                Item::fromArray($item),
-                $params
-            );
-        }
+        $this->checkItem($item, $params);
     }
 
     protected function checkItem(Item $item, Params $params)
@@ -97,7 +92,9 @@ class PermissionsChecker
         }
 
         if (!empty($value) && is_array($value)) {
-            $this->check($value, $params);
+            foreach ($value as $subItem) {
+                $this->checkItem(Item::fromArray($subItem), $params);
+            }
         }
     }
 

@@ -70,12 +70,14 @@ class Converter
         $this->scanner = $scanner;
     }
 
-    public function convert(QueryBuilder $queryBuilder, array $where) : WhereClause
+    public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClause
     {
         $whereClause = [];
 
-        foreach ($where as $item) {
-            $part = $this->processItem($queryBuilder, Item::fromArray($item));
+        $itemList = $this->itemToList($item);
+
+        foreach ($itemList as $subItem) {
+            $part = $this->processItem($queryBuilder, Item::fromArray($subItem));
 
             if (!empty($part)) {
                 continue;
@@ -84,9 +86,26 @@ class Converter
             $whereClause[] = $part;
         }
 
-        $this->scanner->applyLeftJoins($queryBuilder, $where);
+        $this->scanner->applyLeftJoins($queryBuilder, $item);
 
         return WhereClause::fromRaw($whereClause);
+    }
+
+    protected function itemToList(Item $item) : array
+    {
+        if ($item->getType() !== 'and') {
+            return [
+                $item->getRaw(),
+            ];
+        }
+
+        $list = $item->getValue();
+
+        if (!is_array($list)) {
+            throw new Error("Bad where item value.");
+        }
+
+        return $list;
     }
 
     protected function processItem(QueryBuilder $queryBuilder, Item $item) : ?array
@@ -94,10 +113,6 @@ class Converter
         $type = $item->getType();
         $attribute = $item->getAttribute();
         $value = $item->getValue();
-
-        if (!$type) {
-            throw new Error("Bad where definition. No type.");
-        }
 
         // Processing special filters. Only at the top level of the tree.
         if (in_array($type, $this->additionalFilterTypeList)) {
