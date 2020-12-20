@@ -91,4 +91,32 @@ class MetadataProvider
             ->metadata
             ->get($entityType, ['fullTextSearchColumnList']);
     }
+
+    public function getRelationType(string $entityType, string $link) : ?string
+    {
+        return (bool) $this->entityManager
+            ->getMetadata()
+            ->get($entityType, ['relations', $link, 'type']);
+    }
+
+    public function getRelationEntityType(string $entityType, string $link) : ?string
+    {
+        return (bool) $this->entityManager
+            ->getMetadata()
+            ->get($entityType, ['relations', $link, 'entity']);
+    }
+
+    public function getAttributeType(string $entityType, string $field) : ?string
+    {
+        return (bool) $this->entityManager
+            ->getMetadata()
+            ->get($entityType, ['fields', $attribute, 'type']);
+    }
+
+    public function getAttributeRelationParam(string $entityType, string $attribute) : ?string
+    {
+        return (bool) $this->entityManager
+            ->getMetadata()
+            ->get($entityType, ['fields', $attribute, 'relation']);
+    }
 }

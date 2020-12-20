@@ -27,59 +27,44 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Order;
+namespace tests\unit\Espo\Core\Select\Appliers;
 
 use Espo\Core\{
-    Utils\Metadata,
+    Exceptions\Error,
+    Exceptions\Forbidden,
+    Select\Appliers\OrderApplier,
+    Select\SearchParams,
+    Select\Order\Params as OrderParams,
+    Select\Order\ItemConverterFactory,
+    Select\Order\MetadataProvider,
 };
 
 use Espo\{
-    ORM\EntityManager,
+    ORM\QueryParams\SelectBuilder as QueryBuilder,
+    Entities\User,
 };
 
-class MetadataProvider
+class OrderApplierTest extends \PHPUnit\Framework\TestCase
 {
-    protected $metadata;
-    protected $entityManager;
-
-    private function __construct(Metadata $metadata, EntityManager $entityManager)
+    protected function setUp() : void
     {
-        $this->metadata = $metadata;
-        $this->entityManager = $entityManager;
+        $this->filterFactory = $this->createMock(PrimaryFilterFactory::class);
+        $this->user = $this->createMock(User::class);
+        $this->metadataProvider = $this->createMock(MetadataProvider::class);
+        $this->itemConverterFactory = $this->createMock(ItemConverterFactory::class);
+        $this->queryBuilder = $this->createMock(QueryBuilder::class);
+
+        $this->entityType = 'Test';
+
+        $this->applier = new OrderApplier(
+            $this->entityType,
+            $this->user,
+            $this->metadataProvider,
+            $this->itemConverterFactory
+        );
     }
 
-    public function getFieldType(string $entityType, string $field) : ?string
+    public function testApply1()
     {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'fields', $field, 'type'
-        ]) ?? null;
-    }
-
-    public function getDefaultOrderBy(string $entityType) : ?string
-    {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'collection', 'orderBy'
-        ]) ?? null;
-    }
-
-    public function getDefaultOrder(string $entityType) : ?string
-    {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'collection', 'order'
-        ]) ?? null;
-    }
-
-    public function hasAttribute(string $entityType, string $attribute) : bool
-    {
-        return (bool) $this->entityManager
-            ->getMetadata()
-            ->get($entityType, ['fields', $attribute]);
-    }
-
-    public function isAttributeParamUniqueTrue(string $entityType, string $attribute) : bool
-    {
-        return (bool) $this->entityManager
-            ->getMetadata()
-            ->get($entityType, ['fields', $attribute, 'unique']);
     }
 }

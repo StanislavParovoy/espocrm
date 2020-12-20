@@ -27,7 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Order;
+namespace Espo\Core\Select\Select;
 
 use Espo\Core\{
     Utils\Metadata,
@@ -48,13 +48,6 @@ class MetadataProvider
         $this->entityManager = $entityManager;
     }
 
-    public function getFieldType(string $entityType, string $field) : ?string
-    {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'fields', $field, 'type'
-        ]) ?? null;
-    }
-
     public function getDefaultOrderBy(string $entityType) : ?string
     {
         return $this->metadata->get([
@@ -62,10 +55,24 @@ class MetadataProvider
         ]) ?? null;
     }
 
-    public function getDefaultOrder(string $entityType) : ?string
+    public function getSelectAttributesDependancyMap(string $entityType) : ?array
     {
         return $this->metadata->get([
-            'entityDefs', $entityType, 'collection', 'order'
+            'selectDefs', $this->entityType, 'selectAttributesDependancyMap'
+        ]) ?? null;
+    }
+
+    public function getAclPortalAttributeList(string $entityType) : ?array
+    {
+        return $this->metadata->get([
+            'selectDefs', $this->entityType, 'aclPortalAttributeList'
+        ]) ?? null;
+    }
+
+    public function getAclAttributeList(string $entityType) : ?array
+    {
+        return $this->metadata->get([
+            'selectDefs', $this->entityType, 'aclAttributeList'
         ]) ?? null;
     }
 
@@ -74,12 +81,5 @@ class MetadataProvider
         return (bool) $this->entityManager
             ->getMetadata()
             ->get($entityType, ['fields', $attribute]);
-    }
-
-    public function isAttributeParamUniqueTrue(string $entityType, string $attribute) : bool
-    {
-        return (bool) $this->entityManager
-            ->getMetadata()
-            ->get($entityType, ['fields', $attribute, 'unique']);
     }
 }

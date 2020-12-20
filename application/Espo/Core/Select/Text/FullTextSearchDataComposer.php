@@ -34,9 +34,6 @@ use Espo\Core\{
     Utils\Config,
 };
 
-use Espo\ORM\{
-    EntityManager,
-};
 
 class FullTextSearchDataComposer
 {
@@ -46,18 +43,15 @@ class FullTextSearchDataComposer
 
     protected $config;
     protected $metadataProvider;
-    protected $entityManager;
 
     public function __construct(
         string $entityType,
         Config $config,
-        MetadataProvider $metadataProvider,
-        EntityManager $entityManager
+        MetadataProvider $metadataProvider
     ) {
         $this->entityType = $entityType;
         $this->config = $config;
         $this->metadataProvider = $metadataProvider;
-        $this->entityManager = $entityManager;
     }
 
     public function compose(string $filter, FullTextSearchDataComposerParams $params) : ?FullTextSearchData

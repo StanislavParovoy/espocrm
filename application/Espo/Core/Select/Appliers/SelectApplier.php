@@ -32,11 +32,11 @@ namespace Espo\Core\Select\Appliers;
 use Espo\Core\{
     Exceptions\Error,
     Select\SearchParams,
+    Select\Select\MetadataProvider,
     Utils\FieldUtil,
 };
 
 use Espo\{
-    ORM\EntityManager,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     Entities\User,
 };
@@ -57,27 +57,22 @@ class SelectApplier
         'accountId',
     ];
 
-    private $seed = null;
-
     protected $entityType;
 
     protected $user;
-    protected $entityManager;
     protected $fieldUtil;
-    protected $metadata;
+    protected $metadataProvider;
 
     public function __construct(
         string $entityType,
         User $user,
-        EntityManager $entityManager,
         FieldUtil $fieldUtil,
-        Metadata $metadata
+        MetadataProvider $metadataProvider
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->entityManager = $entityManager;
         $this->fieldUtil = $fieldUtil;
-        $this->metadata = $metadata;
+        $this->metadataProvider = $metadataProvider;
     }
 
     public function apply(QueryBuilder $queryBuilder, SearchParams $searchParams)
@@ -97,8 +92,6 @@ class SelectApplier
             return null;
         }
 
-        $entityDefs = $this->getEntityDefs();
-
         $attributeList = [];
 
         if (!in_array('id', $passedAttributeList)) {
@@ -110,7 +103,7 @@ class SelectApplier
                 continue;
             }
 
-            if (!$entityDefs->hasAttribute($attribute)) {
+            if (!$this->metadataProvider->hasAttribute($this->entityType, $attribute)) {
                 continue;
             }
 
@@ -122,17 +115,14 @@ class SelectApplier
                 continue;
             }
 
-            if (!$entityDefs->hasAttribute($attribute)) {
+            if (!$this->metadataProvider->hasAttribute($this->entityType, $attribute)) {
                 continue;
             }
 
             $attributeList[] = $attribute;
         }
 
-        $sortByField = $searchParams->getOrderBy() ??
-            $this->metadata->get([
-                'entityDefs', $this->entityType, 'collection', 'orderBy'
-            ]);
+        $sortByField = $searchParams->getOrderBy() ?? $this->metadataProvider->getDefaultOrderBy($this->entityType);
 
         if ($sortByField) {
             $sortByAttributeList = $this->fieldUtil->getAttributeList($this->entityType, $sortByField);
@@ -142,7 +132,7 @@ class SelectApplier
                     continue;
                 }
 
-                if (!$entityDefs->hasAttribute($attribute)) {
+                if (!$this->metadataProvider->hasAttribute($this->entityType, $attribute)) {
                     continue;
                 }
 
@@ -150,9 +140,8 @@ class SelectApplier
             }
         }
 
-        $selectAttributesDependancyMap = $this->metadata->get([
-            'selectDefs', $this->entityType, 'selectAttributesDependancyMap'
-        ]);
+        $selectAttributesDependancyMap =
+            $this->metadataProvider->getSelectAttributesDependancyMap($this->entityType) ?? [];
 
         foreach ($selectAttributesDependancyMap as $attribute => $dependantAttributeList) {
             if (!in_array($attribute, $attributeList)) {
@@ -171,23 +160,16 @@ class SelectApplier
         return $attributeList;
     }
 
-    protected function getEntityDefs() : Entity
-    {
-        return $this->seed ?? $this->entityManager->getEntity($this->entityType);
-    }
-
     protected function getAclAttributeList() : array
     {
         if ($this->user->isPortal()) {
-            return $this->metadata->get([
-                'selectDefs', $this->entityType, 'aclPortalAttributeList',
-            ]) ??
-            $this->aclPortalAttributeList;
+            return
+                $this->metadataProvider->getAclPortalAttributeList($this->entityType) ??
+                $this->aclPortalAttributeList;
         }
 
-        return $this->metadata->get([
-            'selectDefs', $this->entityType, 'aclAttributeList',
-        ]) ??
-        $this->aclAttributeList;
+        return
+            $this->metadataProvider->getAclAttributeList($this->entityType) ??
+            $this->aclAttributeList;
     }
 }

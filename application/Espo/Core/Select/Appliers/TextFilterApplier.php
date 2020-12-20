@@ -41,7 +41,6 @@ use Espo\Core\{
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
-    ORM\EntityManager,
     ORM\Entity,
     Entities\User,
 };
@@ -71,7 +70,6 @@ class TextFilterApplier
     protected $user;
     protected $config;
     protected $metadataProvider;
-    protected $entityManager;
     protected $fullTextSearchDataComposerFactory;
 
     public function __construct(
@@ -79,14 +77,12 @@ class TextFilterApplier
         User $user,
         Config $config,
         MetadataProvider $metadataProvider,
-        EntityManager $entityManager,
         FullTextSearchDataComposerFactory $fullTextSearchDataComposerFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->config = $config;
         $this->metadataProvider = $metadataProvider;
-        $this->entityManager = $entityManager;
         $this->fullTextSearchDataComposerFactory = $fullTextSearchDataComposerFactory;
     }
 
@@ -259,30 +255,30 @@ class TextFilterApplier
         string $field,
         bool $skipWidlcards
     ) {
-        $entityDefs = $this->getEntityDefs();
-
         $attributeType = null;
 
         if (strpos($field, '.') !== false) {
             list($link, $foreignField) = explode('.', $field);
 
-            $foreignEntityType = $entityDefs->getRelationParam($link, 'entity');
+            $foreignEntityType = $this->metadataProvider->getRelationEntityType($this->entityType, $link);
 
-            if ($entityDefs->getRelationParam($link, 'type') === Entity::HAS_MANY) {
+            if (!$foreignEntityType) {
+                throw new Error("Bad relation in text filter field '{$field}'.");
+            }
+
+            if ($this->metadataProvider->getRelationType($this->entityType, $link) === Entity::HAS_MANY) {
                 $queryBuilder->distinct();
             }
 
             $queryBuilder->leftJoin($link);
 
-            $foreignEntityDefs = $this->entityManager->getEntity($foreignEntityType);
-
-            $attributeType = $foreignEntityDefs->getAttributeType($foreignField);
+            $attributeType = $this->metadataProvider->getAttributeType($foreignEntityType, $foreignField);
         }
         else {
-            $attributeType = $entityDefs->getAttributeType($field);
+            $attributeType = $this->metadataProvider->getAttributeType($this->entityType, $field);
 
             if ($attributeType === 'foreign') {
-                $link = $entityDefs->getAttributeParam($field, 'relation');
+                $link = $this->metadataProvider->getAttributeRelationParam($this->entityType, $field);
 
                 if ($link) {
                     $queryBuilder->leftJoin($link);
@@ -355,10 +351,5 @@ class TextFilterApplier
         ]);
 
         return $composer->compose($filter, $params);
-    }
-
-    protected function getEntityDefs() : Entity
-    {
-        return $this->seed ?? $this->entityManager->getEntity($this->entityType);
     }
 }

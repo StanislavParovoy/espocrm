@@ -39,32 +39,26 @@ use Espo\Core\{
 };
 
 use Espo\{
-    ORM\EntityManager,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     Entities\User,
 };
 
 class OrderApplier
 {
-    private $seed = null;
-
     protected $entityType;
 
     protected $user;
-    protected $entityManager;
     protected $metadataProvider;
     protected $itemConverterFactory;
 
     public function __construct(
         string $entityType,
         User $user,
-        EntityManager $entityManager,
         MetadataProvider $metadataProvider,
         ItemConverterFactory $itemConverterFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
-        $this->entityManager = $entityManager;
         $this->metadataProvider = $metadataProvider;
         $this->itemConverterFactory = $itemConverterFactory;
     }
@@ -160,7 +154,7 @@ class OrderApplier
         else if (
             strpos($orderBy, '.') === false &&
             strpos($orderBy, ':') === false &&
-            !$this->getEntityDefs()->hasAttribute($orderBy)
+            !$this->metadataProvider->hasAttribute($entityType, $orderBy)
         ) {
             throw new Error("Order by non-existing field '{$orderBy}'.");
         }
@@ -179,18 +173,13 @@ class OrderApplier
             $orderBy !== 'id' &&
             (
                 !$orderByAttribute ||
-                !$this->getEntityDefs()->getAttributeParam($orderByAttribute, 'unique')
+                !$this->metadataProvider->isAttributeParamUniqueTrue($entityType, $orderByAttribute)
             ) &&
-            $this->getEntityDefs()->hasAttribute('id')
+            $this->metadataProvider->hasAttribute($entityType, 'id')
         ) {
             $resultOrderBy[] = ['id', $order];
         }
 
         $queryBuilder->order($resultOrderBy);
-    }
-
-    protected function getEntityDefs() : Entity
-    {
-        return $this->seed ?? $this->entityManager->getEntity($this->entityType);
     }
 }
