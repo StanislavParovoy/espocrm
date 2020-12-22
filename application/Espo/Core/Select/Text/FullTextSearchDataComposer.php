@@ -30,10 +30,8 @@
 namespace Espo\Core\Select\Text;
 
 use Espo\Core\{
-    Exceptions\Error,
     Utils\Config,
 };
-
 
 class FullTextSearchDataComposer
 {
@@ -93,7 +91,7 @@ class FullTextSearchDataComposer
         $fullTextSearchFieldList = [];
 
         if (!$useFullTextSearch) {
-            return false;
+            return null;
         }
 
         foreach ($fieldList as $field) {
