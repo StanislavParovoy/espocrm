@@ -63,8 +63,6 @@ class TextFilterApplier
 
     const MIN_LENGTH_FOR_CONTENT_SEARCH = 4;
 
-    private $seed = null;
-
     protected $entityType;
 
     protected $user;
@@ -88,8 +86,6 @@ class TextFilterApplier
 
     public function apply(QueryBuilder $queryBuilder, string $filter, FilterParams $params)
     {
-        $noFullText = $params->noFullTextSearch();
-
         $fullTextSearchData = null;
 
         $forceFullTextSearch = false;
@@ -126,7 +122,7 @@ class TextFilterApplier
             }
         }
 
-        if ($noFullText) {
+        if ($params->noFullTextSearch()) {
             $skipFullTextSearch = true;
         }
 
@@ -277,7 +273,7 @@ class TextFilterApplier
         else {
             $attributeType = $this->metadataProvider->getAttributeType($this->entityType, $field);
 
-            if ($attributeType === 'foreign') {
+            if ($attributeType === Entity::FOREIGN) {
                 $link = $this->metadataProvider->getAttributeRelationParam($this->entityType, $field);
 
                 if ($link) {
@@ -286,7 +282,7 @@ class TextFilterApplier
             }
         }
 
-        if ($attributeType === 'int') {
+        if ($attributeType === Entity::INT) {
             if (is_numeric($filter)) {
                 $orGroup[$field] = intval($filter);
             }
@@ -295,7 +291,7 @@ class TextFilterApplier
         }
 
         if (!$skipWidlcards) {
-            if ($this->checkWhetherToUseContains($filter, $attributeType)) {
+            if ($this->checkWhetherToUseContains($field, $filter, $attributeType)) {
                 $expression = '%' . $filter . '%';
             }
             else {
@@ -309,7 +305,7 @@ class TextFilterApplier
         $orGroup[$field . '*'] = $expression;
     }
 
-    protected function checkWhetherToUseContains(string $filter, string $attributeType) : bool
+    protected function checkWhetherToUseContains(string $field, string $filter, string $attributeType) : bool
     {
         $textFilterContainsMinLength =
             $this->config->get('textFilterContainsMinLength') ??
@@ -319,7 +315,7 @@ class TextFilterApplier
             return false;
         }
 
-        if ($attributeType === 'text') {
+        if ($attributeType === Entity::TEXT) {
             return true;
         }
 
@@ -328,7 +324,7 @@ class TextFilterApplier
         }
 
         if (
-            $attributeType === 'varchar' &&
+            $attributeType === Entity::VARCHAR &&
             $this->config->get('textFilterUseContainsForVarchar')
         ) {
             return true;
