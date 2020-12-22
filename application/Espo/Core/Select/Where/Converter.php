@@ -51,7 +51,6 @@ class Converter
     protected $entityType;
     protected $user;
     protected $itemConverter;
-    protected $dateTimeItemConverter;
     protected $ormMatadata;
     protected $scanner;
     protected $randomStringGenerator;
@@ -60,7 +59,6 @@ class Converter
         string $entityType,
         User $user,
         ItemGeneralConverter $itemConverter,
-        DateTimeItemConverter $dateTimeItemConverter,
         OrmMatadata $ormMatadata,
         Scanner $scanner,
         RandomStringGenerator $randomStringGenerator
@@ -68,7 +66,6 @@ class Converter
         $this->entityType = $entityType;
         $this->user = $user;
         $this->itemConverter = $itemConverter;
-        $this->dateTimeItemConverter = $dateTimeItemConverter;
         $this->ormMatadata = $ormMatadata;
         $this->scanner = $scanner;
         $this->randomStringGenerator = $randomStringGenerator;
