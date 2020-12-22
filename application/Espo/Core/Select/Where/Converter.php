@@ -33,8 +33,9 @@ use Espo\{
     Core\Exceptions\Error,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
-    ORM\EntityManager,
+    ORM\Metadata as OrmMatadata,
     Entities\User,
+    Core\Select\Helpers\RandomStringGenerator,
 };
 
 /**
@@ -51,23 +52,26 @@ class Converter
     protected $user;
     protected $itemConverter;
     protected $dateTimeItemConverter;
-    protected $entityManager;
+    protected $ormMatadata;
     protected $scanner;
+    protected $randomStringGenerator;
 
     public function __construct(
         string $entityType,
         User $user,
         ItemGeneralConverter $itemConverter,
         DateTimeItemConverter $dateTimeItemConverter,
-        EntityManager $entityManager,
-        Scanner $scanner
+        OrmMatadata $ormMatadata,
+        Scanner $scanner,
+        RandomStringGenerator $randomStringGenerator
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->itemConverter = $itemConverter;
         $this->dateTimeItemConverter = $dateTimeItemConverter;
-        $this->entityManager = $entityManager;
+        $this->ormMatadata = $ormMatadata;
         $this->scanner = $scanner;
+        $this->randomStringGenerator = $randomStringGenerator;
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClause
@@ -138,20 +142,16 @@ class Converter
     {
         $link = $attribute;
 
-        $relDefs = $this->entityManager
-            ->getMetadata()
-            ->get($this->entityType, 'relations') ?? [];
-
-        $defs = $relDefs[$link] ?? null;
+        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null
 
         if (!$defs) {
-            throw new Error("Can't apply inCategory for link {$link}.");
+            throw new Error("Bad link '{$link}' in where item.");
         }
 
         $foreignEntity = $defs['entity'] ?? null;
 
         if (!$foreignEntity) {
-            throw new Error("Can't apply inCategory for link {$link}.");
+            throw new Error("Bad link '{$link}' in where item.");
         }
 
         $pathName = lcfirst($foreignEntity) . 'Path';
@@ -160,7 +160,7 @@ class Converter
 
         if ($relationType == 'manyMany') {
             if (empty($defs['midKeys'])) {
-                throw new Error("Can't apply inCategory for link {$link}.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
             $queryBuilder->distinct();
@@ -190,7 +190,7 @@ class Converter
 
         if ($relationType == 'belongsTo') {
             if (empty($defs['key'])) {
-                throw new Error("Can't apply inCategory filter for link {$link}.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
             $key = $defs['key'];
@@ -210,7 +210,7 @@ class Converter
             return;
         }
 
-        throw new Error("Can't apply inCategory filter for link {$link}.");
+        throw new Error("Not supported link '{$link}' in where item.");
     }
 
     protected function applyIsUserFromTeams(QueryBuilder $queryBuilder, string $attribute, $value)
@@ -221,14 +221,10 @@ class Converter
             $value = $value[0];
         }
 
-        $relDefs = $this->entityManager
-            ->getMetadata()
-            ->get($this->entityType, 'relations') ?? [];
-
-        $defs = $relDefs[$link] ?? null;
+        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null
 
         if (!$defs) {
-            throw new Error("Can't apply isUserFromTeams for link {$link}.");
+            throw new Error("Bad link '{$link}' in where item.");
         }
 
         $relationType = $defs['type'] ?? null;
@@ -237,10 +233,10 @@ class Converter
             $key = $defs['key'] ?? null;
 
             if (!$key) {
-                throw new Error("Can't apply isUserFromTeams for link {$link}.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
-            $aliasName = $link . 'IsUserFromTeamFilter' .strval(rand(10000, 99999));
+            $aliasName = $link . 'IsUserFromTeamFilter' . $this->randomStringGenerator->generate();
 
             $queryBuilder->leftJoin(
                 'TeamUser',
@@ -260,6 +256,6 @@ class Converter
             return;
         }
 
-        throw new Error("Can't apply isUserFromTeams for link {$link}.");
+        throw new Error("Not supported link '{$link}' in where item.");
     }
 }

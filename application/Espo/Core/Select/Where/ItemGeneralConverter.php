@@ -34,8 +34,11 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
     ORM\EntityManager,
+    ORM\Metadata as OrmMetadata,
+    ORM\Entity,
     Entities\User,
     Core\Utils\Config,
+    Core\Select\Helpers\RandomStringGenerator,
 };
 
 use DateTime;
@@ -51,26 +54,32 @@ class ItemGeneralConverter
     protected $user;
     protected $dateTimeItemTransformer;
     protected $entityManager;
+    protected $ormMetadata;
     protected $config;
     protected $scanner;
     protected $itemConverterFactory;
+    protected $randomStringGenerator;
 
     public function __construct(
         string $entityType,
         User $user,
         DateTimeItemTransformer $dateTimeItemTransformer,
         EntityManager $entityManager,
+        OrmMetadata, $ormMetadata,
         Config $config,
         Scanner $scanner,
-        ItemConverterFactory $itemConverterFactory
+        ItemConverterFactory $itemConverterFactory,
+        RandomStringGenerator $randomStringGenerator
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->dateTimeItemTransformer = $dateTimeItemTransformer;
         $this->entityManager = $entityManager;
+        $this->ormMetadata = $ormMetadata;
         $this->config = $config;
         $this->scanner = $scanner;
         $this->itemConverterFactory = $itemConverterFactory;
+        $this->randomStringGenerator = $randomStringGenerator;
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : array
@@ -231,14 +240,11 @@ class ItemGeneralConverter
 
         $column = $this->metadata->get(['entityDefs', $this->entityType, 'fields', $attribute, 'column']);
 
-        $alias =  $link . 'ColumnFilter' . strval(rand(10000, 99999));
+        $alias =  $link . 'ColumnFilter' . $this->randomStringGenerator->generate();
 
         $queryBuilder->distinct();
 
-        $queryBuilder->leftJoin([
-            $link,
-            $alias,
-        ]);
+        $queryBuilder->leftJoin($link, $alias);
 
         $columnKey = $alias . 'Middle.' . $column;
 
@@ -289,39 +295,52 @@ class ItemGeneralConverter
 
     protected function groupProcessArray(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
     {
-        $arrayValueAlias = 'arrayFilter' . strval(rand(10000, 99999));
+        $arrayValueAlias = 'arrayFilter' . $this->randomStringGenerator->generate();
 
         $arrayAttribute = $attribute;
         $arrayEntityType = $this->entityType;
         $idPart = 'id';
-
-        $seed = $this->entityManager->getEntity($this->entityType);
 
         $isForeign = strpos($attribute, '.') > 0;
 
         $isForeignType = false;
 
         if (!$isForeign) {
-            $isForeignType = $isForeign = $seed->getAttributeType($attribute) === 'foreign';
+            $isForeignType = $this->ormMetadata->get(
+                $this->entityType, ['fields', $attribute, 'type']
+            ) === Entity::FOREIGN;
+
+            $isForeign = $isForeignType;
         }
 
         if ($isForeign) {
+            $defs = $this->ormMetadata->get($this->entityType, ['fields', $attribute]);
+
             if ($isForeignType) {
-                $arrayAttributeLink = $seed->getAttributeParam($attribute, 'relation');
-                $arrayAttribute = $seed->getAttributeParam($attribute, 'foreign');
-            } else {
+                $arrayAttributeLink = $defs['relation'] ?? null;
+                $arrayAttribute = $defs['foreign'] ?? null;
+            }
+            else {
                 list($arrayAttributeLink, $arrayAttribute) = explode('.', $attribute);
             }
 
-            $arrayEntityType = $seed->getRelationParam($arrayAttributeLink, 'entity');
+            if (!$arrayAttributeLink || !$arrayAttribute) {
+                throw Error("Bad where item.");
+            }
 
-            $arrayLinkAlias = $arrayAttributeLink . 'ArrayFilter' . strval(rand(10000, 99999));
+            $arrayEntityType = $this->ormMetadata->get(
+                $this->entityType, ['relations', $arrayAttributeLink, 'entity']
+            );
+
+            $arrayLinkAlias = $arrayAttributeLink . 'ArrayFilter' . $this->randomStringGenerator->generate();
 
             $idPart = $arrayLinkAlias . '.id';
 
             $queryBuilder->leftJoin($arrayAttributeLink, $arrayLinkAlias);
 
-            $relationType = $seed->getRelationType($arrayAttributeLink);
+            $relationType = $this->ormMetadata->get(
+                $this->entityType, ['relations', $arrayAttributeLink, 'type']
+            );
 
             if ($relationType === 'manyMany' || $relationType === 'hasMany') {
                 $queryBuilder->distinct();
@@ -330,7 +349,7 @@ class ItemGeneralConverter
 
         if ($type === 'arrayAnyOf') {
             if (is_null($value) || !$value && !is_array($value)) {
-                throw new Error("Bad where item 'array'. No value.");
+                throw new Error("Bad where item. No value.");
             }
 
             $queryBuilder->leftJoin(
@@ -947,7 +966,7 @@ class ItemGeneralConverter
     {
         $link = $attribute;
 
-        $alias = $link . 'IsLinkedFilter' . strval(rand(10000, 99999));
+        $alias = $link . 'IsLinkedFilter' . $this->randomStringGenerator->generate();
 
         $queryBuilder->distinct();
 
@@ -962,16 +981,16 @@ class ItemGeneralConverter
     {
         $link = $attribute;
 
-        $defs = $this->entityManager->getMetadata($this->entityType, ['relations', $link]);
+        $defs = $this->ormMetadata->get($this->entityType, ['relations', $link]);
 
         if (!$defs) {
-            throw new Error("Bad where item 'linkedWith'. Relation does not exist.");
+            throw new Error("Bad link '{$link}' in where item.");
         }
 
-        $alias =  $link . 'LinkedWithFilter' . strval(rand(10000, 99999));
+        $alias =  $link . 'LinkedWithFilter' . $this->randomStringGenerator->generate();
 
         if (is_null($value) || !$value && !is_array($value)) {
-            throw new Error("Bad where item 'linkedWith'. Empty value.");
+            throw new Error("Bad where item. Empty value.");
         }
 
         $relationType = $defs['type'] ?? null;
@@ -984,7 +1003,7 @@ class ItemGeneralConverter
             $key = $defs['midKeys'][1] ?? null;
 
             if (!$key) {
-                throw new Error("Bad where item 'linkedWith'. Bad relation.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
             return [
@@ -1002,7 +1021,7 @@ class ItemGeneralConverter
             $key = $defs['key'] ?? null;
 
             if (!$key) {
-                throw new Error("Bad where item 'linkedWith'. Bad relation.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
             return [
@@ -1017,23 +1036,23 @@ class ItemGeneralConverter
             ];
         }
 
-        throw new Error("Bad where item 'linkedWith'. Not supported relation type.");
+        throw new Error("Bad where item. Not supported relation type.");
     }
 
     protected function processNotLinkedWith(QueryBuilder $queryBuilder, string $attribute, $value) : array
     {
         $link = $attribute;
 
-        $defs = $this->entityManager->getMetadata($this->entityType, ['relations', $link]);
+        $defs = $this->ormMetadata->get($this->entityType, ['relations', $link]);
 
         if (!$defs) {
-            throw new Error("Bad where item 'notLinkedWith'. Relation does not exist.");
+            throw new Error("Bad link '{$link}' in where item.");
         }
 
-        $alias =  $link . 'NotLinkedWithFilter' . strval(rand(10000, 99999));
+        $alias =  $link . 'NotLinkedWithFilter' . $this->randomStringGenerator->generate();
 
         if (is_null($value)) {
-            throw new Error("Bad where item 'notLinkedWith'. Empty value.");
+            throw new Error("Bad where item. Empty value.");
         }
 
         $relationType = $defs['type'] ?? null;
@@ -1044,7 +1063,7 @@ class ItemGeneralConverter
             $key = $defs['midKeys'][1] ?? null;
 
             if (!$key) {
-                throw new Error("Bad where item 'notLinkedWith'. Bad relation.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
             $queryBuilder->leftJoin(
@@ -1072,7 +1091,7 @@ class ItemGeneralConverter
             $key = $defs['key'] ?? null;
 
             if (!$key) {
-                throw new Error("Bad where item 'notLinkedWith'. Bad relation.");
+                throw new Error("Bad link '{$link}' in where item.");
             }
 
             return [
@@ -1087,6 +1106,6 @@ class ItemGeneralConverter
             ];
         }
 
-        throw new Error("Bad where item 'notLinkedWith'. Not supported relation type.");
+        throw new Error("Bad where item. Not supported relation type.");
     }
 }
