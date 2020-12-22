@@ -122,10 +122,10 @@ class SelectApplier
             $attributeList[] = $attribute;
         }
 
-        $sortByField = $searchParams->getOrderBy() ?? $this->metadataProvider->getDefaultOrderBy($this->entityType);
+        $orderByField = $searchParams->getOrderBy() ?? $this->metadataProvider->getDefaultOrderBy($this->entityType);
 
-        if ($sortByField) {
-            $sortByAttributeList = $this->fieldUtil->getAttributeList($this->entityType, $sortByField);
+        if ($orderByField) {
+            $sortByAttributeList = $this->fieldUtil->getAttributeList($this->entityType, $orderByField);
 
             foreach ($sortByAttributeList as $attribute) {
                 if (in_array($attribute, $attributeList)) {

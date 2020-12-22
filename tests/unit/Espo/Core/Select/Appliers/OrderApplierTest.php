@@ -31,7 +31,6 @@ namespace tests\unit\Espo\Core\Select\Appliers;
 
 use Espo\Core\{
     Exceptions\Error,
-    Exceptions\Forbidden,
     Select\Appliers\OrderApplier,
     Select\SearchParams,
     Select\Order\Params as OrderParams,
