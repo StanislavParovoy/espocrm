@@ -34,6 +34,7 @@ use Espo\Core\{
     Exceptions\Forbidden,
     Select\SearchParams,
     Select\Order\Params as OrderParams,
+    Select\Order\Item as OrderItem,
     Select\Order\ItemConverterFactory,
     Select\Order\MetadataProvider,
 };
@@ -65,7 +66,7 @@ class OrderApplier
 
     public function apply(QueryBuilder $queryBuilder, OrderParams $params)
     {
-        if ($params->applyDefaultOrder()) {
+        if ($params->forceDefault()) {
             $this->applyDefaultOrder($queryBuilder, $params->getOrder());
 
             return;
@@ -139,7 +140,7 @@ class OrderApplier
             $converter = $this->itemConverterFactory->create($this->entityType, $orderBy);
 
             $resultOrderBy = $converter->convert(
-                Item::fromArray([
+                OrderItem::fromArray([
                     'orderBy' => $orderBy,
                     'order' => $order,
                 ])
@@ -154,7 +155,7 @@ class OrderApplier
         else if (
             strpos($orderBy, '.') === false &&
             strpos($orderBy, ':') === false &&
-            !$this->metadataProvider->hasAttribute($entityType, $orderBy)
+            !$this->metadataProvider->hasAttribute($this->entityType, $orderBy)
         ) {
             throw new Error("Order by non-existing field '{$orderBy}'.");
         }
@@ -173,9 +174,9 @@ class OrderApplier
             $orderBy !== 'id' &&
             (
                 !$orderByAttribute ||
-                !$this->metadataProvider->isAttributeParamUniqueTrue($entityType, $orderByAttribute)
+                !$this->metadataProvider->isAttributeParamUniqueTrue($this->entityType, $orderByAttribute)
             ) &&
-            $this->metadataProvider->hasAttribute($entityType, 'id')
+            $this->metadataProvider->hasAttribute($this->entityType, 'id')
         ) {
             $resultOrderBy[] = ['id', $order];
         }

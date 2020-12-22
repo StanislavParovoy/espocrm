@@ -35,7 +35,9 @@ use Espo\Core\{
     Select\Appliers\OrderApplier,
     Select\SearchParams,
     Select\Order\Params as OrderParams,
+    Select\Order\Item,
     Select\Order\ItemConverterFactory,
+    Select\Order\ItemConverter,
     Select\Order\MetadataProvider,
 };
 
@@ -48,11 +50,11 @@ class OrderApplierTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
-        $this->filterFactory = $this->createMock(PrimaryFilterFactory::class);
         $this->user = $this->createMock(User::class);
         $this->metadataProvider = $this->createMock(MetadataProvider::class);
         $this->itemConverterFactory = $this->createMock(ItemConverterFactory::class);
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
+        $this->params = $this->createMock(OrderParams::class);
 
         $this->entityType = 'Test';
 
@@ -64,7 +66,194 @@ class OrderApplierTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testApplyDefault()
+    {
+        $order = SearchParams::ORDER_DESC;
+
+        $this->params
+            ->expects($this->any())
+            ->method('forceDefault')
+            ->willReturn(true);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrder')
+            ->willReturn($order);
+
+        $this->metadataProvider
+            ->expects($this->any())
+            ->method('getDefaultOrderBy')
+            ->with($this->entityType)
+            ->willReturn('testField');
+
+        $this->initApplyOrderTest('testField', $order, 'varchar');
+
+        $this->applier->apply($this->queryBuilder, $this->params);
+    }
+
     public function testApply1()
     {
+        $order = SearchParams::ORDER_DESC;
+        $orderBy = 'testField';
+
+        $this->params
+            ->expects($this->any())
+            ->method('forceDefault')
+            ->willReturn(false);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrder')
+            ->willReturn($order);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrderBy')
+            ->willReturn($orderBy);
+
+        $this->metadataProvider
+            ->expects($this->any())
+            ->method('getDefaultOrderBy')
+            ->with($this->entityType)
+            ->willReturn($orderBy);
+
+        $this->initApplyOrderTest($orderBy, $order, 'varchar');
+
+        $this->applier->apply($this->queryBuilder, $this->params);
+    }
+
+    public function testApplyWithConverter()
+    {
+        $order = SearchParams::ORDER_DESC;
+        $orderBy = 'testField';
+
+        $this->params
+            ->expects($this->any())
+            ->method('forceDefault')
+            ->willReturn(false);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrder')
+            ->willReturn($order);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrderBy')
+            ->willReturn($orderBy);
+
+        $this->metadataProvider
+            ->expects($this->any())
+            ->method('getDefaultOrderBy')
+            ->with($this->entityType)
+            ->willReturn($orderBy);
+
+        $this->initApplyOrderTest($orderBy, $order, 'varchar', [['hello', SearchParams::ORDER_DESC]]);
+
+        $this->applier->apply($this->queryBuilder, $this->params);
+    }
+
+    public function testApplyNotExisting()
+    {
+        $order = SearchParams::ORDER_DESC;
+        $orderBy = 'testField';
+
+        $this->params
+            ->expects($this->any())
+            ->method('forceDefault')
+            ->willReturn(false);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrder')
+            ->willReturn($order);
+
+        $this->params
+            ->expects($this->any())
+            ->method('getOrderBy')
+            ->willReturn($orderBy);
+
+        $this->metadataProvider
+            ->expects($this->any())
+            ->method('getDefaultOrderBy')
+            ->with($this->entityType)
+            ->willReturn($orderBy);
+
+        $this->initApplyOrderTest($orderBy, $order, 'varchar', null, true);
+
+        $this->applier->apply($this->queryBuilder, $this->params);
+    }
+
+    protected function initApplyOrderTest(
+        string $orderBy, string $order, string $fieldType, ?array $converterResult = null, bool $notExisting = false
+    ) {
+        $this->metadataProvider
+            ->expects($this->any())
+            ->method('getFieldType')
+            ->with($this->entityType, $orderBy)
+            ->willReturn($fieldType);
+
+        $this->itemConverterFactory
+            ->expects($this->once())
+            ->method('has')
+            ->with($this->entityType, $orderBy)
+            ->willReturn(
+                (bool) $converterResult
+            );
+
+            $this->metadataProvider
+                ->expects($this->any())
+                ->method('hasAttribute')
+                ->will(
+                    $this->returnValueMap(
+                        [
+                            [$this->entityType, $orderBy, !$notExisting],
+                            [$this->entityType, 'id', true],
+                        ]
+                    )
+                );
+
+        if ($converterResult) {
+            $converter = $this->createMock(ItemConverter::class);
+
+            $this->itemConverterFactory
+                ->expects($this->once())
+                ->method('create')
+                ->with($this->entityType, $orderBy)
+                ->willReturn($converter);
+
+            $item = Item::fromArray([
+                'orderBy' => $orderBy,
+                'order' => $order,
+            ]);
+
+            $converter
+                ->expects($this->once())
+                ->method('convert')
+                ->with($item)
+                ->willReturn($converterResult);
+        } else {
+
+            if ($notExisting) {
+                $this->expectException(Error::class);
+
+                return;
+            }
+
+            $this->metadataProvider
+                ->expects($this->once())
+                ->method('isAttributeParamUniqueTrue')
+                ->with($this->entityType, $orderBy)
+                ->willReturn(false);
+        }
+
+        $expectedOrderBy = $converterResult ?? [[$orderBy, $order]];
+
+        $expectedOrderBy[] = ['id', $order];
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('order')
+            ->with($expectedOrderBy);
     }
 }
