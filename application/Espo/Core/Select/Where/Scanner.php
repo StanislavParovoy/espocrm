@@ -118,7 +118,7 @@ class Scanner
 
         $attributeType = $seed->getAttributeType($attribute);
 
-        if ($attributeType === 'foreign') {
+        if ($attributeType === Entity::FOREIGN) {
             $relation = $seed->getAttributeParam($attribute, 'relation');
 
             if ($relation) {
