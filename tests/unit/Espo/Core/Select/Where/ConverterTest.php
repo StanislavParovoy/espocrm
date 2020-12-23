@@ -106,6 +106,22 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testConvertApplyLeftJoins()
+    {
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+            ],
+        ]);
+
+        $this->scanner
+            ->expects($this->once())
+            ->method('applyLeftJoins')
+            ->with($this->queryBuilder, $item);
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+    }
+
     public function testConvertEquals1()
     {
         $item = Item::fromArray([
