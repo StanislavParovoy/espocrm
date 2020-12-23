@@ -75,6 +75,11 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
 
+        $this->randomStringGenerator
+            ->expects($this->any())
+            ->method('generate')
+            ->willReturn('Random');
+
         $this->dateTimeItemTransformer = new DateTimeItemTransformer(
             $this->entityType,
             $this->user
@@ -288,6 +293,60 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
         $expected = [
             'foreignPath.ascendorId' => 'value',
+        ];
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
+
+    public function testConvertIsUserFromTeams()
+    {
+        $this->ormMatadata
+            ->expects($this->once())
+            ->method('get')
+            ->with($this->entityType, ['relations', 'user'])
+            ->willReturn(
+                [
+                    'type' => Entity::BELONGS_TO,
+                    'entity' => 'User',
+                    'key' => 'userId',
+                ]
+            );
+
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'isUserFromTeams',
+                    'attribute' => 'user',
+                    'value' => 'valueTeamId',
+                ],
+            ],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('distinct');
+
+        $aliasName = 'userIsUserFromTeamsFilterRandom';
+
+        $this->queryBuilder
+            ->method('join')
+            ->withConsecutive(
+                [
+                    'TeamUser',
+                    $aliasName . 'Middle',
+                    [
+                        $aliasName . 'Middle.userId:' => 'userId',
+                        $aliasName . 'Middle.deleted' => false,
+                    ]
+                ],
+            );
+
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $expected = [
+            $aliasName . 'Middle.teamId' => 'valueTeamId',
         ];
 
         $this->assertEquals($expected, $whereClause->getRaw());

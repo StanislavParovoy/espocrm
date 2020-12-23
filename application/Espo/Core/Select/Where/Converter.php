@@ -224,6 +224,11 @@ class Converter
         }
 
         $relationType = $defs['type'] ?? null;
+        $entityType = $defs['entity'] ?? null;
+
+        if ($entityType !== 'User') {
+            new Error("Not supported link '{$link}' in where item.");
+        }
 
         if ($relationType == Entity::BELONGS_TO) {
             $key = $defs['key'] ?? null;
@@ -232,7 +237,7 @@ class Converter
                 throw new Error("Bad link '{$link}' in where item.");
             }
 
-            $aliasName = $link . 'IsUserFromTeamFilter' . $this->randomStringGenerator->generate();
+            $aliasName = $link . 'IsUserFromTeamsFilter' . $this->randomStringGenerator->generate();
 
             $queryBuilder->leftJoin(
                 'TeamUser',
@@ -246,7 +251,7 @@ class Converter
             $queryBuilder->distinct();
 
             return [
-                $aliasName . 'Middle.teamId' => $idsValue,
+                $aliasName . 'Middle.teamId' => $value,
             ];
         }
 
