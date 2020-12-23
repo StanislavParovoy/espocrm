@@ -86,7 +86,6 @@ class DateTimeItemTransformer
 
         $where = [
             'attribute' => $attribute,
-            'originalType' => $type,
         ];
 
         $dt = new DateTime('now', new DateTimeZone($timeZone));

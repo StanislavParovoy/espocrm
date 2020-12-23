@@ -90,6 +90,7 @@ class ItemGeneralConverter
 
         if ($item->isDateTime()) {
             return $this->convert(
+                $queryBuilder,
                 $this->dateTimeItemTransformer->transform($item)
             );
         }

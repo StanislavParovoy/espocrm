@@ -367,4 +367,31 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expected, $whereClause->getRaw());
     }
+
+    public function testConvertDateTimeOn1()
+    {
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'on',
+                    'attribute' => 'test',
+                    'value' => '2020-12-20',
+                    'dateTime' => true,
+                    'timeZone' => 'Europe/Kiev',
+                ],
+            ],
+        ]);
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $expected = [
+            'AND' => [
+                'test>=' => '2020-12-19 22:00:00',
+                'test<=' => '2020-12-20 21:59:59',
+            ],
+        ];
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
 }
