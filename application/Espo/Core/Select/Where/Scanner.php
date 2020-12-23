@@ -48,18 +48,18 @@ class Scanner
         $this->entityManager = $entityManager;
     }
 
-    public function applyLeftJoins(SelectBuilder $selectBuilder, Item $item)
+    public function applyLeftJoins(QueryBuilder $queryBuilder, Item $item)
     {
-        $entityType = $selectBuilder->build()->getFrom();
+        $entityType = $queryBuilder->build()->getFrom();
 
         if (!$entityType) {
             throw new Error("No entity type.");
         }
 
-        $this->applyLeftJoinsFromItem($selectBuilder, $item, $entityType);
+        $this->applyLeftJoinsFromItem($queryBuilder, $item, $entityType);
     }
 
-    protected function applyLeftJoinsFromItem(SelectBuilder $selectBuilder, Item $item, string $entityType)
+    protected function applyLeftJoinsFromItem(QueryBuilder $queryBuilder, Item $item, string $entityType)
     {
         $type = $item->getType();
         $value = $item->getValue();
@@ -75,7 +75,7 @@ class Scanner
             }
 
             foreach ($value as $subItem) {
-                $this->applyLeftJoinsFromItem($selectBuilder, Item::fromRaw($subItem), $entityType);
+                $this->applyLeftJoinsFromItem($queryBuilder, Item::fromRaw($subItem), $entityType);
             }
 
             return;
@@ -85,16 +85,16 @@ class Scanner
             return;
         }
 
-        $this->applyLeftJoinsFromAttribute($selectBuilder, $attribute, $entityType);
+        $this->applyLeftJoinsFromAttribute($queryBuilder, $attribute, $entityType);
     }
 
-    protected function applyLeftJoinsFromAttribute(SelectBuilder $selectBuilder, string $attribute, string $entityType)
+    protected function applyLeftJoinsFromAttribute(QueryBuilder $queryBuilder, string $attribute, string $entityType)
     {
         if (strpos($attribute, ':') !== false) {
             $argumentList = QueryComposer::getAllAttributesFromComplexExpression($attribute);
 
             foreach ($argumentList as $argument) {
-                $this->applyLeftJoinsFromAttribute($selectBuilder, $argument, $entityType);
+                $this->applyLeftJoinsFromAttribute($queryBuilder, $argument, $entityType);
             }
 
             return;

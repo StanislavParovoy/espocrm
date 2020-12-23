@@ -54,31 +54,30 @@ class ItemGeneralConverter
     protected $entityType;
     protected $user;
     protected $dateTimeItemTransformer;
-    protected $entityManager;
-    protected $config;
     protected $scanner;
     protected $itemConverterFactory;
     protected $randomStringGenerator;
+    protected $entityManager;
+    protected $config;
 
     public function __construct(
         string $entityType,
         User $user,
         DateTimeItemTransformer $dateTimeItemTransformer,
-        EntityManager $entityManager,
-        Config $config,
         Scanner $scanner,
         ItemConverterFactory $itemConverterFactory,
-        RandomStringGenerator $randomStringGenerator
+        RandomStringGenerator $randomStringGenerator,
+        EntityManager $entityManager,
+        Config $config
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->dateTimeItemTransformer = $dateTimeItemTransformer;
-        $this->entityManager = $entityManager;
-        $this->ormMetadata = $ormMetadata;
-        $this->config = $config;
         $this->scanner = $scanner;
         $this->itemConverterFactory = $itemConverterFactory;
         $this->randomStringGenerator = $randomStringGenerator;
+        $this->entityManager = $entityManager;
+        $this->config = $config;
 
         $this->ormMatadata = $this->entityManager->getMetadata();
     }

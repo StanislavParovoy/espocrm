@@ -43,11 +43,15 @@ class WhereClause implements WhereItem
 
     public static function fromRaw(array $whereClause) : self
     {
+        if (count($whereClause) === 1 && array_keys($whereClause)[0] === 0) {
+            $whereClause = $whereClause[0];
+        }
+
         $object = new self();
 
         $object->raw = $whereClause;
 
-        return $self;
+        return $object;
     }
 
     public function getRaw() : array

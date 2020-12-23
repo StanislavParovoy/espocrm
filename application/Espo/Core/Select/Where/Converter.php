@@ -54,24 +54,24 @@ class Converter
     protected $entityType;
     protected $user;
     protected $itemConverter;
-    protected $entityManager;
     protected $scanner;
     protected $randomStringGenerator;
+    protected $entityManager;
 
     public function __construct(
         string $entityType,
         User $user,
         ItemGeneralConverter $itemConverter,
-        EntityManager $entityManager,
         Scanner $scanner,
-        RandomStringGenerator $randomStringGenerator
+        RandomStringGenerator $randomStringGenerator,
+        EntityManager $entityManager
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->itemConverter = $itemConverter;
-        $this->entityManager = $entityManager;
         $this->scanner = $scanner;
         $this->randomStringGenerator = $randomStringGenerator;
+        $this->entityManager = $entityManager;
 
         $this->ormMatadata = $this->entityManager->getMetadata();
     }
@@ -85,7 +85,7 @@ class Converter
         foreach ($itemList as $subItem) {
             $part = $this->processItem($queryBuilder, Item::fromArray($subItem));
 
-            if (!empty($part)) {
+            if (empty($part)) {
                 continue;
             }
 
