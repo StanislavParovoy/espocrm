@@ -343,7 +343,7 @@ class ItemGeneralConverter
                 $this->entityType, ['relations', $arrayAttributeLink, 'type']
             );
 
-            if ($relationType === 'manyMany' || $relationType === 'hasMany') {
+            if ($relationType === Entity::MANY_MANY || $relationType === Entity::HAS_MANY) {
                 $queryBuilder->distinct();
             }
         }
@@ -998,7 +998,7 @@ class ItemGeneralConverter
 
         $queryBuilder->distinct();
 
-        if ($relationType == 'manyMany') {
+        if ($relationType == Entity::MANY_MANY) {
             $queryBuilder->leftJoin($link, $alias);
 
             $key = $defs['midKeys'][1] ?? null;
@@ -1011,14 +1011,14 @@ class ItemGeneralConverter
                 $alias . 'Middle.' . $key => $value,
             ];
         }
-        else if ($relationType == 'hasMany') {
+        else if ($relationType == Entity::HAS_MANY) {
             $queryBuilder->leftJoin($link, $alias);
 
             return [
                 $alias . '.id' => $value,
             ];
         }
-        else if ($relationType == 'belongsTo') {
+        else if ($relationType == Entity::BELONGS_TO) {
             $key = $defs['key'] ?? null;
 
             if (!$key) {
@@ -1029,7 +1029,7 @@ class ItemGeneralConverter
                 $key => $value,
             ];
         }
-        else if ($relationType == 'hasOne') {
+        else if ($relationType == Entity::HAS_ONE) {
             $queryBuilder->leftJoin($link, $alias);
 
             return [
@@ -1060,7 +1060,7 @@ class ItemGeneralConverter
 
         $queryBuilder->distinct();
 
-        if ($relationType == 'manyMany') {
+        if ($relationType == Entity::MANY_MANY) {
             $key = $defs['midKeys'][1] ?? null;
 
             if (!$key) {
@@ -1077,7 +1077,7 @@ class ItemGeneralConverter
                 $alias . 'Middle.' . $key => null,
             ];
         }
-        else if ($relationType == 'hasMany') {
+        else if ($relationType == Entity::HAS_MANY) {
             $queryBuilder->leftJoin(
                 $link,
                 $alias,
@@ -1088,7 +1088,7 @@ class ItemGeneralConverter
                 $alias . '.id' => null,
             ];
         }
-        else if ($relationType == 'belongsTo') {
+        else if ($relationType == Entity::BELONGS_TO) {
             $key = $defs['key'] ?? null;
 
             if (!$key) {
@@ -1099,7 +1099,7 @@ class ItemGeneralConverter
                 $key . '!=' => $value,
             ];
         }
-        else if ($relationType == 'hasOne') {
+        else if ($relationType == Entity::HAS_ONE) {
             $queryBuilder->leftJoin($link, $alias);
 
             return [

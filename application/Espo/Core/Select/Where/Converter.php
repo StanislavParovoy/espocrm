@@ -34,6 +34,7 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
     ORM\EntityManager,
+    ORM\Entity,
     Entities\User,
     Core\Select\Helpers\RandomStringGenerator,
 };
@@ -159,7 +160,7 @@ class Converter
 
         $relationType = $defs['type'] ?? null;
 
-        if ($relationType == 'manyMany') {
+        if ($relationType == Entity::MANY_MANY) {
             if (empty($defs['midKeys'])) {
                 throw new Error("Bad link '{$link}' in where item.");
             }
@@ -189,7 +190,7 @@ class Converter
             return;
         }
 
-        if ($relationType == 'belongsTo') {
+        if ($relationType == Entity::BELONGS_TO) {
             if (empty($defs['key'])) {
                 throw new Error("Bad link '{$link}' in where item.");
             }
@@ -230,7 +231,7 @@ class Converter
 
         $relationType = $defs['type'] ?? null;
 
-        if ($relationType == 'belongsTo') {
+        if ($relationType == Entity::BELONGS_TO) {
             $key = $defs['key'] ?? null;
 
             if (!$key) {
