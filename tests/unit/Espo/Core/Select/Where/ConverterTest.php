@@ -186,4 +186,110 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expected, $whereClause->getRaw());
     }
+
+    public function testConvertInCategoryManyMany()
+    {
+        $this->ormMatadata
+            ->expects($this->once())
+            ->method('get')
+            ->with($this->entityType, ['relations', 'test'])
+            ->willReturn(
+                [
+                    'type' => Entity::MANY_MANY,
+                    'entity' => 'Foreign',
+                    'midKeys' => ['localId', 'foreignId'],
+                ]
+            );
+
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'inCategory',
+                    'attribute' => 'test',
+                    'value' => 'value',
+                ],
+            ],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('distinct');
+
+        $this->queryBuilder
+            ->method('join')
+            ->withConsecutive(
+                [
+                    'test',
+                    'testInCategoryFilter',
+                ],
+                [
+                    'ForeignPath',
+                    'foreignPath',
+                    [
+                         "foreignPath.descendorId:" => "testInCategoryFilterMiddle.foreignId",
+                    ]
+                ],
+            );
+
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $expected = [
+            'foreignPath.ascendorId' => 'value',
+        ];
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
+
+    public function testConvertInCategoryBelongsTo()
+    {
+        $this->ormMatadata
+            ->expects($this->once())
+            ->method('get')
+            ->with($this->entityType, ['relations', 'test'])
+            ->willReturn(
+                [
+                    'type' => Entity::BELONGS_TO,
+                    'entity' => 'Foreign',
+                    'key' => 'foreignId',
+                ]
+            );
+
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'inCategory',
+                    'attribute' => 'test',
+                    'value' => 'value',
+                ],
+            ],
+        ]);
+
+        $this->queryBuilder
+            ->expects($this->never())
+            ->method('distinct');
+
+        $this->queryBuilder
+            ->method('join')
+            ->withConsecutive(
+                [
+                    'ForeignPath',
+                    'foreignPath',
+                    [
+                        "foreignPath.descendorId:" => "foreignId",
+                    ]
+                ],
+            );
+
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $expected = [
+            'foreignPath.ascendorId' => 'value',
+        ];
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
 }

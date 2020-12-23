@@ -132,15 +132,13 @@ class Converter
                 return null;
             }
 
-            $this->$methodName($queryBuilder, $attribute, $value);
-
-            return null;
+            return $this->$methodName($queryBuilder, $attribute, $value);
         }
 
         return $this->itemConverter->convert($queryBuilder, $item);
     }
 
-    protected function applyInCategory(QueryBuilder $queryBuilder, string $attribute, $value)
+    protected function applyInCategory(QueryBuilder $queryBuilder, string $attribute, $value) : array
     {
         $link = $attribute;
 
@@ -183,11 +181,9 @@ class Converter
                 ]
             );
 
-            $queryBuilder->where([
+            return [
                 $pathName . '.ascendorId' => $value,
-            ]);
-
-            return;
+            ];
         }
 
         if ($relationType == Entity::BELONGS_TO) {
@@ -205,17 +201,15 @@ class Converter
                 ]
             );
 
-            $queryBuilder->where([
+            return [
                 $pathName . '.ascendorId' => $value,
-            ]);
-
-            return;
+            ];
         }
 
         throw new Error("Not supported link '{$link}' in where item.");
     }
 
-    protected function applyIsUserFromTeams(QueryBuilder $queryBuilder, string $attribute, $value)
+    protected function applyIsUserFromTeams(QueryBuilder $queryBuilder, string $attribute, $value) : array
     {
         $link = $attribute;
 
@@ -249,13 +243,11 @@ class Converter
                 ]
             );
 
-            $queryBuilder->where([
-                $aliasName . 'Middle.teamId' => $idsValue,
-            ]);
-
             $queryBuilder->distinct();
 
-            return;
+            return [
+                $aliasName . 'Middle.teamId' => $idsValue,
+            ];
         }
 
         throw new Error("Not supported link '{$link}' in where item.");
