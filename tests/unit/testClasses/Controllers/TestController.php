@@ -27,29 +27,17 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams;
+namespace tests\unit\testClasses\Controllers;
 
-use RuntimeException;
+use Espo\Core\{
+    Api\Request,
+    Api\Response,
+};
 
-trait BaseBuilderTrait
+class TestController
 {
-    protected $params = [];
-
-    public function __construct()
+    public function postActionHello(Request $request, Response $response)
     {
-    }
 
-    protected function isEmpty() : bool
-    {
-        return empty($this->params);
-    }
-
-    protected function cloneInternal(Query $query)
-    {
-        if (!$this->isEmpty()) {
-            throw new RuntimeException("Clone can be called only on a new empty builder instance.");
-        }
-
-        $this->params = $query->getRawParams();
     }
 }

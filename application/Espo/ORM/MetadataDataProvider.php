@@ -27,29 +27,12 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams;
+namespace Espo\ORM;
 
-use RuntimeException;
-
-trait BaseBuilderTrait
+/**
+ * Provides data for metadata.
+ */
+interface MetadataDataProvider
 {
-    protected $params = [];
-
-    public function __construct()
-    {
-    }
-
-    protected function isEmpty() : bool
-    {
-        return empty($this->params);
-    }
-
-    protected function cloneInternal(Query $query)
-    {
-        if (!$this->isEmpty()) {
-            throw new RuntimeException("Clone can be called only on a new empty builder instance.");
-        }
-
-        $this->params = $query->getRawParams();
-    }
+    public function get() : array;
 }
