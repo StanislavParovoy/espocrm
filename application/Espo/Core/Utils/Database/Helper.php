@@ -162,7 +162,14 @@ class Helper
     public function createPdoConnection(array $params = null)
     {
         if (!isset($params)) {
-            $params = $this->getConfig()->get('database');
+            $config = $this->getConfig();
+            if ($config) {
+                $params = $config->get('database');
+            }
+        }
+
+        if (empty($params)) {
+            return null;
         }
 
         $platform = !empty($params['platform']) ? strtolower($params['platform']) : 'mysql';
