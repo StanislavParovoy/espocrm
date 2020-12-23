@@ -34,6 +34,7 @@ use Espo\Core\{
     Select\Where\Params,
     Select\Where\Converter,
     Select\Where\ConverterFactory,
+    Select\Where\PermissionsCheckerFactory,
     Select\Where\Item as WhereItem,
 };
 
@@ -68,7 +69,7 @@ class WhereApplier
             $params->applyWherePermissionsCheck() ||
             $params->forbidComplexExpressions()
         ) {
-            $permissionsChecker = $this->permissionsCheckerFactory->create($entityType, $user);
+            $permissionsChecker = $this->permissionsCheckerFactory->create($this->entityType, $this->user);
 
             $permissionsChecker->check($whereItem, $params);
         }

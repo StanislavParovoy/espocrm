@@ -143,7 +143,7 @@ class Converter
     {
         $link = $attribute;
 
-        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null
+        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null;
 
         if (!$defs) {
             throw new Error("Bad link '{$link}' in where item.");
@@ -222,7 +222,7 @@ class Converter
             $value = $value[0];
         }
 
-        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null
+        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null;
 
         if (!$defs) {
             throw new Error("Bad link '{$link}' in where item.");
