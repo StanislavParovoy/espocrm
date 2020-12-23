@@ -33,7 +33,7 @@ use Espo\{
     Core\Exceptions\Error,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
-    ORM\Metadata as OrmMatadata,
+    ORM\EntityManager,
     Entities\User,
     Core\Select\Helpers\RandomStringGenerator,
 };
@@ -48,10 +48,12 @@ class Converter
         'isUserFromTeams',
     ];
 
+    protected $ormMatadata;
+
     protected $entityType;
     protected $user;
     protected $itemConverter;
-    protected $ormMatadata;
+    protected $entityManager;
     protected $scanner;
     protected $randomStringGenerator;
 
@@ -59,16 +61,18 @@ class Converter
         string $entityType,
         User $user,
         ItemGeneralConverter $itemConverter,
-        OrmMatadata $ormMatadata,
+        EntityManager $entityManager,
         Scanner $scanner,
         RandomStringGenerator $randomStringGenerator
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->itemConverter = $itemConverter;
-        $this->ormMatadata = $ormMatadata;
+        $this->entityManager = $entityManager;
         $this->scanner = $scanner;
         $this->randomStringGenerator = $randomStringGenerator;
+
+        $this->ormMatadata = $this->entityManager->getMetadata();
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClause

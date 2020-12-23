@@ -34,7 +34,6 @@ use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
     ORM\EntityManager,
-    ORM\Metadata as OrmMetadata,
     ORM\Entity,
     Entities\User,
     Core\Utils\Config,
@@ -50,11 +49,12 @@ use DateInterval;
  */
 class ItemGeneralConverter
 {
+    protected $ormMetadata;
+
     protected $entityType;
     protected $user;
     protected $dateTimeItemTransformer;
     protected $entityManager;
-    protected $ormMetadata;
     protected $config;
     protected $scanner;
     protected $itemConverterFactory;
@@ -65,7 +65,6 @@ class ItemGeneralConverter
         User $user,
         DateTimeItemTransformer $dateTimeItemTransformer,
         EntityManager $entityManager,
-        OrmMetadata, $ormMetadata,
         Config $config,
         Scanner $scanner,
         ItemConverterFactory $itemConverterFactory,
@@ -80,6 +79,8 @@ class ItemGeneralConverter
         $this->scanner = $scanner;
         $this->itemConverterFactory = $itemConverterFactory;
         $this->randomStringGenerator = $randomStringGenerator;
+
+        $this->ormMatadata = $this->entityManager->getMetadata();
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : array
