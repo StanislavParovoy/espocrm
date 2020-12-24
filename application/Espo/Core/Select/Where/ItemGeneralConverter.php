@@ -811,7 +811,7 @@ class ItemGeneralConverter
 
         return [
             'AND' => [
-                $attribute . '>=' => $dt->add(new DateInterval('P'.(($quarter - 1) * 3).'M'))->format('Y-m-d'),
+                $attribute . '>=' => $dt->add(new DateInterval('P' . (($quarter - 1) * 3) . 'M'))->format('Y-m-d'),
                 $attribute . '<' => $dt->add(new DateInterval('P3M'))->format('Y-m-d'),
             ]
         ];
@@ -951,10 +951,9 @@ class ItemGeneralConverter
     {
         return [
             'id!=s' => [
-                'selectParams' =>  [
-                    'select' => ['id'],
-                    'joins' => [$attribute],
-                ]
+                'select' => ['id'],
+                'from' => $this->entityType,
+                'joins' => [$attribute],
             ]
         ];
     }
