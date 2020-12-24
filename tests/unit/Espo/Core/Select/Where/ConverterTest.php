@@ -463,7 +463,6 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
             'from' => $this->entityType,
             'leftJoins' => [['test']],
             'joins' => [],
-
         ]);
 
         $sqQueryBuilder
