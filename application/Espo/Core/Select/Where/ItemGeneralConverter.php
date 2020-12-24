@@ -193,29 +193,17 @@ class ItemGeneralConverter
             throw new Error("Bad where item.");
         }
 
-        $whereClause = [];
-
         $sqQueryBuilder = $this->entityManager
             ->getQueryBuilder()
             ->select()
             ->from($this->entityType);
 
-        foreach ($value as $item) {
-            $part = $this->convert($sqQueryBuilder, Item::fromArray($item));
-
-            foreach ($part as $left => $right) {
-                if (!empty($right) || is_null($right) || $right === '' || $right === 0 || $right === false) {
-                    $whereClause[] = [
-                        $left => $right
-                    ];
-                }
-            }
-        }
-
         $whereItem = Item::fromArray([
             'type' => 'and',
             'value' => $value,
         ]);
+
+        $whereClause = $this->convert($sqQueryBuilder, $whereItem);
 
         $this->scanner->applyLeftJoins($sqQueryBuilder, $whereItem);
 
@@ -225,12 +213,13 @@ class ItemGeneralConverter
 
         return [
             $key => [
-                'selectParams' =>  [
+                //'selectParams' =>  [
                     'select' => ['id'],
+                    'from' => $this->entityType,
                     'whereClause' => $whereClause,
                     'leftJoins' => $rawParams['leftJoins'] ?? [],
                     'joins' => $rawParams['joins'] ?? [],
-                ],
+                //],
             ],
         ];
     }

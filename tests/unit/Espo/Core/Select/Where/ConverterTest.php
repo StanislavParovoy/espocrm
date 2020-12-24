@@ -47,6 +47,8 @@ use Espo\{
     ORM\Metadata as OrmMatadata,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
+    ORM\QueryBuilder as BaseQueryBuilder,
+    ORM\QueryParams\Select,
     Entities\User,
 };
 
@@ -68,10 +70,17 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         $this->entityManager = $this->createMock(EntityManager::class);
         $this->ormMatadata = $this->createMock(OrmMatadata::class);
 
+        $this->baseQueryBuilder = $this->createMock(BaseQueryBuilder::class);
+
         $this->entityManager
             ->expects($this->any())
             ->method('getMetadata')
             ->willReturn($this->ormMatadata);
+
+        $this->entityManager
+            ->expects($this->any())
+            ->method('getQueryBuilder')
+            ->willReturn($this->baseQueryBuilder);
 
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
 
@@ -389,6 +398,92 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
             'AND' => [
                 'test>=' => '2020-12-19 22:00:00',
                 'test<=' => '2020-12-20 21:59:59',
+            ],
+        ];
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
+
+    public function testConvertSbQueryIn()
+    {
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'subQueryIn',
+                    'value' => [
+                        [
+                            'type' => 'equals',
+                            'attribute' => 'test1',
+                            'value' => 'value1',
+                        ],
+                    ],
+                ],
+
+            ],
+        ]);
+
+        $sqQueryBuilder = $this->createMock(QueryBuilder::class);
+
+        $this->baseQueryBuilder
+            ->expects($this->once())
+            ->method('select')
+            ->willReturn($sqQueryBuilder);
+
+        $sqQueryBuilder
+            ->expects($this->once())
+            ->method('from')
+            ->with($this->entityType)
+            ->willReturn($sqQueryBuilder);
+
+        $sqItem = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'equals',
+                    'attribute' => 'test1',
+                    'value' => 'value1',
+                ],
+            ],
+        ]);
+
+        $this->scanner
+            ->method('applyLeftJoins')
+            ->withConsecutive(
+                [
+                    $sqQueryBuilder, $sqItem
+                ],
+                [
+                    $this->queryBuilder, $item
+                ],
+            );
+
+        $query = Select::fromRaw([
+            'select' => ['id'],
+            'from' => $this->entityType,
+            'leftJoins' => [['test']],
+            'joins' => [],
+
+        ]);
+
+        $sqQueryBuilder
+            ->expects($this->once())
+            ->method('build')
+            ->willReturn($query);
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $expected = [
+            'id=s' => [
+                'select' => ['id'],
+                'from' => $this->entityType,
+                'whereClause' => [
+                    'AND' => [
+                        ['test1=' => 'value1'],
+                    ],
+                ],
+                'leftJoins' => [['test']],
+                'joins' => [],
             ],
         ];
 
