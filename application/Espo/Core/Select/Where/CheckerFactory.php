@@ -35,7 +35,7 @@ use Espo\{
     Core\AclManager,
 };
 
-class PermissionsCheckerFactory
+class CheckerFactory
 {
     protected $injectableFactory;
     protected $aclManager;
@@ -46,11 +46,11 @@ class PermissionsCheckerFactory
         $this->aclManager = $aclManager;
     }
 
-    public function create(string $entityType, User $user) : PermissionsChecker
+    public function create(string $entityType, User $user) : Checker
     {
         $acl = $this->aclManager->createUserAcl($user);
 
-        return $this->injectableFactory->createWith(PermissionsChecker::class, [
+        return $this->injectableFactory->createWith(Checker::class, [
             'entityType' => $entityType,
             'acl' => $acl,
         ]);

@@ -34,8 +34,8 @@ use Espo\Core\{
     Select\Where\Params,
     Select\Where\Converter,
     Select\Where\ConverterFactory,
-    Select\Where\PermissionsCheckerFactory,
-    Select\Where\PermissionsChecker,
+    Select\Where\CheckerFactory,
+    Select\Where\checker,
     Select\Where\Item as WhereItem,
     Select\Appliers\WhereApplier,
 };
@@ -55,8 +55,8 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
         $this->whereItem = $this->createMock(WhereItem::class);
         $this->converterFactory = $this->createMock(ConverterFactory::class);
         $this->converter = $this->createMock(Converter::class);
-        $this->permissionsCheckerFactory = $this->createMock(PermissionsCheckerFactory::class);
-        $this->permissionsChecker = $this->createMock(PermissionsChecker::class);
+        $this->checkerFactory = $this->createMock(CheckerFactory::class);
+        $this->checker = $this->createMock(checker::class);
         $this->params = $this->createMock(Params::class);
 
         $this->entityType = 'Test';
@@ -65,7 +65,7 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
             $this->entityType,
             $this->user,
             $this->converterFactory,
-            $this->permissionsCheckerFactory
+            $this->checkerFactory
         );
     }
 
@@ -81,16 +81,16 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
             ->method('forbidComplexExpressions')
             ->willReturn(true);
 
-        $this->permissionsChecker
+        $this->checker
             ->expects($this->once())
             ->method('check')
             ->with($this->whereItem, $this->params);
 
-        $this->permissionsCheckerFactory
+        $this->checkerFactory
             ->expects($this->once())
             ->method('create')
             ->with($this->entityType, $this->user)
-            ->willReturn($this->permissionsChecker);
+            ->willReturn($this->checker);
 
         $this->converter
             ->expects($this->once())
@@ -119,7 +119,7 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
             ->method('forbidComplexExpressions')
             ->willReturn(false);
 
-        $this->permissionsCheckerFactory
+        $this->checkerFactory
             ->expects($this->never())
             ->method('create');
 

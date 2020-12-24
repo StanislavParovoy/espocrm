@@ -34,7 +34,7 @@ use Espo\Core\{
     Select\Where\Params,
     Select\Where\Converter,
     Select\Where\ConverterFactory,
-    Select\Where\PermissionsCheckerFactory,
+    Select\Where\CheckerFactory,
     Select\Where\Item as WhereItem,
 };
 
@@ -49,18 +49,18 @@ class WhereApplier
     protected $entityType;
     protected $user;
     protected $converterFactory;
-    protected $permissionsCheckerFactory;
+    protected $checkerFactory;
 
     public function __construct(
         string $entityType,
         User $user,
         ConverterFactory $converterFactory,
-        PermissionsCheckerFactory $permissionsCheckerFactory
+        CheckerFactory $checkerFactory
     ) {
         $this->entityType = $entityType;
         $this->user = $user;
         $this->converterFactory = $converterFactory;
-        $this->permissionsCheckerFactory = $permissionsCheckerFactory;
+        $this->checkerFactory = $checkerFactory;
     }
 
     public function apply(QueryBuilder $queryBuilder, WhereItem $whereItem, Params $params)
@@ -69,9 +69,9 @@ class WhereApplier
             $params->applyWherePermissionsCheck() ||
             $params->forbidComplexExpressions()
         ) {
-            $permissionsChecker = $this->permissionsCheckerFactory->create($this->entityType, $this->user);
+            $checker = $this->checkerFactory->create($this->entityType, $this->user);
 
-            $permissionsChecker->check($whereItem, $params);
+            $checker->check($whereItem, $params);
         }
 
         $converter = $this->converterFactory->create($this->entityType, $this->user);

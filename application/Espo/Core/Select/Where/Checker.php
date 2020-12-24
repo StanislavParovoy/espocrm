@@ -40,7 +40,7 @@ use Espo\{
 /**
  * Checks Where parameters. Throws an exception if anything not allowed is met.
  */
-class PermissionsChecker
+class Checker
 {
     private $seed = null;
 

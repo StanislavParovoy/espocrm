@@ -30,8 +30,8 @@
 namespace tests\unit\Espo\Core\Select\Where;
 
 use Espo\Core\{
-    Select\Where\PermissionsCheckerFactory,
-    Select\Where\PermissionsChecker,
+    Select\Where\CheckerFactory,
+    Select\Where\Checker,
     InjectableFactory,
     AclManager,
     Acl,
@@ -41,7 +41,7 @@ use Espo\{
     Entities\User,
 };
 
-class PermissionsCheckerFactoryTest extends \PHPUnit\Framework\TestCase
+class CheckerFactoryTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp() : void
     {
@@ -56,7 +56,7 @@ class PermissionsCheckerFactoryTest extends \PHPUnit\Framework\TestCase
             ->with($this->user)
             ->willReturn($this->acl);
 
-        $this->factory = new PermissionsCheckerFactory(
+        $this->factory = new CheckerFactory(
             $this->injectableFactory,
             $this->aclManager
         );
@@ -71,13 +71,13 @@ class PermissionsCheckerFactoryTest extends \PHPUnit\Framework\TestCase
     {
         $entityType = 'Test';
 
-        $object = $this->createMock(PermissionsChecker::class);
+        $object = $this->createMock(Checker::class);
 
         $this->injectableFactory
             ->expects($this->at(0))
             ->method('createWith')
             ->with(
-                PermissionsChecker::class,
+                Checker::class,
                 [
                     'entityType' => $entityType,
                     'acl' => $this->acl,
