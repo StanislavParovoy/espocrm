@@ -300,7 +300,7 @@ class ItemGeneralConverter
         $arrayEntityType = $this->entityType;
         $idPart = 'id';
 
-        $isForeign = strpos($attribute, '.') > 0;
+        $isForeign = strpos($attribute, '.') !== false;
 
         $isForeignType = false;
 
