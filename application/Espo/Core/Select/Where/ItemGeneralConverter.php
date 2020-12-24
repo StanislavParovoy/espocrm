@@ -439,14 +439,12 @@ class ItemGeneralConverter
             foreach ($value as $arrayValue) {
                 return [
                     $idPart .'=s' => [
-                        'entityType' => 'ArrayValue',
-                        'selectParams' => [
-                            'select' => ['entityId'],
-                            'whereClause' => [
-                                'value' => $arrayValue,
-                                'attribute' => $arrayAttribute,
-                                'entityType' => $arrayEntityType,
-                            ],
+                        'select' => ['entityId'],
+                        'from' => 'ArrayValue',
+                        'whereClause' => [
+                            'value' => $arrayValue,
+                            'attribute' => $arrayAttribute,
+                            'entityType' => $arrayEntityType,
                         ],
                     ]
                 ];
