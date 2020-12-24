@@ -31,6 +31,7 @@ namespace Espo\Core\Select\Where;
 
 use Espo\{
     Core\Exceptions\Forbidden,
+    Core\Exceptions\BadRequest,
     Core\Acl,
     ORM\QueryComposer\BaseQueryComposer as QueryComposer,
     ORM\EntityManager,
@@ -108,11 +109,11 @@ class Checker
             }
         }
 
-        if ($attribute && $checkWherePermission) {
+        if ($attribute) {
             $argumentList = QueryComposer::getAllAttributesFromComplexExpression($attribute);
 
             foreach ($argumentList as $argument) {
-                $this->checkAttributeExistance($argument, $type);
+                $this->checkAttributeExistence($argument, $type);
 
                 if ($checkWherePermission) {
                     $this->checkAttributePermission($argument, $type);
@@ -127,7 +128,7 @@ class Checker
         }
     }
 
-    protected function checkAttributeExistance(string $attribute, string $type)
+    protected function checkAttributeExistence(string $attribute, string $type)
     {
         if (strpos($attribute, '.') !== false) {
             // @todo Check existance of foreign attributes.
@@ -136,14 +137,14 @@ class Checker
 
         if (in_array($type, $this->linkTypeList)) {
             if (!$this->getSeed()->hasRelation($attribute)) {
-                throw new Forbidden("Not existing relation '{$attribute}' in where.");
+                throw new BadRequest("Not existing relation '{$attribute}' in where.");
             }
 
             return;
         }
 
         if (!$this->getSeed()->hasAttribute($attribute)) {
-            throw new Forbidden("Not existing attribute '{$attribute}' in where.");
+            throw new BadRequest("Not existing attribute '{$attribute}' in where.");
         }
     }
 
