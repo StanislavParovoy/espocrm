@@ -213,13 +213,11 @@ class ItemGeneralConverter
 
         return [
             $key => [
-                //'selectParams' =>  [
-                    'select' => ['id'],
-                    'from' => $this->entityType,
-                    'whereClause' => $whereClause,
-                    'leftJoins' => $rawParams['leftJoins'] ?? [],
-                    'joins' => $rawParams['joins'] ?? [],
-                //],
+                'select' => ['id'],
+                'from' => $this->entityType,
+                'whereClause' => $whereClause,
+                'leftJoins' => $rawParams['leftJoins'] ?? [],
+                'joins' => $rawParams['joins'] ?? [],
             ],
         ];
     }
