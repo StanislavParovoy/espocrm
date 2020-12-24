@@ -130,7 +130,7 @@ class SelectBuilder
             throw new Error("No entity type.");
         }
 
-         $this->queryBuilder->from($this->entityType);
+        $this->queryBuilder->from($this->entityType);
 
         $this->applyFromSearchParams();
 
