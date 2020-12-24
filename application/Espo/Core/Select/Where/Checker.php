@@ -49,6 +49,28 @@ class Checker
     protected $entityManager;
     protected $acl;
 
+    protected $nestingTypeList = [
+        'or',
+        'and',
+        'subQueryIn',
+        'subQueryNotIn',
+        'not',
+    ];
+
+    protected $subQueryTypeList = [
+        'subQueryIn',
+        'subQueryNotIn',
+        'not',
+    ];
+
+    protected $linkTypeList = [
+        'isLinked',
+        'isNotLinked',
+        'linkedWith',
+        'notLinkedWith',
+        'isUserFromTeams',
+    ];
+
     public function __construct(string $entityType, EntityManager $entityManager, Acl $acl)
     {
         $this->entityType = $entityType;
@@ -72,14 +94,17 @@ class Checker
         $checkWherePermission = $params->applyWherePermissionsCheck();
 
         if ($forbidComplexExpressions) {
-            if ($type && in_array($type, ['subQueryIn', 'subQueryNotIn', 'not'])) {
-                throw new Forbidden("Sub-queries are forbidden in search params.");
+            if (in_array($type, $this->subQueryTypeList)) {
+                throw new Forbidden("Sub-queries are forbidden in where.");
             }
         }
 
         if ($attribute && $forbidComplexExpressions) {
-            if (strpos($attribute, '.') !== false || strpos($attribute, ':')) {
-                throw new Forbidden("Complex expressions are forbidden in search params.");
+            if (
+                strpos($attribute, '.') !== false ||
+                strpos($attribute, ':') !== false
+            ) {
+                throw new Forbidden("Complex expressions are forbidden in where.");
             }
         }
 
@@ -91,7 +116,7 @@ class Checker
             }
         }
 
-        if (in_array($type, ['or', 'and']) && is_array($value)) {
+        if (in_array($type, $this->nestingTypeList) && is_array($value)) {
             foreach ($value as $subItem) {
                 $this->checkItem(Item::fromArray($subItem), $params);
             }
@@ -130,9 +155,7 @@ class Checker
             return;
         }
 
-        if (
-            in_array($type, ['isLinked', 'isNotLinked', 'linkedWith', 'notLinkedWith', 'isUserFromTeams'])
-        ) {
+        if (in_array($type, $this->linkTypeList)) {
             $link = $attribute;
 
             if (!$this->getSeed()->hasRelation($link)) {
