@@ -91,7 +91,7 @@ class Checker
             }
         }
 
-        if (!empty($value) && is_array($value)) {
+        if (in_array($type, ['or', 'and']) && is_array($value)) {
             foreach ($value as $subItem) {
                 $this->checkItem(Item::fromArray($subItem), $params);
             }
