@@ -112,7 +112,11 @@ class Checker
             $argumentList = QueryComposer::getAllAttributesFromComplexExpression($attribute);
 
             foreach ($argumentList as $argument) {
-                $this->checkWhereArgument($argument, $type);
+                $this->checkAttributeExistance($argument, $type);
+
+                if ($checkWherePermission) {
+                    $this->checkAttributePermission($argument, $type);
+                }
             }
         }
 
@@ -123,11 +127,31 @@ class Checker
         }
     }
 
-    protected function checkWhereArgument(string $attribute, string $type)
+    protected function checkAttributeExistance(string $attribute, string $type)
+    {
+        if (strpos($attribute, '.') !== false) {
+            // @todo Check existance of foreign attributes.
+            return;
+        }
+
+        if (in_array($type, $this->linkTypeList)) {
+            if (!$this->getSeed()->hasRelation($attribute)) {
+                throw new Forbidden("Not existing relation '{$attribute}' in where.");
+            }
+
+            return;
+        }
+
+        if (!$this->getSeed()->hasAttribute($attribute)) {
+            throw new Forbidden("Not existing attribute '{$attribute}' in where.");
+        }
+    }
+
+    protected function checkAttributePermission(string $attribute, string $type)
     {
         $entityType = $this->entityType;
 
-        if (strpos($attribute, '.')) {
+        if (strpos($attribute, '.') !== false) {
             list($link, $attribute) = explode('.', $attribute);
 
             if (!$this->getSeed()->hasRelation($link)) {

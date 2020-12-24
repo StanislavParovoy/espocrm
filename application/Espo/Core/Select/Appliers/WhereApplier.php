@@ -65,14 +65,9 @@ class WhereApplier
 
     public function apply(QueryBuilder $queryBuilder, WhereItem $whereItem, Params $params)
     {
-        if (
-            $params->applyWherePermissionsCheck() ||
-            $params->forbidComplexExpressions()
-        ) {
-            $checker = $this->checkerFactory->create($this->entityType, $this->user);
+        $checker = $this->checkerFactory->create($this->entityType, $this->user);
 
-            $checker->check($whereItem, $params);
-        }
+        $checker->check($whereItem, $params);
 
         $converter = $this->converterFactory->create($this->entityType, $this->user);
 

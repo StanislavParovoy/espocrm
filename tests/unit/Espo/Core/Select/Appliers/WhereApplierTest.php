@@ -103,7 +103,6 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
             ->with($this->entityType, $this->user)
             ->willReturn($this->converter);
 
-
         $this->applier->apply($this->queryBuilder, $this->whereItem, $this->params);
     }
 
@@ -119,9 +118,16 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
             ->method('forbidComplexExpressions')
             ->willReturn(false);
 
+        $this->checker
+            ->expects($this->once())
+            ->method('check')
+            ->with($this->whereItem, $this->params);
+
         $this->checkerFactory
-            ->expects($this->never())
-            ->method('create');
+            ->expects($this->once())
+            ->method('create')
+            ->with($this->entityType, $this->user)
+            ->willReturn($this->checker);
 
         $this->converter
             ->expects($this->once())
