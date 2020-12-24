@@ -160,7 +160,7 @@ class SelectBuilder
     }
 
     /**
-     * Switch a user for whom select query will be built.
+     * Switch a user for whom a select query will be built.
      */
     public function forUser(User $user) : self
     {
