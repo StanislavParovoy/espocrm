@@ -44,7 +44,7 @@ use Espo\Core\{
 use Espo\{
     ORM\EntityManager,
     ORM\Entity,
-    ORM\Metadata as OrmMatadata,
+    ORM\Metadata as ormMetadata,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
     ORM\QueryBuilder as BaseQueryBuilder,
@@ -68,14 +68,14 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         $this->itemConverterFactory = $this->createMock(ItemConverterFactory::class);
 
         $this->entityManager = $this->createMock(EntityManager::class);
-        $this->ormMatadata = $this->createMock(OrmMatadata::class);
+        $this->ormMetadata = $this->createMock(ormMetadata::class);
 
         $this->baseQueryBuilder = $this->createMock(BaseQueryBuilder::class);
 
         $this->entityManager
             ->expects($this->any())
             ->method('getMetadata')
-            ->willReturn($this->ormMatadata);
+            ->willReturn($this->ormMetadata);
 
         $this->entityManager
             ->expects($this->any())
@@ -219,7 +219,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertInCategoryManyMany()
     {
-        $this->ormMatadata
+        $this->ormMetadata
             ->expects($this->once())
             ->method('get')
             ->with($this->entityType, ['relations', 'test'])
@@ -262,7 +262,6 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
                 ],
             );
 
-
         $whereClause = $this->converter->convert($this->queryBuilder, $item);
 
         $expected = [
@@ -274,7 +273,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertInCategoryBelongsTo()
     {
-        $this->ormMatadata
+        $this->ormMetadata
             ->expects($this->once())
             ->method('get')
             ->with($this->entityType, ['relations', 'test'])
@@ -325,7 +324,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertIsUserFromTeams()
     {
-        $this->ormMatadata
+        $this->ormMetadata
             ->expects($this->once())
             ->method('get')
             ->with($this->entityType, ['relations', 'user'])
@@ -404,7 +403,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $whereClause->getRaw());
     }
 
-    public function testConvertSbQueryIn()
+    public function testConvertSubQueryIn()
     {
         $item = Item::fromArray([
             'type' => 'and',
@@ -485,6 +484,59 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
                 'joins' => [],
             ],
         ];
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
+
+    public function testConvertLinkedWith1()
+    {
+        $link = 'test';
+
+        $value = ['value-id'];
+
+        $item = Item::fromArray([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => 'linkedWith',
+                    'attribute' => $link,
+                    'value' => $value,
+                ],
+            ],
+        ]);
+
+        $this->ormMetadata
+            ->expects($this->once())
+            ->method('get')
+            ->with($this->entityType, ['relations', $link])
+            ->willReturn(
+                [
+                    'type' => Entity::MANY_MANY,
+                    'entity' => 'Foreign',
+                    'midKeys' => ['localId', 'foreignId'],
+                ]
+            );
+
+        $alias = $link . 'LinkedWithFilterRandom';
+
+        $this->queryBuilder
+            ->expects($this->once())
+            ->method('distinct');
+
+        $this->queryBuilder
+            ->method('leftJoin')
+            ->withConsecutive(
+                [
+                    $link,
+                    $alias,
+                ],
+            );
+
+        $expected = [
+            $alias . 'Middle.foreignId' => $value,
+        ];
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
 
         $this->assertEquals($expected, $whereClause->getRaw());
     }

@@ -80,7 +80,7 @@ class ItemGeneralConverter
         $this->entityManager = $entityManager;
         $this->config = $config;
 
-        $this->ormMatadata = $this->entityManager->getMetadata();
+        $this->ormMetadata = $this->entityManager->getMetadata();
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClauseItem

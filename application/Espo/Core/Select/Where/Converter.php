@@ -49,7 +49,7 @@ class Converter
         'isUserFromTeams',
     ];
 
-    protected $ormMatadata;
+    protected $ormMetadata;
 
     protected $entityType;
     protected $user;
@@ -73,7 +73,7 @@ class Converter
         $this->randomStringGenerator = $randomStringGenerator;
         $this->entityManager = $entityManager;
 
-        $this->ormMatadata = $this->entityManager->getMetadata();
+        $this->ormMetadata = $this->entityManager->getMetadata();
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClause
@@ -142,7 +142,7 @@ class Converter
     {
         $link = $attribute;
 
-        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null;
+        $defs = $this->ormMetadata->get($this->entityType, ['relations', $link]) ?? null;
 
         if (!$defs) {
             throw new Error("Bad link '{$link}' in where item.");
@@ -217,7 +217,7 @@ class Converter
             $value = $value[0];
         }
 
-        $defs = $this->ormMatadata->get($this->entityType, ['relations', $link]) ?? null;
+        $defs = $this->ormMetadata->get($this->entityType, ['relations', $link]) ?? null;
 
         if (!$defs) {
             throw new Error("Bad link '{$link}' in where item.");
