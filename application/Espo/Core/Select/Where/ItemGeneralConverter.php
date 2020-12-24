@@ -33,6 +33,7 @@ use Espo\{
     Core\Exceptions\Error,
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereClause,
+    ORM\QueryParams\Parts\WhereItem as WhereClauseItem,
     ORM\EntityManager,
     ORM\Entity,
     Entities\User,
@@ -82,7 +83,7 @@ class ItemGeneralConverter
         $this->ormMatadata = $this->entityManager->getMetadata();
     }
 
-    public function convert(QueryBuilder $queryBuilder, Item $item) : array
+    public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClauseItem
     {
         $type = $item->getType();
         $value = $item->getValue();
@@ -114,13 +115,17 @@ class ItemGeneralConverter
             case 'or':
             case 'and':
 
-                return $this->groupProcessAndOr($queryBuilder, $type, $attribute, $value);
+                return WhereClause::fromRaw(
+                    $this->groupProcessAndOr($queryBuilder, $type, $attribute, $value)
+                );
 
             case 'not':
             case 'subQueryNotIn':
             case 'subQueryIn':
 
-                return $this->groupProcessSubQuery($queryBuilder, $type, $attribute, $value);
+                return WhereClause::fromRaw(
+                    $this->groupProcessSubQuery($queryBuilder, $type, $attribute, $value)
+                );
         }
 
         if (!$attribute) {
@@ -136,7 +141,9 @@ class ItemGeneralConverter
             case 'columnEquals':
             case 'columnNotEquals':
 
-                return $this->groupProcessColumn($queryBuilder, $type, $attribute, $value);
+                return WhereClause::fromRaw(
+                    $this->groupProcessColumn($queryBuilder, $type, $attribute, $value)
+                );
 
             case 'arrayAnyOf':
             case 'arrayNoneOf':
@@ -144,13 +151,17 @@ class ItemGeneralConverter
             case 'arrayIsNotEmpty':
             case 'arrayAllOf':
 
-                return $this->groupProcessArray($queryBuilder, $type, $attribute, $value);
+                return WhereClause::fromRaw(
+                    $this->groupProcessArray($queryBuilder, $type, $attribute, $value)
+                );
         }
 
         $methodName = 'process' .  ucfirst($type);
 
         if (method_exists($this, $methodName)) {
-            return $this->$methodName($queryBuilder, $attribute, $value);
+            return WhereClause::fromRaw(
+                $this->$methodName($queryBuilder, $attribute, $value)
+            );
         }
 
         if (!$this->itemConverterFactory->has($type)) {
@@ -171,7 +182,7 @@ class ItemGeneralConverter
         $whereClause = [];
 
         foreach ($value as $item) {
-            $subPart = $this->convert($queryBuilder, Item::fromArray($item));
+            $subPart = $this->convert($queryBuilder, Item::fromArray($item))->getRaw();
 
             foreach ($subPart as $left => $right) {
                 if (!empty($right) || is_null($right) || $right === '' || $right === 0 || $right === false) {
@@ -203,7 +214,7 @@ class ItemGeneralConverter
             'value' => $value,
         ]);
 
-        $whereClause = $this->convert($sqQueryBuilder, $whereItem);
+        $whereClause = $this->convert($sqQueryBuilder, $whereItem)->getRaw();
 
         $this->scanner->applyLeftJoins($sqQueryBuilder, $whereItem);
 

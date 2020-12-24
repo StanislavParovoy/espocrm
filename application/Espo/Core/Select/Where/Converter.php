@@ -135,7 +135,7 @@ class Converter
             return $this->$methodName($queryBuilder, $attribute, $value);
         }
 
-        return $this->itemConverter->convert($queryBuilder, $item);
+        return $this->itemConverter->convert($queryBuilder, $item)->getRaw();
     }
 
     protected function applyInCategory(QueryBuilder $queryBuilder, string $attribute, $value) : array

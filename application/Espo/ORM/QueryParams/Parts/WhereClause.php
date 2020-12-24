@@ -29,13 +29,9 @@
 
 namespace Espo\ORM\QueryParams\Parts;
 
-use Espo\{
-    ORM\QueryParams\Parts\Where\WhereItem,
-};
-
 class WhereClause implements WhereItem
 {
-    protected $raw = [];
+    protected $rawValue = [];
 
     public function __construct()
     {
@@ -49,19 +45,19 @@ class WhereClause implements WhereItem
 
         $object = new self();
 
-        $object->raw = $whereClause;
+        $object->rawValue = $whereClause;
 
         return $object;
     }
 
     public function getRaw() : array
     {
-        return $this->raw;
+        return $this->rawValue;
     }
 
     public function getRawValue() : array
     {
-        return $this->getRaw();
+        return $this->rawValue;
     }
 
     public function getRawKey() : string
@@ -72,7 +68,7 @@ class WhereClause implements WhereItem
     public function add(WhereItem $item)
     {
         if ($item instanceof WhereClause) {
-            $this->raw[] = $item->getRawValue();
+            $this->rawValue[] = $item->getRawValue();
 
             return;
         }
@@ -80,16 +76,16 @@ class WhereClause implements WhereItem
         $key = $item->getRawKey();
         $value = $item->getRawValue();
 
-        if (empty($this->raw)) {
-            $this->raw[$key] = $value;
+        if (empty($this->rawValue)) {
+            $this->rawValue[$key] = $value;
 
             return;
         }
 
-        if (count($this->raw) === 1 && array_keys($this->raw)[0] !== 0) {
-            $this->raw = [$this->raw];
+        if (count($this->rawValue) === 1 && array_keys($this->rawValue)[0] !== 0) {
+            $this->rawValue = [$this->rawValue];
         }
 
-        $this->raw[] = [$key => $value];
+        $this->rawValue[] = [$key => $value];
     }
 }

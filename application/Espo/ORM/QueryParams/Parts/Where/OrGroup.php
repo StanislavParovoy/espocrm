@@ -29,19 +29,29 @@
 
 namespace Espo\ORM\QueryParams\Parts\Where;
 
-use Espo\ORM\QueryParams\Parts\WhereClause;
+use Espo\ORM\{
+    QueryParams\Parts\WhereClause,
+    QueryParams\Parts\WhereItem,
+};
 
 class OrGroup implements WhereItem
 {
-    protected $raw = [];
+    protected $rawValue = [];
 
     public function __construct()
     {
     }
 
+    public function getRaw() : array
+    {
+        return [
+            'OR' => $this->rawValue
+        ];
+    }
+
     public function getRawValue() : array
     {
-        return $this->raw;
+        return $this->rawValue;
     }
 
     public function getRawKey() : string
@@ -55,21 +65,21 @@ class OrGroup implements WhereItem
         $value = $item->getRawValue();
 
         if ($item instanceof WhereClause) {
-            $this->raw[] = $value;
+            $this->rawValue[] = $value;
 
             return;
         }
 
-        if (empty($this->raw)) {
-            $this->raw[$key] = $value;
+        if (empty($this->rawValue)) {
+            $this->rawValue[$key] = $value;
 
             return;
         }
 
-        if (count($this->raw) === 1 && array_keys($this->raw)[0] !== 0) {
-            $this->raw = [$this->raw];
+        if (count($this->rawValue) === 1 && array_keys($this->rawValue)[0] !== 0) {
+            $this->rawValue = [$this->rawValue];
         }
 
-        $this->raw[] = [$key => $value];
+        $this->rawValue[] = [$key => $value];
     }
 }

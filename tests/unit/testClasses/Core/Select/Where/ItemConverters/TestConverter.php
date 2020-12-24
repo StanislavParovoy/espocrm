@@ -31,14 +31,16 @@ namespace tests\unit\testClasses\Core\Select\Where\ItemConverters;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
+    ORM\QueryParams\Parts\WhereClause,
+    ORM\QueryParams\Parts\WhereItem as WhereClauseItem,
     Core\Select\Where\Item,
     Core\Select\Where\ItemConverter,
 };
 
 class TestConverter implements ItemConverter
 {
-    public function convert(QueryBuilder $queryBuilder, Item $item) : array
+    public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClauseItem
     {
-
+        return WhereClause::fromRaw([]);
     }
 }

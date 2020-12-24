@@ -27,10 +27,11 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\ORM\QueryParams\Parts\Where;
+namespace Espo\ORM\QueryParams\Parts;
 
 interface WhereItem
 {
+    public function getRaw() : array;
 
     // Uncomment when PHP 8.0 is a min supported version.
     //public function getRawValue() : mixed;

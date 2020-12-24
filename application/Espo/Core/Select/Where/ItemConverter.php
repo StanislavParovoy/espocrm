@@ -31,12 +31,13 @@ namespace Espo\Core\Select\Where;
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
+    ORM\QueryParams\Parts\WhereItem as WhereClauseItem,
 };
 
 /**
- * Converts a where item to a where clause (for ORM).
+ * Converts a where item to a where clause item (for ORM).
  */
 interface ItemConverter
 {
-    public function convert(QueryBuilder $queryBuilder, Item $item) : array;
+    public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClauseItem;
 }
