@@ -52,6 +52,34 @@ trait MySQLPlatform
             $queryParts[] = 'RENAME TO ' . $newName->getQuotedName($this);
         }
 
+        foreach ($diff->renamedColumns as $oldColumnName => $column) {
+            if ($this->onSchemaAlterTableRenameColumn($oldColumnName, $column, $diff, $columnSql)) {
+                continue;
+            }
+
+            // Espo: handle remaned autoincrement column
+            if ($column->getAutoincrement()) {
+                $oldColumnOptions = array_diff_key($column->toArray(), array_flip(['name', 'type', 'collation']));
+                $diff->removedColumns[$oldColumnName] = new Column($oldColumnName, $column->getType(), $oldColumnOptions);
+
+                $columnName = $column->getQuotedName($this);
+                $diff->addedColumns[$columnName] = $column;
+                continue;
+            }
+            // Espo: end
+
+            $oldColumnName          = new Identifier($oldColumnName);
+            $columnArray            = $column->toArray();
+            $columnArray['comment'] = $this->getColumnComment($column);
+
+            // Espo: do not rename the column
+            /*$queryParts[]           =  'CHANGE ' . $oldColumnName->getQuotedName($this) . ' '
+                    . $this->getColumnDeclarationSQL($column->getQuotedName($this), $columnArray); */
+            $queryParts[]           =  'ADD '
+                    . $this->getColumnDeclarationSQL($column->getQuotedName($this), $columnArray);
+            // Espo: end
+        }
+
         foreach ($diff->addedColumns as $column) {
             if ($this->onSchemaAlterTableAddColumn($column, $diff, $columnSql)) {
                 continue;
@@ -153,33 +181,6 @@ trait MySQLPlatform
             $columnArray['comment'] = $this->getColumnComment($column);
             $queryParts[]           =  'CHANGE ' . ($columnDiff->getOldColumnName()->getQuotedName($this)) . ' '
                     . $this->getColumnDeclarationSQL($column->getQuotedName($this), $columnArray);
-        }
-
-        foreach ($diff->renamedColumns as $oldColumnName => $column) {
-            if ($this->onSchemaAlterTableRenameColumn($oldColumnName, $column, $diff, $columnSql)) {
-                continue;
-            }
-
-            // Espo: handle remaned autoincrement column
-            if ($column->getAutoincrement()) {
-                $diff->removedColumns[$oldColumnName] = new Column($oldColumnName, $column->getType(), $column->toArray());
-
-                $columnName = $column->getQuotedName($this);
-                $diff->addedColumns[$columnName] = $column;
-                continue;
-            }
-            // Espo: end
-
-            $oldColumnName          = new Identifier($oldColumnName);
-            $columnArray            = $column->toArray();
-            $columnArray['comment'] = $this->getColumnComment($column);
-
-            // Espo: do not rename the column
-            /*$queryParts[]           =  'CHANGE ' . $oldColumnName->getQuotedName($this) . ' '
-                    . $this->getColumnDeclarationSQL($column->getQuotedName($this), $columnArray); */
-            $queryParts[]           =  'ADD '
-                    . $this->getColumnDeclarationSQL($column->getQuotedName($this), $columnArray);
-            // Espo: end
         }
 
         if (isset($diff->addedIndexes['primary'])) {

@@ -48,11 +48,15 @@ abstract class Base extends \tests\integration\Core\BaseTestCase
         $entityManager = $this->getContainer()->get('entityManager');
         $pdo = $entityManager->getPDO();
 
+        $dbName = $this->getContainer()->get('config')->get('database.dbname');
+
         $query = "
             SELECT * FROM information_schema.columns
             WHERE table_name = '" . Util::toUnderScore($entityName) . "'
             AND column_name = '" . Util::toUnderScore($fieldName) . "'
+            AND table_schema = '" . $dbName . "'
         ";
+
         $sth = $pdo->prepare($query);
         $sth->execute();
 

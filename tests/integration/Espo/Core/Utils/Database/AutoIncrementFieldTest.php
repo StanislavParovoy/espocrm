@@ -58,4 +58,62 @@ class AutoIncrementFieldTest extends Base
         $this->assertEquals('auto_increment', $column['EXTRA']);
         $this->assertEquals('UNI', $column['COLUMN_KEY']);
     }
+
+    public function testDeleteColumnOnExistingTable()
+    {
+        // 1. Create "testAutoIncrement" field
+        $this->testColumnOnExistingTable();
+
+        // 2. Delete "testAutoIncrement" field
+        $metadata = $this->getContainer()->get('metadata');
+        $entityDefs = $metadata->delete('entityDefs', 'Test', [
+            'fields.testAutoIncrement',
+        ]);
+        $metadata->save();
+
+        $this->getContainer()->get('dataManager')->rebuild([$entityName]);
+
+        $column = $this->getColumnInfo('Test', 'testAutoIncrement');
+
+        $this->assertNotEmpty($column);
+        $this->assertEquals('int', $column['DATA_TYPE']);
+        $this->assertEquals('YES', $column['IS_NULLABLE']);
+        $this->assertEquals('10', $column['NUMERIC_PRECISION']);
+        $this->assertEmpty($column['EXTRA']);
+        $this->assertEmpty($column['COLUMN_KEY']);
+    }
+
+    public function testDeleteCreateColumnOnExistingTable()
+    {
+        // 1. Create "testAutoIncrement" field
+        $this->testColumnOnExistingTable();
+
+        // 2. Delete "testAutoIncrement" field
+        $metadata = $this->getContainer()->get('metadata');
+        $entityDefs = $metadata->delete('entityDefs', 'Test', [
+            'fields.testAutoIncrement',
+        ]);
+        $metadata->save();
+
+        // 3. Create "testAutoIncrement2" field
+        $this->updateDefs('Test', 'testAutoIncrement2', [
+            'type' => 'autoincrement',
+        ]);
+
+        $column = $this->getColumnInfo('Test', 'testAutoIncrement');
+        $this->assertNotEmpty($column);
+        $this->assertEquals('int', $column['DATA_TYPE']);
+        $this->assertEquals('YES', $column['IS_NULLABLE']);
+        $this->assertEquals('10', $column['NUMERIC_PRECISION']);
+        $this->assertEmpty($column['EXTRA']);
+        $this->assertEmpty($column['COLUMN_KEY']);
+
+        $column2 = $this->getColumnInfo('Test', 'testAutoIncrement2');
+        $this->assertNotEmpty($column2);
+        $this->assertEquals('int', $column2['DATA_TYPE']);
+        $this->assertEquals('NO', $column2['IS_NULLABLE']);
+        $this->assertEquals('10', $column2['NUMERIC_PRECISION']);
+        $this->assertEquals('auto_increment', $column2['EXTRA']);
+        $this->assertEquals('UNI', $column2['COLUMN_KEY']);
+    }
 }
