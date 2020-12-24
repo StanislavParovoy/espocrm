@@ -33,6 +33,9 @@ use Espo\Core\{
     InjectableFactory,
 };
 
+/**
+ * Creates instances of Select Builder.
+ */
 class SelectBuilderFactory
 {
     protected $injectableFactory;
@@ -42,10 +45,8 @@ class SelectBuilderFactory
         $this->injectableFactory = $injectableFactory;
     }
 
-    public function create(string $entityType) : SelectBuilder
+    public function create() : SelectBuilder
     {
-        return $this->injectableFactory->createWith(SelectBuilder::class, [
-            'entityType' => $entityType,
-        ]);
+        return $this->injectableFactory->create(SelectBuilder::class);
     }
 }

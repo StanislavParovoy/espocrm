@@ -62,7 +62,7 @@ use Espo\{
  */
 class SelectBuilder
 {
-    protected $entityType;
+    protected $entityType = null;
 
     protected $queryBuilder;
 
@@ -86,27 +86,35 @@ class SelectBuilder
 
     protected $applierFactory;
 
-    public function __construct(string $entityType, User $user, ApplierFactory $applierFactory)
+    public function __construct(User $user, ApplierFactory $applierFactory)
     {
-        $this->entityType = $entityType;
-
         $this->applierFactory = $applierFactory;
 
         $this->user = $user;
 
         $this->queryBuilder = new OrmSelectBuilder();
+    }
 
-        $this->queryBuilder->from($entityType);
+    /**
+     * Specify an entity type to select from.
+     */
+    public function from(string $entityType) : self
+    {
+        $this->entityType = $entityType;
+
+        return $this;
     }
 
     /**
      * Start building from an existing select query.
      */
-    public function fromQuery(Query $query) : self
+    public function clone(Query $query) : self
     {
-        if ($entity->entityType !== $query->getFrom()) {
+        if ($this->entityType && $entity->entityType !== $query->getFrom()) {
             throw new Error("Not matching entity type.");
         }
+
+        $this->entityType = $query->getFrom();
 
         $this->queryBuilder->clone($query);
 
@@ -118,6 +126,12 @@ class SelectBuilder
      */
     public function build() : Query
     {
+        if (!$this->entityType) {
+            throw new Error("No entity type.");
+        }
+
+         $this->queryBuilder->from($this->entityType);
+
         $this->applyFromSearchParams();
 
         if ($this->applyDefaultOrder) {
