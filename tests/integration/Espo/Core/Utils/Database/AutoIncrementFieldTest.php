@@ -43,7 +43,7 @@ class AutoIncrementFieldTest extends Base
         $this->assertEquals('UNI', $column['COLUMN_KEY']);
     }
 
-    /*public function testColumnOnExistingTable()
+    public function testColumnOnExistingTable()
     {
         $this->updateDefs('Test', 'testAutoIncrement', [
             'type' => 'autoincrement',
@@ -57,5 +57,5 @@ class AutoIncrementFieldTest extends Base
         $this->assertEquals('10', $column['NUMERIC_PRECISION']);
         $this->assertEquals('auto_increment', $column['EXTRA']);
         $this->assertEquals('UNI', $column['COLUMN_KEY']);
-    }*/
+    }
 }
