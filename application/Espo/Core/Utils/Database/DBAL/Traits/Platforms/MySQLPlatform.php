@@ -37,6 +37,7 @@ use Doctrine\DBAL\Schema\{
     ForeignKeyConstraint,
     ColumnDiff,
     Column,
+    Identifier,
 };
 
 trait MySQLPlatform
@@ -60,8 +61,27 @@ trait MySQLPlatform
                 'comment' => $this->getColumnComment($column),
             ]);
 
+            // Espo: Unable to create autoindex column in existing table fix
+            if ($column->getAutoincrement()) {
+                $columnArray['unique'] = true;
+
+                $columnName = $column->getQuotedName($this);
+
+                foreach ($diff->addedIndexes as $indexName => $index) {
+                    if ($index->getColumns() === [$columnName]) {
+                        $columnArray['uniqueDeclaration'] = $index->getName() . "(" . $columnName . ")";
+                        unset($diff->addedIndexes[$indexName]);
+                    }
+                }
+            }
+            // Espo: end
+
             $queryParts[] = 'ADD ' . $this->getColumnDeclarationSQL($column->getQuotedName($this), $columnArray);
         }
+
+        // Espo: remove autoincrement column
+        $autoincrementRemovedIndexes = [];
+        // Espo: end
 
         foreach ($diff->removedColumns as $column) {
             if ($this->onSchemaAlterTableRemoveColumn($column, $diff, $columnSql)) {
@@ -83,6 +103,13 @@ trait MySQLPlatform
                 );
 
                 $diff->changedColumns[$columnName] = new ColumnDiff($columnName, $changedColumn, $changedProperties, $column);
+
+                foreach ($diff->removedIndexes as $indexName => $index) {
+                    if ($index->getColumns() === [$columnName]) {
+                        $autoincrementRemovedIndexes[$indexName] = $index;
+                        unset($diff->removedIndexes[$indexName]);
+                    }
+                }
             }
             // Espo: end
 
@@ -107,6 +134,21 @@ trait MySQLPlatform
             ) {
                 continue;
             }
+
+            // Espo: Unable to create autoindex column in existing table fix
+            if ($column->getAutoincrement()) {
+                $columnArray['unique'] = true;
+
+                $columnName = $column->getQuotedName($this);
+
+                foreach ($diff->addedIndexes as $indexName => $index) {
+                    if ($index->getColumns() === [$columnName]) {
+                        $columnArray['uniqueDeclaration'] = $index->getName() . "(" . $columnName . ")";
+                        unset($diff->addedIndexes[$indexName]);
+                    }
+                }
+            }
+            // Espo: end
 
             $columnArray['comment'] = $this->getColumnComment($column);
             $queryParts[]           =  'CHANGE ' . ($columnDiff->getOldColumnName()->getQuotedName($this)) . ' '
@@ -166,6 +208,16 @@ trait MySQLPlatform
                     . implode(', ', $queryParts);
             }
 
+            // Espo: remove autoincrement column
+            if (!empty($autoincrementRemovedIndexes)) {
+                $tableName = $diff->getName($this)->getQuotedName($this);
+
+                foreach ($autoincrementRemovedIndexes as $index) {
+                    $sql[] = $this->getDropIndexSQL($index, $tableName);
+                }
+            }
+            // Espo: end
+
             $sql = array_merge(
                 $this->getPreAlterTableIndexForeignKeySQL($diff),
                 $sql,
@@ -204,5 +256,43 @@ trait MySQLPlatform
         }
 
         return parent::_getCreateTableSQL($name, $columns, $options);
+    }
+
+    public function getColumnDeclarationSQL($name, array $column)
+    {
+        if (isset($column['columnDefinition'])) {
+            $declaration = $this->getCustomTypeDeclarationSQL($column);
+        } else {
+            $default = $this->getDefaultValueDeclarationSQL($column);
+
+            $charset = ! empty($column['charset']) ?
+                ' ' . $this->getColumnCharsetDeclarationSQL($column['charset']) : '';
+
+            $collation = ! empty($column['collation']) ?
+                ' ' . $this->getColumnCollationDeclarationSQL($column['collation']) : '';
+
+            $notnull = ! empty($column['notnull']) ? ' NOT NULL' : '';
+
+            $unique = ! empty($column['unique']) ?
+                ' ' . $this->getUniqueFieldDeclarationSQL() : '';
+
+            $check = ! empty($column['check']) ? ' ' . $column['check'] : '';
+
+            $typeDecl    = $column['type']->getSQLDeclaration($column, $this);
+            $declaration = $typeDecl . $charset . $default . $notnull . $unique . $check . $collation;
+
+            // Espo: Unable to create autoindex column in existing table fix
+            if (!empty($column['uniqueDeclaration'])) {
+                $declaration = $typeDecl . $charset . $default . $notnull . $check . $collation
+                    . ", ADD". $unique . " " . $column['uniqueDeclaration'];
+            }
+            // Espo: end
+
+            if ($this->supportsInlineColumnComments() && isset($column['comment']) && $column['comment'] !== '') {
+                $declaration .= ' ' . $this->getInlineColumnCommentSQL($column['comment']);
+            }
+        }
+
+        return $name . ' ' . $declaration;
     }
 }
