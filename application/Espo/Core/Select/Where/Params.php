@@ -33,7 +33,7 @@ use InvalidArgumentException;
 
 class Params
 {
-    private $applyWherePermissionsCheck = false;
+    private $applyPermissionCheck = false;
 
     private $forbidComplexExpressions = false;
 
@@ -45,7 +45,7 @@ class Params
     {
         $object = new self();
 
-        $object->applyWherePermissionsCheck = $params['applyWherePermissionsCheck'] ?? false;
+        $object->applyPermissionCheck = $params['applyPermissionCheck'] ?? false;
         $object->forbidComplexExpressions = $params['forbidComplexExpressions'] ?? false;
 
         foreach ($params as $key => $value) {
@@ -57,9 +57,9 @@ class Params
         return $object;
     }
 
-    public function applyWherePermissionsCheck() : bool
+    public function applyPermissionCheck() : bool
     {
-        return $this->applyWherePermissionsCheck;
+        return $this->applyPermissionCheck;
     }
 
     public function forbidComplexExpressions() : bool

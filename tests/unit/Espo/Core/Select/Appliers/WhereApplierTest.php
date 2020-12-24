@@ -71,16 +71,6 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
 
     public function testApply1()
     {
-        $this->params
-            ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
-            ->willReturn(true);
-
-        $this->params
-            ->expects($this->any())
-            ->method('forbidComplexExpressions')
-            ->willReturn(true);
-
         $this->checker
             ->expects($this->once())
             ->method('check')
@@ -108,16 +98,6 @@ class WhereApplierTest extends \PHPUnit\Framework\TestCase
 
     public function testApply2()
     {
-        $this->params
-            ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
-            ->willReturn(false);
-
-        $this->params
-            ->expects($this->any())
-            ->method('forbidComplexExpressions')
-            ->willReturn(false);
-
         $this->checker
             ->expects($this->once())
             ->method('check')

@@ -92,7 +92,7 @@ class Checker
         $value = $item->getValue();
 
         $forbidComplexExpressions = $params->forbidComplexExpressions();
-        $checkWherePermission = $params->applyWherePermissionsCheck();
+        $checkWherePermission = $params->applyPermissionCheck();
 
         if ($forbidComplexExpressions) {
             if (in_array($type, $this->subQueryTypeList)) {

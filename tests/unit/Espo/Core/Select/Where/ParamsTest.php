@@ -44,27 +44,27 @@ class ParamsTest extends \PHPUnit\Framework\TestCase
     public function testFromArray()
     {
         $item = Params::fromArray([
-            'applyWherePermissionsCheck' => true,
+            'applyPermissionCheck' => true,
             'forbidComplexExpressions' => true,
         ]);
 
-        $this->assertTrue($item->applyWherePermissionsCheck());
+        $this->assertTrue($item->applyPermissionCheck());
         $this->assertTrue($item->forbidComplexExpressions());
 
         $item = Params::fromArray([
-            'applyWherePermissionsCheck' => false,
+            'applyPermissionCheck' => false,
             'forbidComplexExpressions' => false,
         ]);
 
-        $this->assertFalse($item->applyWherePermissionsCheck());
+        $this->assertFalse($item->applyPermissionCheck());
         $this->assertFalse($item->forbidComplexExpressions());
 
         $item = Params::fromArray([
-            'applyWherePermissionsCheck' => false,
+            'applyPermissionCheck' => false,
             'forbidComplexExpressions' => true,
         ]);
 
-        $this->assertFalse($item->applyWherePermissionsCheck());
+        $this->assertFalse($item->applyPermissionCheck());
         $this->assertTrue($item->forbidComplexExpressions());
     }
 
@@ -73,7 +73,7 @@ class ParamsTest extends \PHPUnit\Framework\TestCase
         $item = Params::fromArray([
         ]);
 
-        $this->assertFalse($item->applyWherePermissionsCheck());
+        $this->assertFalse($item->applyPermissionCheck());
         $this->assertFalse($item->forbidComplexExpressions());
     }
 

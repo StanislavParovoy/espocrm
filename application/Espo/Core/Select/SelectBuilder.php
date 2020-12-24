@@ -80,7 +80,7 @@ class SelectBuilder
 
     protected $boolFilterList = [];
 
-    protected $applyWherePermissionsCheck = false;
+    protected $applyWherePermissionCheck = false;
 
     protected $applyComplexExpressionsForbidden = false;
 
@@ -187,7 +187,7 @@ class SelectBuilder
     public function withStrictAccessControl() : self
     {
         $this->withAccessControlFilter();
-        $this->withWherePermissionsCheck();
+        $this->withWherePermissionCheck();
         $this->withComplexExpressionsForbidden();
 
         return $this;
@@ -216,9 +216,9 @@ class SelectBuilder
     /**
      * Check permissions to where items.
      */
-    public function withWherePermissionsCheck() : self
+    public function withWherePermissionCheck() : self
     {
-        $this->applyWherePermissionsCheck = true;
+        $this->applyWherePermissionCheck = true;
 
         return $this;
     }
@@ -386,7 +386,7 @@ class SelectBuilder
             ]);
 
             $params = WhereParams::fromArray([
-                'applyWherePermissionsCheck' => $this->applyWherePermissionsCheck,
+                'applyPermissionCheck' => $this->applyWherePermissionCheck,
                 'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
             ]);
 

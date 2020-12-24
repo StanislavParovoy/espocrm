@@ -85,7 +85,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(false);
 
         $item = Item::fromArray([
@@ -138,7 +138,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(false);
 
         $item = Item::fromArray([
@@ -175,7 +175,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(false);
 
         $item = Item::fromArray([
@@ -209,7 +209,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(true);
 
         $item = Item::fromArray([
@@ -294,7 +294,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(true);
 
         $item = Item::fromArray([
@@ -339,7 +339,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(true);
 
         $item = Item::fromArray([
@@ -390,7 +390,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(true);
 
         $item = Item::fromArray([
@@ -441,7 +441,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
 
         $this->params
             ->expects($this->any())
-            ->method('applyWherePermissionsCheck')
+            ->method('applyPermissionCheck')
             ->willReturn(false);
 
         $item = Item::fromArray([
