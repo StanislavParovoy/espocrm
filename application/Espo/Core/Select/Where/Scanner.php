@@ -43,6 +43,17 @@ class Scanner
 
     private $seedHash = [];
 
+    protected $nestingTypeList = [
+        'or',
+        'and',
+    ];
+
+    protected $subQueryTypeList = [
+        'subQueryIn',
+        'subQueryNotIn',
+        'not',
+    ];
+
     public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -65,11 +76,11 @@ class Scanner
         $value = $item->getValue();
         $attribute = $item->getAttribute();
 
-        if (in_array($type, ['subQueryNotIn', 'subQueryIn', 'not'])) {
+        if (in_array($type, $this->subQueryTypeList)) {
             return;
         }
 
-        if (in_array($type, ['or', 'and', 'having'])) {
+        if (in_array($type, $this->nestingTypeList)) {
             if (!is_array($value)) {
                 return;
             }
