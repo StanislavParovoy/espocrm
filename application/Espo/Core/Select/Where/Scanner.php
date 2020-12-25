@@ -86,7 +86,7 @@ class Scanner
             }
 
             foreach ($value as $subItem) {
-                $this->applyLeftJoinsFromItem($queryBuilder, Item::fromRaw($subItem), $entityType);
+                $this->applyLeftJoinsFromItem($queryBuilder, Item::fromArray($subItem), $entityType);
             }
 
             return;
@@ -119,7 +119,9 @@ class Scanner
             if ($seed->hasRelation($link)) {
                 $queryBuilder->leftJoin($link);
 
-                if ($seed->getRelationType($link) === Entity::HAS_MANY) {
+                if (
+                    in_array($seed->getRelationType($link), [Entity::HAS_MANY, Entity::MANY_MANY])
+                ) {
                     $queryBuilder->distinct();
                 }
             }
