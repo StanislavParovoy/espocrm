@@ -47,7 +47,7 @@ class Item
     {
     }
 
-    public static function fromArray(array $params) : self
+    public static function fromRaw(array $params) : self
     {
         $object = new self();
 

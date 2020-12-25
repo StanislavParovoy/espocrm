@@ -458,6 +458,6 @@ class DateTimeItemTransformer
                 $where['type'] = $type;
         }
 
-        return Item::fromArray($where);
+        return Item::fromRaw($where);
     }
 }

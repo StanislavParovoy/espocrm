@@ -117,7 +117,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertApplyLeftJoins()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
             ],
@@ -133,7 +133,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertEquals1()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -155,7 +155,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertEquals2()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -183,7 +183,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertOr()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -231,7 +231,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
                 ]
             );
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -285,7 +285,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
                 ]
             );
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -336,7 +336,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
                 ]
             );
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -378,7 +378,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertDateTimeOn1()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -405,7 +405,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
     public function testConvertSubQueryIn()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -435,7 +435,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
             ->with($this->entityType)
             ->willReturn($sqQueryBuilder);
 
-        $sqItem = Item::fromArray([
+        $sqItem = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -494,7 +494,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
 
         $value = ['value-id'];
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [

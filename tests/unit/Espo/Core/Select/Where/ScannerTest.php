@@ -75,7 +75,7 @@ class ScannerTest extends \PHPUnit\Framework\TestCase
 
     public function testApplyLeftJoins1()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [

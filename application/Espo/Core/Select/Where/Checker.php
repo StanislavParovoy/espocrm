@@ -123,7 +123,7 @@ class Checker
 
         if (in_array($type, $this->nestingTypeList) && is_array($value)) {
             foreach ($value as $subItem) {
-                $this->checkItem(Item::fromArray($subItem), $params);
+                $this->checkItem(Item::fromRaw($subItem), $params);
             }
         }
     }

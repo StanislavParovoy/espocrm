@@ -83,7 +83,7 @@ class Converter
         $itemList = $this->itemToList($item);
 
         foreach ($itemList as $subItem) {
-            $part = $this->processItem($queryBuilder, Item::fromArray($subItem));
+            $part = $this->processItem($queryBuilder, Item::fromRaw($subItem));
 
             if (empty($part)) {
                 continue;

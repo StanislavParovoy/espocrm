@@ -86,7 +86,7 @@ class Scanner
             }
 
             foreach ($value as $subItem) {
-                $this->applyLeftJoinsFromItem($queryBuilder, Item::fromArray($subItem), $entityType);
+                $this->applyLeftJoinsFromItem($queryBuilder, Item::fromRaw($subItem), $entityType);
             }
 
             return;

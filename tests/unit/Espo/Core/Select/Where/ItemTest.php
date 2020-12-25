@@ -43,7 +43,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
 
     public function testFromArray()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'equals',
             'attribute' => 'test',
             'value' => 'testValue',
@@ -55,7 +55,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($item->isDateTime());
         $this->assertEquals(null, $item->getTimeZone());
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'equals',
             'attribute' => 'test',
             'value' => 1,
@@ -65,7 +65,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('test', $item->getAttribute());
         $this->assertEquals(1, $item->getValue());
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'equals',
             'attribute' => 'test',
             'value' => 'testValue',
@@ -81,7 +81,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
         ]);
     }
 
@@ -89,14 +89,14 @@ class ItemTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'equals',
         ]);
     }
 
     public function testEmptyAttribute2()
     {
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [],
         ]);
@@ -108,7 +108,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'attribute' => 'test',
         ]);
     }
@@ -117,7 +117,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $params = Item::fromArray([
+        $params = Item::fromRaw([
             'bad' => 'd',
         ]);
     }
@@ -129,7 +129,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
             'value' => [],
         ];
 
-        $item = Item::fromArray($raw);
+        $item = Item::fromRaw($raw);
 
         $result = $item->getRaw();
 
@@ -146,7 +146,7 @@ class ItemTest extends \PHPUnit\Framework\TestCase
             'timeZone' => 'UTC',
         ];
 
-        $item = Item::fromArray($raw);
+        $item = Item::fromRaw($raw);
 
         $result = $item->getRaw();
 

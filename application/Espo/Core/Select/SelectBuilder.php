@@ -35,15 +35,15 @@ use Espo\Core\{
 
 use Espo\Core\Select\{
     Factory\ApplierFactory,
-    Applier\WhereApplier,
-    Applier\SelectApplier,
-    Applier\OrderApplier,
-    Applier\LimitApplier,
-    Applier\AccessControlFilterApplier,
-    Applier\PrimaryFilterApplier,
-    Applier\BoolFilterListApplier,
-    Applier\TextFilterApplier,
-    Applier\AdditionalApplier,
+    Appliers\WhereApplier,
+    Appliers\SelectApplier,
+    Appliers\OrderApplier,
+    Appliers\LimitApplier,
+    Appliers\AccessControlFilterApplier,
+    Appliers\PrimaryFilterApplier,
+    Appliers\BoolFilterListApplier,
+    Appliers\TextFilterApplier,
+    Appliers\AdditionalApplier,
     Where\Params as WhereParams,
     Where\Item as WhereItem,
     Order\Params as OrderParams,
@@ -172,7 +172,7 @@ class SelectBuilder
     /**
      * Apply search params.
      */
-    public function withSearchParams(Search $searchParams) : self
+    public function withSearchParams(SearchParams $searchParams) : self
     {
         $this->searchParams = $searchParams;
 
@@ -415,7 +415,7 @@ class SelectBuilder
 
     protected function applyAdditional()
     {
-        $this->createAdditionalApplier->apply(
+        $this->createAdditionalApplier()->apply(
             $this->queryBuilder,
             $this->searchParams
         );
@@ -463,6 +463,6 @@ class SelectBuilder
 
     protected function createAdditionalApplier() : AdditionalApplier
     {
-        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::BOOL_FILTER_LIST);
+        return $this->applierFactory->create($this->entityType, $this->user, ApplierFactory::ADDITIONAL);
     }
 }

@@ -88,7 +88,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(false);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -141,7 +141,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(false);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -178,7 +178,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(false);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -212,7 +212,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(true);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -297,7 +297,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(true);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -342,7 +342,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(true);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -393,7 +393,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(true);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [
@@ -444,7 +444,7 @@ class CheckerTest extends \PHPUnit\Framework\TestCase
             ->method('applyPermissionCheck')
             ->willReturn(false);
 
-        $item = Item::fromArray([
+        $item = Item::fromRaw([
             'type' => 'and',
             'value' => [
                 [

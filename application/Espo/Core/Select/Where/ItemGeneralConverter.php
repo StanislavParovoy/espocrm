@@ -182,7 +182,7 @@ class ItemGeneralConverter
         $whereClause = [];
 
         foreach ($value as $item) {
-            $subPart = $this->convert($queryBuilder, Item::fromArray($item))->getRaw();
+            $subPart = $this->convert($queryBuilder, Item::fromRaw($item))->getRaw();
 
             foreach ($subPart as $left => $right) {
                 if (!empty($right) || is_null($right) || $right === '' || $right === 0 || $right === false) {
@@ -209,7 +209,7 @@ class ItemGeneralConverter
             ->select()
             ->from($this->entityType);
 
-        $whereItem = Item::fromArray([
+        $whereItem = Item::fromRaw([
             'type' => 'and',
             'value' => $value,
         ]);
