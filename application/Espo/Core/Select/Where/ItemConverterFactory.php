@@ -50,14 +50,14 @@ class ItemConverterFactory
         $this->metadata = $metadata;
     }
 
-    public function has(string $type) : bool
+    public function hasForType(string $type) : bool
     {
-        return (bool) $this->getClassName($type);
+        return (bool) $this->getClassNameForType($type);
     }
 
-    public function create(string $type, string $entityType, User $user) : ItemConverter
+    public function createForType(string $type, string $entityType, User $user) : ItemConverter
     {
-        $className = $this->getClassName($type);
+        $className = $this->getClassNameForType($type);
 
         if (!$className) {
             throw new Error("Where item converter class name is not defined.");
@@ -69,10 +69,36 @@ class ItemConverterFactory
         ]);
     }
 
-    protected function getClassName(string $type) : ?string
+    protected function getClassNameForType(string $type) : ?string
     {
         return $this->metadata->get([
             'app', 'select', 'whereItemConverterClassNameMap', $type
+        ]);
+    }
+
+    public function has(string $entityType, string $attribute, string $type) : bool
+    {
+        return (bool) $this->getClassName($entityType, $attribute, $type);
+    }
+
+    public function create(string $entityType, string $attribute, string $type, User $user) : ItemConverter
+    {
+        $className = $this->getClassName($entityType, $attribute, $type);
+
+        if (!$className) {
+            throw new Error("Where item converter class name is not defined.");
+        }
+
+        return $this->injectableFactory->createWith($className, [
+            'entityType' => $entityType,
+            'user' => $user,
+        ]);
+    }
+
+    protected function getClassName(string $entityType, string $attribute, string $type) : ?string
+    {
+        return $this->metadata->get([
+            'selectDefs', $entityType, 'whereItemConverterClassNameMap', $attribute . '_' . $type
         ]);
     }
 }

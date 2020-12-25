@@ -37,6 +37,7 @@ use Espo\Core\{
     Select\Where\ItemConverterFactory,
     Select\Where\ItemGeneralConverter,
     Select\Where\DateTimeItemTransformer,
+    Select\Where\ItemConverter,
     Select\Helpers\RandomStringGenerator,
     Utils\Config,
 };
@@ -537,6 +538,61 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         ];
 
         $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $this->assertEquals($expected, $whereClause->getRaw());
+    }
+
+    public function testConvertCustomConverter()
+    {
+        $type = 'testType';
+        $attribute = 'testAttribute';
+
+        $item = Item::fromRaw([
+            'type' => 'and',
+            'value' => [
+                [
+                    'type' => $type,
+                    'attribute' => $attribute,
+                    'value' => 'test-value',
+                ],
+            ],
+        ]);
+
+        $subItem = Item::fromRaw([
+            'type' => $type,
+            'attribute' => $attribute,
+            'value' => 'test-value',
+        ]);
+
+        $converter = $this->createMock(ItemConverter::class);
+
+        $converter
+            ->expects($this->once())
+            ->method('convert')
+            ->with($this->queryBuilder, $subItem)
+            ->willReturn(
+                WhereClause::fromRaw([
+                    'testAnother=' => 'test-value',
+                ])
+            );
+
+        $this->itemConverterFactory
+            ->expects($this->once())
+            ->method('has')
+            ->with($this->entityType, $attribute, $type)
+            ->willReturn(true);
+
+        $this->itemConverterFactory
+            ->expects($this->once())
+            ->method('create')
+            ->with($this->entityType, $attribute, $type, $this->user)
+            ->willReturn($converter);
+
+        $whereClause = $this->converter->convert($this->queryBuilder, $item);
+
+        $expected = [
+            'testAnother=' => 'test-value',
+        ];
 
         $this->assertEquals($expected, $whereClause->getRaw());
     }

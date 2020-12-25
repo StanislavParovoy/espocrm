@@ -101,6 +101,14 @@ class ItemGeneralConverter
         }
 
         if ($attribute) {
+            if ($this->itemConverterFactory->has($this->entityType, $attribute, $type)) {
+                $converter = $this->itemConverterFactory->create(
+                    $this->entityType, $attribute, $type, $this->user
+                );
+
+                return $converter->convert($queryBuilder, $item);
+            }
+
             $methodName = 'convert' . ucfirst($attribute) . ucfirst($type);
 
             if (method_exists($this, $methodName)) {
@@ -164,11 +172,11 @@ class ItemGeneralConverter
             );
         }
 
-        if (!$this->itemConverterFactory->has($type)) {
+        if (!$this->itemConverterFactory->hasForType($type)) {
             throw new Error("Unknown where item type.");
         }
 
-        $converter = $this->itemConverterFactory->create($type, $this->entityType, $this->user);
+        $converter = $this->itemConverterFactory->createForType($type, $this->entityType, $this->user);
 
         return $converter->convert($queryBuilder, $item);
     }

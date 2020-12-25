@@ -55,10 +55,31 @@ class ItemConverterFactoryTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testCreate1()
+    public function testCreateForType()
     {
         $this->prepareFactoryTest(TestConverter::class);
         $this->prepareFactoryTest(TestConverter::class, true);
+    }
+
+    public function testHasFalseForType()
+    {
+        $this->metadata
+            ->expects($this->at(0))
+            ->method('get')
+            ->with([
+                'app', 'select', 'whereItemConverterClassNameMap', 'someType'
+            ])
+            ->willReturn(null);
+
+        $this->assertFalse(
+            $this->factory->hasForType('someType')
+        );
+    }
+
+    public function testCreateEntityType()
+    {
+        $this->prepareFactoryTestEntityType(TestConverter::class);
+        $this->prepareFactoryTestEntityType(TestConverter::class, true);
     }
 
     protected function prepareFactoryTest(?string $className, bool $testHas = false)
@@ -77,7 +98,58 @@ class ItemConverterFactoryTest extends \PHPUnit\Framework\TestCase
 
         if ($testHas) {
             $this->assertTrue(
-                $this->factory->has($type)
+                $this->factory->hasForType($type)
+            );
+
+            return;
+        }
+
+        $object = $this->createMock($className);
+
+        $this->injectableFactory
+            ->expects($this->at(0))
+            ->method('createWith')
+            ->with(
+                $className,
+                [
+                    'entityType' => $entityType,
+                    'user' => $this->user,
+                ]
+            )
+            ->willReturn($object);
+
+        $resultObject = $this->factory->createForType(
+            $type,
+            $entityType,
+            $this->user
+        );
+
+        $this->assertEquals($object, $resultObject);
+    }
+
+    protected function prepareFactoryTestEntityType(?string $className, bool $testHas = false)
+    {
+        $entityType = 'Test';
+
+        $type = 'someType';
+
+        $attribute = 'test';
+
+        $this->metadata
+            ->expects($this->at(0))
+            ->method('get')
+            ->with([
+                'selectDefs', $entityType, 'whereItemConverterClassNameMap', $attribute . '_' . $type
+            ])
+            ->willReturn($className);
+
+        if ($testHas) {
+            $this->assertTrue(
+                $this->factory->has(
+                    $entityType,
+                    $attribute,
+                    $type
+                )
             );
 
             return;
@@ -98,26 +170,12 @@ class ItemConverterFactoryTest extends \PHPUnit\Framework\TestCase
             ->willReturn($object);
 
         $resultObject = $this->factory->create(
-            $type,
             $entityType,
+            $attribute,
+            $type,
             $this->user
         );
 
         $this->assertEquals($object, $resultObject);
-    }
-
-    public function testHasFalse()
-    {
-        $this->metadata
-            ->expects($this->at(0))
-            ->method('get')
-            ->with([
-                'app', 'select', 'whereItemConverterClassNameMap', 'someType'
-            ])
-            ->willReturn(null);
-
-        $this->assertFalse(
-            $this->factory->has('someType')
-        );
     }
 }
