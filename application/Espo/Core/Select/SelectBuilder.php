@@ -282,7 +282,7 @@ class SelectBuilder
      */
     public function withBoolFilterList(array $boolFilterList) : self
     {
-        $this->boolFilterList[] = array_merge($this->boolFilterList, $boolFilterList);
+        $this->boolFilterList = array_merge($this->boolFilterList, $boolFilterList);
 
         return $this;
     }
@@ -317,7 +317,7 @@ class SelectBuilder
             ->apply(
                 $this->queryBuilder,
                 $this->textFilter,
-                TextFilterParams::fromRaw([
+                TextFilterParams::fromArray([
                     'noFullTextSearch' => $noFullTextSearch,
                 ])
             );

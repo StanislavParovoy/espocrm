@@ -67,30 +67,30 @@ class SearchBuilderTest extends \PHPUnit\Framework\TestCase
 
         $this->entityType = 'Test';
 
-        $whereApplier = $this->createMock(WhereApplier::class);
-        $selectApplier = $this->createMock(SelectApplier::class);
-        $orderApplier = $this->createMock(OrderApplier::class);
-        $limitApplier = $this->createMock(WhereApplier::class);
-        $accessControlFilterApplier = $this->createMock(AccessControlFilterApplier::class);
-        $textFilterApplier = $this->createMock(TextFilterApplier::class);
-        $primaryFilterApplier = $this->createMock(PrimaryFilterApplier::class);
-        $boolFilterListApplier = $this->createMock(boolFilterListApplier::class);
-        $additionalApplier = $this->createMock(AdditionalApplier::class);
+        $this->whereApplier = $this->createMock(WhereApplier::class);
+        $this->selectApplier = $this->createMock(SelectApplier::class);
+        $this->orderApplier =  $this->createMock(OrderApplier::class);
+        $this->limitApplier = $this->createMock(WhereApplier::class);
+        $this->accessControlFilterApplier = $this->createMock(AccessControlFilterApplier::class);
+        $this->textFilterApplier = $selectApplier = $this->createMock(TextFilterApplier::class);
+        $this->primaryFilterApplier = $selectApplier = $this->createMock(PrimaryFilterApplier::class);
+        $this->boolFilterListApplier = $selectApplier = $this->createMock(boolFilterListApplier::class);
+        $this->additionalApplier = $selectApplier = $this->createMock(AdditionalApplier::class);
 
         $this->applierFactory
             ->expects($this->any())
             ->method('create')
             ->will(
                 $this->returnValueMap([
-                    [$this->entityType, $this->user, ApplierFactory::WHERE, $whereApplier],
-                    [$this->entityType, $this->user, ApplierFactory::SELECT, $selectApplier],
-                    [$this->entityType, $this->user, ApplierFactory::ORDER, $orderApplier],
-                    [$this->entityType, $this->user, ApplierFactory::LIMIT, $limitApplier],
-                    [$this->entityType, $this->user, ApplierFactory::ACCESS_CONTROL_FILTER, $accessControlFilterApplier],
-                    [$this->entityType, $this->user, ApplierFactory::TEXT_FILTER, $textFilterApplier],
-                    [$this->entityType, $this->user, ApplierFactory::PRIMARY_FILTER, $primaryFilterApplier],
-                    [$this->entityType, $this->user, ApplierFactory::BOOL_FILTER_LIST, $boolFilterListApplier],
-                    [$this->entityType, $this->user, ApplierFactory::ADDITIONAL, $additionalApplier],
+                    [$this->entityType, $this->user, ApplierFactory::WHERE, $this->whereApplier],
+                    [$this->entityType, $this->user, ApplierFactory::SELECT, $this->selectApplier],
+                    [$this->entityType, $this->user, ApplierFactory::ORDER, $this->orderApplier],
+                    [$this->entityType, $this->user, ApplierFactory::LIMIT, $this->limitApplier],
+                    [$this->entityType, $this->user, ApplierFactory::ACCESS_CONTROL_FILTER, $this->accessControlFilterApplier],
+                    [$this->entityType, $this->user, ApplierFactory::TEXT_FILTER, $this->textFilterApplier],
+                    [$this->entityType, $this->user, ApplierFactory::PRIMARY_FILTER, $this->primaryFilterApplier],
+                    [$this->entityType, $this->user, ApplierFactory::BOOL_FILTER_LIST, $this->boolFilterListApplier],
+                    [$this->entityType, $this->user, ApplierFactory::ADDITIONAL, $this->additionalApplier],
                 ])
             );
 
@@ -99,7 +99,13 @@ class SearchBuilderTest extends \PHPUnit\Framework\TestCase
 
     public function testBuild1()
     {
-        $searchParams = SearchParams::fromRaw([
+        $raw = [
+            'textFilter' => 'testText',
+            'primaryFilter' => 'testPrimary',
+            'boolFilterList' => [
+                'testBool1',
+                'testBool2',
+            ],
             'where' => [
                 [
                     'type' => 'equals',
@@ -107,12 +113,97 @@ class SearchBuilderTest extends \PHPUnit\Framework\TestCase
                     'value' => 'value',
                 ],
             ],
+            'orderBy' => 'test',
+            'order' => SearchParams::ORDER_DESC,
+        ];
+
+        $searchParams = SearchParams::fromRaw($raw);
+
+        $this->primaryFilterApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class),
+                $raw['primaryFilter']
+            );
+
+        $this->boolFilterListApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class),
+                [
+                    'testBool1',
+                    'testBool2',
+                    'testBool3',
+                ]
+            );
+
+        $textFilterParams = TextFilterParams::fromArray([
+            'noFullTextSearch' => false,
         ]);
+
+        $this->textFilterApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class),
+                $raw['textFilter'],
+                $textFilterParams
+            );
+
+        $this->accessControlFilterApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class)
+            );
+
+        $whereItem = WhereItem::fromRaw([
+            'type' => 'and',
+            'value' => $searchParams->getWhere(),
+        ]);
+
+        $whereParams = WhereParams::fromArray([
+            'applyPermissionCheck' => true,
+            'forbidComplexExpressions' => true,
+        ]);
+
+        $this->whereApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class),
+                $whereItem,
+                $whereParams
+            );
+
+        $orderParams = OrderParams::fromArray([
+            'forbidComplexExpressions' => true,
+            'orderBy' => $searchParams->getOrderBy(),
+            'order' => $searchParams->getOrder(),
+        ]);
+
+        $this->orderApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class),
+                $orderParams,
+            );
+
+        $this->additionalApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class)
+            );
 
         $query = $this->selectBuilder
             ->from($this->entityType)
             ->withSearchParams($searchParams)
             ->withStrictAccessControl()
+            ->withBoolFilter('testBool3')
             ->build();
 
         $this->assertEquals($this->entityType, $query->getFrom());
