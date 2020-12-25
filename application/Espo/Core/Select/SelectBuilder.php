@@ -80,6 +80,8 @@ class SelectBuilder
 
     protected $boolFilterList = [];
 
+    protected $whereItemList = [];
+
     protected $applyWherePermissionCheck = false;
 
     protected $applyComplexExpressionsForbidden = false;
@@ -133,6 +135,10 @@ class SelectBuilder
         $this->queryBuilder->from($this->entityType);
 
         $this->applyFromSearchParams();
+
+        if (count($this->whereItemList)) {
+            $this->applyWhereItemList();
+        }
 
         if ($this->applyDefaultOrder) {
             $this->applyDefaultOrder();
@@ -287,6 +293,16 @@ class SelectBuilder
         return $this;
     }
 
+    /**
+     * Apply a Where Item.
+     */
+    public function withWhere(WhereItem $whereItem) : self
+    {
+        $this->whereItemList[] = $whereItem;
+
+        return $this;
+    }
+
     protected function applyPrimaryFilter()
     {
         $this->createPrimaryFilterApplier()
@@ -351,6 +367,28 @@ class SelectBuilder
             );
     }
 
+    protected function applyWhereItemList()
+    {
+        foreach ($this->whereItemList as $whereItem) {
+            $this->applyWhereItem($whereItem);
+        }
+    }
+
+    protected function applyWhereItem(WhereItem $whereItem)
+    {
+        $params = WhereParams::fromArray([
+            'applyPermissionCheck' => $this->applyWherePermissionCheck,
+            'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
+        ]);
+
+        $this->createWhereApplier()
+            ->apply(
+                $this->queryBuilder,
+                $whereItem,
+                $params
+            );
+    }
+
     protected function applyFromSearchParams()
     {
         if (!$this->searchParams) {
@@ -359,9 +397,7 @@ class SelectBuilder
 
         if (
             !$this->applyDefaultOrder &&
-            (
-                $this->searchParams->getOrderBy() || $this->searchParams->getOrder()
-            )
+            ($this->searchParams->getOrderBy() || $this->searchParams->getOrder())
         ) {
             $params = OrderParams::fromArray([
                 'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
@@ -374,6 +410,11 @@ class SelectBuilder
                     $this->queryBuilder,
                     $params
                 );
+        }
+
+
+        if (!$this->searchParams->getOrderBy() && !$this->searchParams->getOrder()) {
+            $this->withDefaultOrder();
         }
 
         if ($this->searchParams->getMaxSize() || $this->searchParams->getOffset()) {
@@ -399,17 +440,7 @@ class SelectBuilder
                 'value' => $this->searchParams->getWhere(),
             ]);
 
-            $params = WhereParams::fromArray([
-                'applyPermissionCheck' => $this->applyWherePermissionCheck,
-                'forbidComplexExpressions' => $this->applyComplexExpressionsForbidden,
-            ]);
-
-            $this->createWhereApplier()
-                ->apply(
-                    $this->queryBuilder,
-                    $whereItem,
-                    $params
-                );
+            $this->whereItemList[] = $whereItem;
         }
     }
 

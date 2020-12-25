@@ -208,4 +208,47 @@ class SearchBuilderTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($this->entityType, $query->getFrom());
     }
+
+    public function testBuildDefaultOrder1()
+    {
+        $raw = [
+            'textFilter' => 'testText',
+        ];
+
+        $searchParams = SearchParams::fromRaw($raw);
+
+        $orderParams = OrderParams::fromArray([
+            'forceDefault' => true,
+            'order' => null,
+        ]);
+
+        $this->orderApplier
+            ->expects($this->once())
+            ->method('apply')
+            ->with(
+                $this->isInstanceOf(QueryBuilder::class),
+                $orderParams
+            );
+
+        $query = $this->selectBuilder
+            ->from($this->entityType)
+            ->withSearchParams($searchParams)
+            ->build();
+
+        $this->assertEquals($this->entityType, $query->getFrom());
+    }
+
+    public function testBuildClone1()
+    {
+        $query = (new QueryBuilder())
+            ->from($this->entityType)
+            ->build();
+
+        $query = $this->selectBuilder
+            ->clone($query)
+            ->withPrimaryFilter('testPrimary')
+            ->build();
+
+        $this->assertEquals($this->entityType, $query->getFrom());
+    }
 }
