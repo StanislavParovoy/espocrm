@@ -29,10 +29,6 @@
 
 namespace Espo\Core\Select;
 
-use Espo\Core\{
-    Exceptions\Error,
-};
-
 use Espo\Core\Select\{
     Factory\ApplierFactory,
     Appliers\WhereApplier,
@@ -56,6 +52,8 @@ use Espo\{
     Entities\User,
 };
 
+use LogicException;
+
 /**
  * Builds select queries for ORM.
  * Applies search parameters (passed from frontend), ACL restrictions, filters, etc.
@@ -67,6 +65,8 @@ class SelectBuilder
     protected $queryBuilder;
 
     protected $user = null;
+
+    protected $sourceQuery = null;
 
     protected $searchParams = null;
 
@@ -102,6 +102,10 @@ class SelectBuilder
      */
     public function from(string $entityType) : self
     {
+        if ($this->sourceQuery) {
+            throw new LogicException("Can't call 'from' after 'clone'.");
+        }
+
         $this->entityType = $entityType;
 
         return $this;
@@ -112,13 +116,13 @@ class SelectBuilder
      */
     public function clone(Query $query) : self
     {
-        if ($this->entityType && $entity->entityType !== $query->getFrom()) {
-            throw new Error("Not matching entity type.");
+        if ($this->entityType && $this->entityType !== $query->getFrom()) {
+            throw new LogicException("Not matching entity type.");
         }
 
         $this->entityType = $query->getFrom();
 
-        $this->queryBuilder->clone($query);
+        $this->sourceQuery = $query;
 
         return $this;
     }
@@ -129,10 +133,15 @@ class SelectBuilder
     public function build() : Query
     {
         if (!$this->entityType) {
-            throw new Error("No entity type.");
+            throw new LogicException("No entity type.");
         }
 
-        $this->queryBuilder->from($this->entityType);
+        if ($this->sourceQuery) {
+            $this->queryBuilder->clone($this->sourceQuery);
+        }
+        else {
+            $this->queryBuilder->from($this->entityType);
+        }
 
         $this->applyFromSearchParams();
 
