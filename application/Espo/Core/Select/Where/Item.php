@@ -55,7 +55,7 @@ class Item
         $object->attribute = $params['attribute'] ?? $params['field'] ?? null;
         $object->value = $params['value'] ?? null;
         $object->dateTime = $params['dateTime'] ?? false;
-        $object->timeZone = $params['timeZone'] ?? false;
+        $object->timeZone = $params['timeZone'] ?? null;
 
         unset($params['field']);
 

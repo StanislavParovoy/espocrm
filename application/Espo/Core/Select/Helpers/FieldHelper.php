@@ -29,10 +29,14 @@
 
 namespace Espo\Core\Select\Helpers;
 
-use Espo\Core\{
-    EntityManager,
+use Espo\{
+    ORM\EntityManager,
+    ORM\Entity
 };
 
+/**
+ * @todo Rewrite using EntityDefs class. Then write unit tests.
+ */
 class FieldHelper
 {
     private $seed = null;
@@ -44,6 +48,7 @@ class FieldHelper
     public function __construct(string $entityType, EntityManager $entityManager)
     {
         $this->entityType = $entityType;
+        $this->entityManager = $entityManager;
     }
 
     protected function getSeed() : Entity

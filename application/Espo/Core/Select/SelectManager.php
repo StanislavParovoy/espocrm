@@ -2049,8 +2049,8 @@ class SelectManager
 
         $method = 'boolFilter' . ucfirst($filter);
 
-        if (method_exists($this, $method)) {
-            return [];
+        if (!method_exists($this, $method)) {
+            throw new Error("Bool filter '{$filter}' does not exist.");
         }
 
         $rawWhereClause = $this->$method($result) ?? [];

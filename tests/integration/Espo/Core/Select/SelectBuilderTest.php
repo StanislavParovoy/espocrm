@@ -30,6 +30,7 @@
 namespace tests\integration\Espo\Core\Select;
 
 use Espo\Core\{
+    Application,
     Select\SelectBuilderFactory,
     Select\SearchParams,
     InjectableFactory,
@@ -49,7 +50,7 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
         $this->factory = $injectableFactory->create(SelectBuilderFactory::class);
     }
 
-    protected function initTest(array $aclData, bool $skipLogin = false)
+    protected function initTest(array $aclData, bool $skipLogin = false) : Application
     {
         $this->createUser('tester', [
             'data' => $aclData
@@ -64,17 +65,23 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
         $injectableFactory = $app->getContainer()->get('injectableFactory');
 
         $this->factory = $injectableFactory->create(SelectBuilderFactory::class);
+
+        return $app;
     }
 
     public function testBuild1()
     {
-        $this->initTest(
+        $app = $this->initTest(
             [
                 'Account' => [
                     'read' => 'team',
                 ],
             ],
         );
+
+        $container = $app->getContainer();
+
+        $userId = $container->get('user')->id;
 
         $builder = $this->factory->create();
 
@@ -106,7 +113,55 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
 
         $raw = $query->getRawParams();
 
-        print_r($raw);
+        $expected = [
+            'from' => 'Account',
+            'orderBy' => [
+                [
+                    'name',
+                    'DESC',
+                ],
+                [
+                    'id',
+                    'DESC',
+                ],
+            ],
+            'joins' => [],
+            'leftJoins' => [
+                [
+                    'teams',
+                    'teamsAccess',
+                ],
+            ],
+            'distinct' => true,
+            'whereClause' => [
+                'OR' => [
+                    [
+                        'assignedUserId' => $userId,
+                    ],
+                ],
+                [
+                    'name=' => 'test',
+                ],
+                [
+                    'createdAt<' => '2020-12-12 10:00:00',
+                ],
+                [
+                    'type' => 'Customer',
+                ],
+                [
+                    'OR' => [
+                        'teamsAccess.id' => [],
+                        'assignedUserId' => $userId,
+                    ],
+                ],
+            ],
+        ];
 
+        $this->assertEquals($expected['from'], $raw['from']);
+        $this->assertEquals($expected['whereClause'], $raw['whereClause']);
+        $this->assertEquals($expected['orderBy'], $raw['orderBy']);
+        $this->assertEquals($expected['leftJoins'], $raw['leftJoins']);
+
+        $this->assertTrue($raw['distinct']);
     }
 }
