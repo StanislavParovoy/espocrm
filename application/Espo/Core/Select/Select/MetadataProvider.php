@@ -42,7 +42,7 @@ class MetadataProvider
     protected $metadata;
     protected $entityManager;
 
-    private function __construct(Metadata $metadata, EntityManager $entityManager)
+    public function __construct(Metadata $metadata, EntityManager $entityManager)
     {
         $this->metadata = $metadata;
         $this->entityManager = $entityManager;

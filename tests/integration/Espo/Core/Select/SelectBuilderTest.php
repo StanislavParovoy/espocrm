@@ -27,59 +27,48 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Select\Order;
+namespace tests\integration\Espo\Core\Select;
 
 use Espo\Core\{
-    Utils\Metadata,
+    Select\SelectBuilderFactory,
+    Select\SearchParams,
+    InjectableFactory,
+    Binding\BindingLoader,
+    Binding\BindingData,
+    Binding\Binding,
 };
 
-use Espo\{
-    ORM\EntityManager,
-};
-
-class MetadataProvider
+class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
 {
-    protected $metadata;
-    protected $entityManager;
-
-    public function __construct(Metadata $metadata, EntityManager $entityManager)
+    protected function setUp() : void
     {
-        $this->metadata = $metadata;
-        $this->entityManager = $entityManager;
+        parent::setUp();
+
+        $injectableFactory = $this->getContainer()->get('injectableFactory');
+
+        $this->factory = $injectableFactory->create(SelectBuilderFactory::class);
     }
 
-    public function getFieldType(string $entityType, string $field) : ?string
+    public function testBuild1()
     {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'fields', $field, 'type'
-        ]) ?? null;
-    }
+        $builder = $this->factory->create();
 
-    public function getDefaultOrderBy(string $entityType) : ?string
-    {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'collection', 'orderBy'
-        ]) ?? null;
-    }
+        $searchParams = SearchParams::fromRaw([
+            'orderBy' => 'name',
+            'order' => SearchParams::ORDER_DESC,
+            'primaryFilter' => 'customers',
+            'boolFilterList' => ['onlyMy'],
+        ]);
 
-    public function getDefaultOrder(string $entityType) : ?string
-    {
-        return $this->metadata->get([
-            'entityDefs', $entityType, 'collection', 'order'
-        ]) ?? null;
-    }
+        $query = $builder
+            ->from('Account')
+            ->withStrictAccessControl()
+            ->withSearchParams($searchParams)
+            ->build();
 
-    public function hasAttribute(string $entityType, string $attribute) : bool
-    {
-        return (bool) $this->entityManager
-            ->getMetadata()
-            ->get($entityType, ['fields', $attribute]);
-    }
+        $raw = $query->getRawParams();
 
-    public function isAttributeParamUniqueTrue(string $entityType, string $attribute) : bool
-    {
-        return (bool) $this->entityManager
-            ->getMetadata()
-            ->get($entityType, ['fields', $attribute, 'unique']);
+        print_r($raw);
+
     }
 }
