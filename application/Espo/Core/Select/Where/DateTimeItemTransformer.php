@@ -46,10 +46,8 @@ class DateTimeItemTransformer
     protected $entityType;
     protected $user;
 
-    public function __construct(
-        string $entityType,
-        User $user
-    ) {
+    public function __construct(string $entityType, User $user)
+    {
         $this->entityType = $entityType;
         $this->user = $user;
     }

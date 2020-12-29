@@ -77,7 +77,7 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
             ->expects($this->at(0))
             ->method('get')
             ->with([
-                'selectDefs', $entityType, 'whereItemConverterClassName'
+                'selectDefs', $entityType, 'whereDateTimeItemTransformerClassName'
             ])
             ->willReturn($className1);
 
@@ -85,12 +85,12 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
             ->expects($this->at(1))
             ->method('get')
             ->with([
-                'selectDefs', $entityType, 'whereDateTimeItemTransformerClassName'
+                'selectDefs', $entityType, 'whereItemConverterClassName'
             ])
             ->willReturn($className2);
 
-        $className1 = $className1 ?? ItemGeneralConverter::class;
-        $className2 = $className2 ?? DateTimeItemTransformer::class;
+        $className1 = $className1 ?? DateTimeItemTransformer::class;
+        $className2 = $className2 ?? ItemGeneralConverter::class;
 
         $this->injectableFactory
             ->expects($this->at(0))
@@ -102,7 +102,7 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
                     'user' => $this->user,
                 ]
             )
-            ->willReturn($this->itemConverter);
+            ->willReturn($this->dateTimeItemTransformer);
 
         $this->injectableFactory
             ->expects($this->at(1))
@@ -112,9 +112,10 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
                 [
                     'entityType' => $entityType,
                     'user' => $this->user,
+                    'dateTimeItemTransformer' => $this->dateTimeItemTransformer,
                 ]
             )
-            ->willReturn($this->dateTimeItemTransformer);
+            ->willReturn($this->itemConverter);
 
         $object = $this->createMock(Converter::class);
 
@@ -127,7 +128,7 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
                     'entityType' => $entityType,
                     'user' => $this->user,
                     'itemConverter' => $this->itemConverter,
-                    'dateTimeItemTransformer' => $this->dateTimeItemTransformer,
+
                 ]
             )
             ->willReturn($object);

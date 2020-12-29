@@ -49,8 +49,33 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
         $this->factory = $injectableFactory->create(SelectBuilderFactory::class);
     }
 
+    protected function initTest(array $aclData, bool $skipLogin = false)
+    {
+        $this->createUser('tester', [
+            'data' => $aclData
+        ]);
+
+        if (!$skipLogin) {
+            $this->auth('tester');
+        }
+
+        $app = $this->createApplication();
+
+        $injectableFactory = $app->getContainer()->get('injectableFactory');
+
+        $this->factory = $injectableFactory->create(SelectBuilderFactory::class);
+    }
+
     public function testBuild1()
     {
+        $this->initTest(
+            [
+                'Account' => [
+                    'read' => 'team',
+                ],
+            ],
+        );
+
         $builder = $this->factory->create();
 
         $searchParams = SearchParams::fromRaw([
@@ -58,6 +83,19 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
             'order' => SearchParams::ORDER_DESC,
             'primaryFilter' => 'customers',
             'boolFilterList' => ['onlyMy'],
+            'where' => [
+                [
+                    'type' => 'equals',
+                    'attribute' => 'name',
+                    'value' => 'test',
+                ],
+                [
+                    'type' => 'before',
+                    'attribute' => 'createdAt',
+                    'value' => '2020-12-12 10:00',
+                    'dateTime' => true,
+                ],
+            ],
         ]);
 
         $query = $builder
