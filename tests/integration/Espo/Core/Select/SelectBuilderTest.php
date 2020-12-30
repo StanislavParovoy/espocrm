@@ -164,4 +164,133 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
 
         $this->assertTrue($raw['distinct']);
     }
+
+    public function testBuildLegacyAccessFilter()
+    {
+        $app = $this->initTest(
+            [
+                'Meeting' => [
+                    'read' => 'team',
+                ],
+            ],
+        );
+
+        $container = $app->getContainer();
+
+        $userId = $container->get('user')->id;
+
+        $builder = $this->factory->create();
+
+        $query = $builder
+            ->from('Meeting')
+            ->withStrictAccessControl()
+            ->build();
+
+        $raw = $query->getRawParams();
+
+        $expected = [
+            'from' => 'Meeting',
+            'joins' => [],
+            'leftJoins' => [
+                [
+                    'teams',
+                    'teamsAccess',
+                ],
+                [
+                    'users',
+                    'usersAccess',
+                ],
+            ],
+            'distinct' => true,
+            'whereClause' => [
+                [
+                    'OR' => [
+                        'teamsAccessMiddle.teamId' => [],
+                        'usersAccessMiddle.userId' => $userId,
+                        'assignedUserId' => $userId,
+                    ],
+                ]
+            ],
+        ];
+
+        $this->assertEquals($expected['whereClause'], $raw['whereClause']);
+        $this->assertEquals($expected['leftJoins'], $raw['leftJoins']);
+
+        $this->assertTrue($raw['distinct']);
+    }
+
+    public function testBuildDefaultOrder()
+    {
+        $app = $this->initTest(
+            [],
+        );
+
+        $searchParams = SearchParams::fromRaw([]);
+
+        $builder = $this->factory->create();
+
+        $query = $builder
+            ->from('Meeting')
+            ->withSearchParams($searchParams)
+            ->build();
+
+        $raw = $query->getRawParams();
+
+        $expectedOrderBy = [
+            ['dateStart', 'DESC'],
+            ['id', 'DESC'],
+        ];
+
+        $this->assertEquals($expectedOrderBy, $raw['orderBy']);
+    }
+
+    public function testBuildMeetingDateTime()
+    {
+        $app = $this->initTest(
+            [],
+        );
+
+        $searchParams = SearchParams::fromRaw([
+            'where' => [
+                [
+                    'type' => 'on',
+                    'attribute' => 'dateStart',
+                    'value' => '2020-12-12',
+                    'dateTime' => true,
+                ],
+            ],
+        ]);
+
+        $builder = $this->factory->create();
+
+        $query = $builder
+            ->from('Meeting')
+            ->withSearchParams($searchParams)
+            ->build();
+
+        $raw = $query->getRawParams();
+
+        $expectedWhereClause = [
+            'OR' => [
+                [
+                    'dateStartDate=' => '2020-12-12',
+                ],
+                [
+                    'AND' => [
+                        [
+                            'AND' => [
+                                'dateStart>=' => '2020-12-12 00:00:00',
+                                'dateStart<=' => '2020-12-12 23:59:59',
+                            ],
+                        ],
+                        [
+                            'dateStartDate=' => null,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expectedWhereClause, $raw['whereClause']);
+    }
 }

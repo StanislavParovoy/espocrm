@@ -1,0 +1,3 @@
+{
+    "whereDateTimeItemTransformerClassName": "Espo\\Modules\\Crm\\Select\\Meeting\\Where\\DateTimeItemTransformer"
+}
