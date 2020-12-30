@@ -214,7 +214,7 @@ class Email extends \Espo\Core\Controllers\Record
 
             $params['where'][] = [
                 'type' => 'inFolder',
-                'attribute' => 'folder',
+                'attribute' => 'folderId',
                 'value' => $folderId,
             ];
 
