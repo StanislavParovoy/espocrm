@@ -31,6 +31,7 @@ namespace tests\integration\Espo\Core\Select;
 
 use Espo\Core\{
     Application,
+    Container,
     Select\SelectBuilderFactory,
     Select\SearchParams,
     InjectableFactory,
@@ -292,5 +293,87 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
         ];
 
         $this->assertEquals($expectedWhereClause, $raw['whereClause']);
+    }
+
+    public function testEmailInbox()
+    {
+        $app = $this->initTest(
+            [],
+        );
+
+        $container = $app->getContainer();
+
+        $userId = $container->get('user')->id;
+
+        $emailAddressId = $this->createUserEmailAddress($container);
+
+        $searchParams = SearchParams::fromRaw([
+            'where' => [
+                [
+                    'type' => 'inFolder',
+                    'attribute' => 'folderId',
+                    'value' => 'inbox',
+                ],
+            ],
+        ]);
+
+        $builder = $this->factory->create();
+
+        $query = $builder
+            ->from('Email')
+            ->withSearchParams($searchParams)
+            ->build();
+
+        $raw = $query->getRawParams();
+
+        $expectedWhereClause = [
+            'emailUser.inTrash' => false,
+            'emailUser.folderId' => null,
+            'emailUser.userId' => $userId,
+            [
+                'status' => ['Archived', 'Sent'],
+            ],
+            'fromEmailAddressId!=' => [$emailAddressId],
+            [
+                'OR' => [
+                    'status' => 'Archived',
+                    'createdById!=' => $userId,
+                ],
+            ],
+        ];
+
+        $expectedLeftJoins = [
+            [
+                'EmailUser',
+                'emailUser',
+                [
+                    'emailUser.emailId:' => 'id',
+                    'emailUser.deleted' => false,
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expectedWhereClause, $raw['whereClause']);
+        $this->assertEquals($expectedLeftJoins, $raw['leftJoins']);
+    }
+
+    protected function createUserEmailAddress(Container $container) : string
+    {
+        $userId = $container->get('user')->id;
+
+        $em = $container->get('entityManager');
+
+        $user = $em->getEntity('User', $userId);
+
+        $emailAddress = $em->createEntity('EmailAddress', [
+            'name' => 'test@test.com',
+        ]);
+
+        $em
+            ->getRepository('User')
+            ->getRelation($user, 'emailAddresses')
+            ->relate($emailAddress);
+
+        return $emailAddress->id;
     }
 }

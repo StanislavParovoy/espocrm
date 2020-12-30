@@ -29,13 +29,15 @@
 
 namespace Espo\Classes\Select\Email\Where\ItemConverters;
 
-use Espo\Core{
+use Espo\Core\{
     Select\Where\ItemConverter,
+    Select\Where\Item,
 };
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereItem as WhereClauseItem,
+    ORM\QueryParams\Parts\WhereClause,
     ORM\EntityManager,
     Entities\User,
 };
@@ -57,7 +59,7 @@ class InFolder implements ItemConverter
 
         switch ($folderId) {
             case 'all':
-                return WhereClauseItem::fromRaw([]);
+                return WhereClause::fromRaw([]);
 
             case 'inbox':
                 return $this->convertInbox($queryBuilder);
@@ -84,7 +86,7 @@ class InFolder implements ItemConverter
         $this->joinEmailUser($queryBuilder);
 
         $whereClause = [
-            'emailUser.inTrash=' => false,
+            'emailUser.inTrash' => false,
             'emailUser.folderId' => null,
             'emailUser.userId' => $this->user->id,
             [
@@ -101,7 +103,7 @@ class InFolder implements ItemConverter
                 'OR' => [
                     'status' => 'Archived',
                     'createdById!=' => $this->user->id,
-                ]
+                ],
             ];
         }
         else {
@@ -111,14 +113,14 @@ class InFolder implements ItemConverter
             ];
         }
 
-        return WhereClauseItem::fromRaw($whereClause);
+        return WhereClause::fromRaw($whereClause);
     }
 
     protected function convertSent(QueryBuilder $queryBuilder) : WhereClauseItem
     {
         $this->joinEmailUser($queryBuilder);
 
-        return WhereClauseItem::fromRaw([
+        return WhereClause::fromRaw([
             'OR' => [
                 'fromEmailAddressId' => $this->getEmailAddressIdList(),
                 [
@@ -137,7 +139,7 @@ class InFolder implements ItemConverter
     {
         $this->joinEmailUser($queryBuilder);
 
-        return WhereClauseItem::fromRaw([
+        return WhereClause::fromRaw([
             'emailUser.userId' => $this->user->id,
             'emailUser.isImportant' => true,
         ]);
@@ -147,7 +149,7 @@ class InFolder implements ItemConverter
     {
         $this->joinEmailUser($queryBuilder);
 
-        return WhereClauseItem::fromRaw([
+        return WhereClause::fromRaw([
             'emailUser.userId' => $this->user->id,
             'emailUser.inTrash' => true,
         ]);
@@ -155,7 +157,7 @@ class InFolder implements ItemConverter
 
     protected function convertDraft(QueryBuilder $queryBuilder) : WhereClauseItem
     {
-        return WhereClauseItem::fromRaw([
+        return WhereClause::fromRaw([
             'status' => 'Draft',
             'createdById' => $this->user->id,
         ]);
@@ -165,7 +167,7 @@ class InFolder implements ItemConverter
     {
         $this->joinEmailUser($queryBuilder);
 
-        return WhereClauseItem::fromRaw([
+        return WhereClause::fromRaw([
             'emailUser.inTrash' => false,
             'emailUser.folderId' => $folderId,
         ]);
