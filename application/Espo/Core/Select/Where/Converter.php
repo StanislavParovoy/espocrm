@@ -44,11 +44,6 @@ use Espo\{
  */
 class Converter
 {
-    protected $additionalFilterTypeList = [
-        'inCategory',
-        'isUserFromTeams',
-    ];
-
     protected $ormMetadata;
 
     protected $entityType;
@@ -120,9 +115,10 @@ class Converter
         $attribute = $item->getAttribute();
         $value = $item->getValue();
 
-        // Processing special filters. Only at the top level of the tree.
-        if (in_array($type, $this->additionalFilterTypeList)) {
-            $methodName = 'apply' . ucfirst($type);
+        $methodName = 'apply' . ucfirst($type);
+
+        if (method_exists($this, $methodName)) {
+            // Processing special filters. Only at the top level of the tree.
 
             if (!$attribute) {
                 throw new Error("Bad where definition. Missing attribute.");

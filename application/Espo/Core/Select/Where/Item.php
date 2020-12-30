@@ -43,6 +43,15 @@ class Item
 
     private $timeZone = null;
 
+    protected $noAttributeTypeList = [
+        'or',
+        'and',
+        'having',
+        'not',
+        'subQueryNotIn',
+        'subQueryIn',
+    ];
+
     private function __construct()
     {
     }
@@ -71,7 +80,7 @@ class Item
 
         if (
             !$object->attribute &&
-            !in_array($object->type, ['or', 'and', 'having', 'not', 'subQueryNotIn', 'subQueryIn'])
+            !in_array($object->type, $object->noAttributeTypeList)
         ) {
             throw new InvalidArgumentException("No 'attribute' in where item.");
         }

@@ -27,7 +27,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Modules\Crm\Select\Meeting\Where;
+namespace Espo\Modules\Crm\Classes\Select\Meeting\Where;
 
 use Espo\Core\{
     Exceptions\Error,

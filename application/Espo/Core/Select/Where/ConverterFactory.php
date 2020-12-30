@@ -66,11 +66,24 @@ class ConverterFactory
             'dateTimeItemTransformer' => $dateTimeItemTransformer,
         ]);
 
-        return $this->injectableFactory->createWith(Converter::class, [
+        $converterClassName = $this->getConverterClassName($entityType);
+
+        return $this->injectableFactory->createWith($converterClassName, [
             'entityType' => $entityType,
             'user' => $user,
             'itemConverter' => $itemConverter,
         ]);
+    }
+
+    protected function getConverterClassName(string $entityType) : string
+    {
+        $className = $this->metadata->get(['selectDefs', $entityType, 'whereConverterClassName']);
+
+        if ($className) {
+            return $className;
+        }
+
+        return Converter::class;
     }
 
     protected function getItemConverterClassName(string $entityType) : string

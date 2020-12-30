@@ -61,15 +61,15 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
 
     public function testCreate1()
     {
-        $this->prepareFactoryTest(null, null);
+        $this->prepareFactoryTest(null, null, null);
     }
 
     public function testCreate2()
     {
-        $this->prepareFactoryTest('SomeClass1', 'SomeClass2');
+        $this->prepareFactoryTest('SomeClass1', 'SomeClass2', 'SomeClass3');
     }
 
-    protected function prepareFactoryTest(?string $className1, ?string $className2)
+    protected function prepareFactoryTest(?string $className1, ?string $className2, ?string $className3)
     {
         $entityType = 'Test';
 
@@ -89,8 +89,17 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
             ])
             ->willReturn($className2);
 
+        $this->metadata
+            ->expects($this->at(2))
+            ->method('get')
+            ->with([
+                'selectDefs', $entityType, 'whereConverterClassName'
+            ])
+            ->willReturn($className3);
+
         $className1 = $className1 ?? DateTimeItemTransformer::class;
         $className2 = $className2 ?? ItemGeneralConverter::class;
+        $className3 = $className3 ?? Converter::class;
 
         $this->injectableFactory
             ->expects($this->at(0))
@@ -123,7 +132,7 @@ class ConverterFactoryTest extends \PHPUnit\Framework\TestCase
             ->expects($this->at(2))
             ->method('createWith')
             ->with(
-                Converter::class,
+                $className3,
                 [
                     'entityType' => $entityType,
                     'user' => $this->user,

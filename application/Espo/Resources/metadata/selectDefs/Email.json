@@ -1,0 +1,5 @@
+{
+    "whereItemConverterClassNameMap": {
+        "folder_inFolder": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\InFolder"
+    }
+}
