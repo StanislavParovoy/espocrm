@@ -72,29 +72,16 @@ class InFolder implements ItemConverter
                 return $this->convertTrash($queryBuilder);
 
             case 'drafts':
-                return $this->convertDrafts($queryBuilder);
+                return $this->convertDraft($queryBuilder);
 
             default:
                 return $this->convertFolderId($queryBuilder, $folderId);
+        }
     }
 
     protected function convertInbox(QueryBuilder $queryBuilder) : WhereClauseItem
     {
-        $emailAddressList = $this->entityManager
-            ->getRepository('User')
-            ->getRelation($this->user, 'emailAddresses')
-            ->select(['id'])
-            ->find();
-
-        $emailAddressIdList = [];
-
-        foreach ($emailAddressList as $emailAddress) {
-            $emailAddressIdList[] = $emailAddress->id;
-        }
-
-        if (!$queryBuilder->hasLeftJoinAlias('emailUser')) {
-             $this->joinEmailUser($queryBuilder);
-        }
+        $this->joinEmailUser($queryBuilder);
 
         $whereClause = [
             'emailUser.inTrash=' => false,
@@ -104,6 +91,8 @@ class InFolder implements ItemConverter
                 'status' => ['Archived', 'Sent'],
             ],
         ];
+
+        $emailAddressIdList = $this->getEmailAddressIdList();
 
         if (!empty($emailAddressIdList)) {
             $whereClause['fromEmailAddressId!='] = $emailAddressIdList;
@@ -125,8 +114,69 @@ class InFolder implements ItemConverter
         return WhereClauseItem::fromRaw($whereClause);
     }
 
+    protected function convertSent(QueryBuilder $queryBuilder) : WhereClauseItem
+    {
+        $this->joinEmailUser($queryBuilder);
+
+        return WhereClauseItem::fromRaw([
+            'OR' => [
+                'fromEmailAddressId' => $this->getEmailAddressIdList(),
+                [
+                    'status' => 'Sent',
+                    'createdById' => $this->user->id
+                ]
+            ],
+            [
+                'status!=' => 'Draft',
+            ],
+            'emailUser.inTrash' => false,
+        ]);
+    }
+
+    protected function convertImportant(QueryBuilder $queryBuilder) : WhereClauseItem
+    {
+        $this->joinEmailUser($queryBuilder);
+
+        return WhereClauseItem::fromRaw([
+            'emailUser.userId' => $this->user->id,
+            'emailUser.isImportant' => true,
+        ]);
+    }
+
+    protected function convertTrash(QueryBuilder $queryBuilder) : WhereClauseItem
+    {
+        $this->joinEmailUser($queryBuilder);
+
+        return WhereClauseItem::fromRaw([
+            'emailUser.userId' => $this->user->id,
+            'emailUser.inTrash' => true,
+        ]);
+    }
+
+    protected function convertDraft(QueryBuilder $queryBuilder) : WhereClauseItem
+    {
+        return WhereClauseItem::fromRaw([
+            'status' => 'Draft',
+            'createdById' => $this->user->id,
+        ]);
+    }
+
+    protected function convertFolderId(QueryBuilder $queryBuilder, string $folderId) : WhereClauseItem
+    {
+        $this->joinEmailUser($queryBuilder);
+
+        return WhereClauseItem::fromRaw([
+            'emailUser.inTrash' => false,
+            'emailUser.folderId' => $folderId,
+        ]);
+    }
+
     protected function joinEmailUser(QueryBuilder $queryBuilder)
     {
+        if ($queryBuilder->hasLeftJoinAlias('emailUser')) {
+            return;
+        }
+
         $queryBuilder->leftJoin(
             'EmailUser',
             'emailUser',
@@ -135,5 +185,22 @@ class InFolder implements ItemConverter
                 'emailUser.deleted' => false,
             ]
         );
+    }
+
+    protected function getEmailAddressIdList() : array
+    {
+        $emailAddressList = $this->entityManager
+            ->getRepository('User')
+            ->getRelation($this->user, 'emailAddresses')
+            ->select(['id'])
+            ->find();
+
+        $emailAddressIdList = [];
+
+        foreach ($emailAddressList as $emailAddress) {
+            $emailAddressIdList[] = $emailAddress->id;
+        }
+
+        return $emailAddressIdList;
     }
 }
