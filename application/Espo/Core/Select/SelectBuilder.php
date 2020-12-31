@@ -421,7 +421,6 @@ class SelectBuilder
                 );
         }
 
-
         if (!$this->searchParams->getOrderBy() && !$this->searchParams->getOrder()) {
             $this->withDefaultOrder();
         }
