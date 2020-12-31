@@ -27,56 +27,32 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Autoload;
+namespace tests\integration\Espo\Core\Utils\Database;
 
-class Loader
+class AddressFieldTest extends Base
 {
-    protected $namespaceLoader;
-
-    public function __construct(NamespaceLoader $namespaceLoader)
+    public function fieldlist()
     {
-        $this->namespaceLoader = $namespaceLoader;
+        return [
+            ['testAddressStreet', 255],
+            ['testAddressCity', 255],
+            ['testAddressState', 255],
+            ['testAddressCountry', 255],
+            ['testAddressPostalCode', 40],
+        ];
     }
 
-    public function register(array $data)
+    /**
+     * @dataProvider fieldlist
+     */
+    public function testColumn($fieldName, $length)
     {
-        /* load "psr-4", "psr-0", "classmap" */
-        $this->namespaceLoader->register($data);
+        $column = $this->getColumnInfo('Test', $fieldName);
 
-        /* load "autoloadFileList" */
-        $this->registerAutoloadFileList($data);
-
-        /* load "files" */
-        $this->registerFiles($data);
-    }
-
-    protected function registerAutoloadFileList(array $data)
-    {
-        $keyName = 'autoloadFileList';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
-    }
-
-    protected function registerFiles(array $data)
-    {
-        $keyName = 'files';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $id => $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
+        $this->assertNotEmpty($column);
+        $this->assertEquals('varchar', $column['DATA_TYPE']);
+        $this->assertEquals($length, $column['CHARACTER_MAXIMUM_LENGTH']);
+        $this->assertEquals('YES', $column['IS_NULLABLE']); 
+        $this->assertEquals('utf8mb4_unicode_ci', $column['COLLATION_NAME']);
     }
 }

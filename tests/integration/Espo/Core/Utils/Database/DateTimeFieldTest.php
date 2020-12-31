@@ -27,56 +27,16 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Autoload;
+namespace tests\integration\Espo\Core\Utils\Database;
 
-class Loader
+class DateTimeFieldTest extends Base
 {
-    protected $namespaceLoader;
-
-    public function __construct(NamespaceLoader $namespaceLoader)
+    public function testColumn()
     {
-        $this->namespaceLoader = $namespaceLoader;
-    }
+        $column = $this->getColumnInfo('Test', 'testDateTime');
 
-    public function register(array $data)
-    {
-        /* load "psr-4", "psr-0", "classmap" */
-        $this->namespaceLoader->register($data);
-
-        /* load "autoloadFileList" */
-        $this->registerAutoloadFileList($data);
-
-        /* load "files" */
-        $this->registerFiles($data);
-    }
-
-    protected function registerAutoloadFileList(array $data)
-    {
-        $keyName = 'autoloadFileList';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
-    }
-
-    protected function registerFiles(array $data)
-    {
-        $keyName = 'files';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $id => $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
+        $this->assertNotEmpty($column);
+        $this->assertEquals('datetime', $column['DATA_TYPE']);
+        $this->assertEquals('YES', $column['IS_NULLABLE']);
     }
 }

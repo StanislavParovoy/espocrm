@@ -27,56 +27,29 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Autoload;
+namespace Espo\Core\Utils\Database\DBAL\Platforms;
 
-class Loader
+use Doctrine\DBAL\{
+    Types\Types,
+    Platforms\Keywords\MariaDb102Keywords,
+};
+
+class MariaDb1027Platform extends MySQLPlatform
 {
-    protected $namespaceLoader;
-
-    public function __construct(NamespaceLoader $namespaceLoader)
+    public function getJsonTypeDeclarationSQL(array $column): string
     {
-        $this->namespaceLoader = $namespaceLoader;
+        return 'LONGTEXT';
     }
 
-    public function register(array $data)
+    protected function getReservedKeywordsClass(): string
     {
-        /* load "psr-4", "psr-0", "classmap" */
-        $this->namespaceLoader->register($data);
-
-        /* load "autoloadFileList" */
-        $this->registerAutoloadFileList($data);
-
-        /* load "files" */
-        $this->registerFiles($data);
+        return Keywords\MariaDb102Keywords::class;
     }
 
-    protected function registerAutoloadFileList(array $data)
+    protected function initializeDoctrineTypeMappings(): void
     {
-        $keyName = 'autoloadFileList';
+        parent::initializeDoctrineTypeMappings();
 
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
-    }
-
-    protected function registerFiles(array $data)
-    {
-        $keyName = 'files';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $id => $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
+        $this->doctrineTypeMapping['json'] = Types::JSON;
     }
 }

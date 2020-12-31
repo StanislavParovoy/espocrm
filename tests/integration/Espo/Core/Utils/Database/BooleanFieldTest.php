@@ -27,56 +27,31 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Autoload;
+namespace tests\integration\Espo\Core\Utils\Database;
 
-class Loader
+class BooleanFieldTest extends Base
 {
-    protected $namespaceLoader;
-
-    public function __construct(NamespaceLoader $namespaceLoader)
+    public function testColumn()
     {
-        $this->namespaceLoader = $namespaceLoader;
+        $column = $this->getColumnInfo('Test', 'testBoolean');
+
+        $this->assertNotEmpty($column);
+        $this->assertEquals('tinyint', $column['DATA_TYPE']);
+        $this->assertEquals('0', $column['COLUMN_DEFAULT']);
+        $this->assertEquals('NO', $column['IS_NULLABLE']);
     }
 
-    public function register(array $data)
+    public function testDefaultValue()
     {
-        /* load "psr-4", "psr-0", "classmap" */
-        $this->namespaceLoader->register($data);
+        $this->updateDefs('Test', 'testBoolean', [
+            'default' => true,
+        ]);
 
-        /* load "autoloadFileList" */
-        $this->registerAutoloadFileList($data);
+        $column = $this->getColumnInfo('Test', 'testBoolean');
 
-        /* load "files" */
-        $this->registerFiles($data);
-    }
-
-    protected function registerAutoloadFileList(array $data)
-    {
-        $keyName = 'autoloadFileList';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
-    }
-
-    protected function registerFiles(array $data)
-    {
-        $keyName = 'files';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $id => $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
+        $this->assertNotEmpty($column);
+        $this->assertEquals('tinyint', $column['DATA_TYPE']);
+        $this->assertEquals('1', $column['COLUMN_DEFAULT']);
+        $this->assertEquals('NO', $column['IS_NULLABLE']);
     }
 }

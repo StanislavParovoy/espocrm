@@ -27,55 +27,28 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Core\Utils\Autoload;
+namespace Espo\Tools\FieldManager\Hooks;
 
-class Loader
+use Espo\Core\{
+    Di,
+    Exceptions\Error,
+};
+
+class AutoincrementType implements Di\MetadataAware
 {
-    protected $namespaceLoader;
+    use Di\MetadataSetter;
 
-    public function __construct(NamespaceLoader $namespaceLoader)
+    public function beforeSave($scope, $name, $defs, $options)
     {
-        $this->namespaceLoader = $namespaceLoader;
-    }
-
-    public function register(array $data)
-    {
-        /* load "psr-4", "psr-0", "classmap" */
-        $this->namespaceLoader->register($data);
-
-        /* load "autoloadFileList" */
-        $this->registerAutoloadFileList($data);
-
-        /* load "files" */
-        $this->registerFiles($data);
-    }
-
-    protected function registerAutoloadFileList(array $data)
-    {
-        $keyName = 'autoloadFileList';
-
-        if (!isset($data[$keyName])) {
+        if (!isset($options['isNew']) || !$options['isNew']) {
             return;
         }
 
-        foreach ($data[$keyName] as $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
-            }
-        }
-    }
+        $fields = $this->metadata->get(['entityDefs', $scope, 'fields']);
 
-    protected function registerFiles(array $data)
-    {
-        $keyName = 'files';
-
-        if (!isset($data[$keyName])) {
-            return;
-        }
-
-        foreach ($data[$keyName] as $id => $filePath) {
-            if (file_exists($filePath)) {
-                require_once($filePath);
+        foreach ($fields as $fieldName => $fieldDefs) {
+            if ($fieldDefs['type'] == 'autoincrement') {
+                throw new Error('The entity can have only one Auto-increment field.');
             }
         }
     }
