@@ -1,5 +1,6 @@
 {
     "whereItemConverterClassNameMap": {
-        "folderId_inFolder": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\InFolder"
+        "folderId_inFolder": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\InFolder",
+        "emailAddress_equals": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\EmailAddressEquals"
     }
 }

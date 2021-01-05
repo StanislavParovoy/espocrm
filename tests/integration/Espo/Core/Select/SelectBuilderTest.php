@@ -413,6 +413,40 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
         $this->assertEquals($expectedLeftJoins, $raw['leftJoins']);
     }
 
+    public function testEmailEmailAddressEquals()
+    {
+        $app = $this->initTest(
+            [],
+        );
+
+        $em = $app->getContainer()->get('entityManager');
+
+        $emailAddress = $em->createEntity('EmailAddress', [
+           'name' => 'test@test.com',
+        ]);
+
+        $searchParams = SearchParams::fromRaw([
+            'where' => [
+                [
+                    'type' => 'equals',
+                    'attribute' => 'emailAddress',
+                    'value' => 'test@test.com',
+                ],
+            ],
+        ]);
+
+        $builder = $this->factory->create();
+
+        $query = $builder
+            ->from('Email')
+            ->withSearchParams($searchParams)
+            ->build();
+
+        $raw = $query->getRawParams();
+
+        $this->assertEquals($emailAddress->id, $raw['whereClause']['OR']['fromEmailAddressId']);
+    }
+
     protected function createUserEmailAddress(Container $container) : string
     {
         $userId = $container->get('user')->id;

@@ -42,7 +42,6 @@ use Espo\{
 };
 
 use DateTime;
-use DateTimeZone;
 use DateInterval;
 
 /**
@@ -116,8 +115,6 @@ class ItemGeneralConverter
             }
         }
 
-        $part = [];
-
         switch ($type) {
 
             case 'or':
@@ -181,8 +178,9 @@ class ItemGeneralConverter
         return $converter->convert($queryBuilder, $item);
     }
 
-    protected function groupProcessAndOr(QueryBuilder $queryBuilder, string $type, ?string $attribute, $value) : array
-    {
+    protected function groupProcessAndOr(
+        QueryBuilder $queryBuilder, string $type, ?string $attribute, $value
+    ) : array {
         if (!is_array($value)) {
             throw new Error("Bad where item.");
         }
@@ -206,8 +204,9 @@ class ItemGeneralConverter
         ];
     }
 
-    protected function groupProcessSubQuery(QueryBuilder $queryBuilder, string $type, ?string $attribute, $value) : array
-    {
+    protected function groupProcessSubQuery(
+        QueryBuilder $queryBuilder, string $type, ?string $attribute, $value
+    ) : array {
         if (!is_array($value)) {
             throw new Error("Bad where item.");
         }
@@ -241,8 +240,9 @@ class ItemGeneralConverter
         ];
     }
 
-    protected function groupProcessColumn(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
-    {
+    protected function groupProcessColumn(
+        QueryBuilder $queryBuilder, string $type, string $attribute, $value
+    ) : array {
         $link = $this->metadata->get(['entityDefs', $this->entityType, 'fields', $attribute, 'link']);
 
         $column = $this->metadata->get(['entityDefs', $this->entityType, 'fields', $attribute, 'column']);
@@ -300,8 +300,9 @@ class ItemGeneralConverter
         throw new Error("Bad where item 'column'.");
     }
 
-    protected function groupProcessArray(QueryBuilder $queryBuilder, string $type, string $attribute, $value) : array
-    {
+    protected function groupProcessArray(
+        QueryBuilder $queryBuilder, string $type, string $attribute, $value
+    ) : array {
         $arrayValueAlias = 'arrayFilter' . $this->randomStringGenerator->generate();
 
         $arrayAttribute = $attribute;
@@ -379,7 +380,7 @@ class ItemGeneralConverter
         if ($type === 'arrayNoneOf') {
             if (is_null($value) || !$value && !is_array($value)) {
                 throw new Error("Bad where item 'array'. No value.");
-            };
+            }
 
             $queryBuilder->leftJoin(
                 'ArrayValue',
