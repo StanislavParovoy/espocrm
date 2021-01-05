@@ -42,7 +42,7 @@ use Espo\{
     Classes\Select\Email\Helpers\EmailAddressHelper,
 };
 
-class EmailAddressEquals implements ItemConverter
+class ToEquals implements ItemConverter
 {
     protected $emailAddressHelper;
     protected $randomStringGenerator;
@@ -87,10 +87,8 @@ class EmailAddressEquals implements ItemConverter
         );
 
         return WhereClause::fromRaw([
-            'OR' => [
-                'fromEmailAddressId' => $emailAddressId,
-                $alias . '.emailAddressId' => $emailAddressId,
-            ],
+            $alias . '.emailAddressId' => $emailAddressId,
+            $alias . '.addressType' => 'to',
         ]);
     }
 }

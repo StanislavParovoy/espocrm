@@ -32,27 +32,28 @@ namespace Espo\Classes\Select\Email\Where\ItemConverters;
 use Espo\Core\{
     Select\Where\ItemConverter,
     Select\Where\Item,
-    Select\Helpers\RandomStringGenerator,
 };
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereItem as WhereClauseItem,
     ORM\QueryParams\Parts\WhereClause,
+    ORM\EntityManager,
     Classes\Select\Email\Helpers\EmailAddressHelper,
 };
 
-class EmailAddressEquals implements ItemConverter
+class FromEquals implements ItemConverter
 {
+    protected $entityManager;
     protected $emailAddressHelper;
     protected $randomStringGenerator;
 
     public function __construct(
-        EmailAddressHelper $emailAddressHelper,
-        RandomStringGenerator $randomStringGenerator
+        EntityManager $entityManager,
+        EmailAddressHelper $emailAddressHelper
     ) {
+        $this->entityManager = $entityManager;
         $this->emailAddressHelper = $emailAddressHelper;
-        $this->randomStringGenerator = $randomStringGenerator;
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClauseItem
@@ -73,24 +74,8 @@ class EmailAddressEquals implements ItemConverter
             ]);
         }
 
-        $queryBuilder->distinct();
-
-        $alias = 'emailEmailAddress' . $this->randomStringGenerator->generate();
-
-        $queryBuilder->leftJoin(
-            'EmailEmailAddress',
-            $alias,
-            [
-                'emailId:' => 'id',
-                'deleted' => false,
-            ]
-        );
-
         return WhereClause::fromRaw([
-            'OR' => [
-                'fromEmailAddressId' => $emailAddressId,
-                $alias . '.emailAddressId' => $emailAddressId,
-            ],
+            'fromEmailAddressId' => $emailAddressId,
         ]);
     }
 }

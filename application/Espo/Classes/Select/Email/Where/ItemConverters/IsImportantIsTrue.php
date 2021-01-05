@@ -32,65 +32,46 @@ namespace Espo\Classes\Select\Email\Where\ItemConverters;
 use Espo\Core\{
     Select\Where\ItemConverter,
     Select\Where\Item,
-    Select\Helpers\RandomStringGenerator,
 };
 
 use Espo\{
     ORM\QueryParams\SelectBuilder as QueryBuilder,
     ORM\QueryParams\Parts\WhereItem as WhereClauseItem,
     ORM\QueryParams\Parts\WhereClause,
-    Classes\Select\Email\Helpers\EmailAddressHelper,
+    Entities\User,
 };
 
-class EmailAddressEquals implements ItemConverter
+class IsImportantIsTrue implements ItemConverter
 {
-    protected $emailAddressHelper;
-    protected $randomStringGenerator;
+    protected $user;
 
-    public function __construct(
-        EmailAddressHelper $emailAddressHelper,
-        RandomStringGenerator $randomStringGenerator
-    ) {
-        $this->emailAddressHelper = $emailAddressHelper;
-        $this->randomStringGenerator = $randomStringGenerator;
+    public function __construct(User $user)
+    {
+        $this->user = $user;
     }
 
     public function convert(QueryBuilder $queryBuilder, Item $item) : WhereClauseItem
     {
-        $value = $item->getValue();
-
-        if (!$value) {
-            return WhereClause::fromRaw([
-                'id' => null,
-            ]);
-        }
-
-        $emailAddressId = $this->emailAddressHelper->getEmailAddressIdByValue($value);
-
-        if (!$emailAddressId) {
-            return WhereClause::fromRaw([
-                'id' => null,
-            ]);
-        }
-
-        $queryBuilder->distinct();
-
-        $alias = 'emailEmailAddress' . $this->randomStringGenerator->generate();
-
-        $queryBuilder->leftJoin(
-            'EmailEmailAddress',
-            $alias,
-            [
-                'emailId:' => 'id',
-                'deleted' => false,
-            ]
-        );
+        $this->joinEmailUser($queryBuilder);
 
         return WhereClause::fromRaw([
-            'OR' => [
-                'fromEmailAddressId' => $emailAddressId,
-                $alias . '.emailAddressId' => $emailAddressId,
-            ],
+            'emailUser.isImportant' => true,
         ]);
+    }
+
+    protected function joinEmailUser(QueryBuilder $queryBuilder)
+    {
+        if ($queryBuilder->hasLeftJoinAlias('emailUser')) {
+            return;
+        }
+
+        $queryBuilder->leftJoin(
+            'EmailUser',
+            'emailUser',
+            [
+                'emailUser.emailId:' => 'id',
+                'emailUser.deleted' => false,
+            ]
+        );
     }
 }

@@ -1,6 +1,16 @@
 {
     "whereItemConverterClassNameMap": {
         "folderId_inFolder": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\InFolder",
-        "emailAddress_equals": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\EmailAddressEquals"
+        "emailAddress_equals": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\EmailAddressEquals",
+        "from_equals": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\FromEquals",
+        "to_equals": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\ToEquals",
+        "isNotReplied_isTrue": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsNotRepliedIsTrue",
+        "isNotReplied_isFalse": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsNotRepliedIsFalse",
+        "isNotRead_isTrue": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsNotReadIsTrue",
+        "isNotRead_isFalse": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsNotReadIsFalse",
+        "isRead_isTrue": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsNotReadIsFalse",
+        "isRead_isFalse": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsNotReadIsTrue",
+        "isImportant_isTrue": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsImportantIsTrue",
+        "isImportant_isFalse": "Espo\\Classes\\Select\\Email\\Where\\ItemConverters\\IsImportantIsFalse"
     }
 }
