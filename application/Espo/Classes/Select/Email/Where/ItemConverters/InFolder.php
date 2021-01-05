@@ -125,7 +125,7 @@ class InFolder implements ItemConverter
                 'fromEmailAddressId' => $this->getEmailAddressIdList(),
                 [
                     'status' => 'Sent',
-                    'createdById' => $this->user->id
+                    'createdById' => $this->user->id,
                 ]
             ],
             [

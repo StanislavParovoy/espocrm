@@ -34,10 +34,6 @@ use Espo\Core\{
     Container,
     Select\SelectBuilderFactory,
     Select\SearchParams,
-    InjectableFactory,
-    Binding\BindingLoader,
-    Binding\BindingData,
-    Binding\Binding,
 };
 
 class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
@@ -340,6 +336,66 @@ class SelectBuilderTest extends \tests\integration\Core\BaseTestCase
                     'createdById!=' => $userId,
                 ],
             ],
+        ];
+
+        $expectedLeftJoins = [
+            [
+                'EmailUser',
+                'emailUser',
+                [
+                    'emailUser.emailId:' => 'id',
+                    'emailUser.deleted' => false,
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expectedWhereClause, $raw['whereClause']);
+        $this->assertEquals($expectedLeftJoins, $raw['leftJoins']);
+    }
+
+    public function testEmailSent()
+    {
+        $app = $this->initTest(
+            [],
+        );
+
+        $container = $app->getContainer();
+
+        $userId = $container->get('user')->id;
+
+        $emailAddressId = $this->createUserEmailAddress($container);
+
+        $searchParams = SearchParams::fromRaw([
+            'where' => [
+                [
+                    'type' => 'inFolder',
+                    'attribute' => 'folderId',
+                    'value' => 'sent',
+                ],
+            ],
+        ]);
+
+        $builder = $this->factory->create();
+
+        $query = $builder
+            ->from('Email')
+            ->withSearchParams($searchParams)
+            ->build();
+
+        $raw = $query->getRawParams();
+
+        $expectedWhereClause = [
+            'OR' => [
+                'fromEmailAddressId' => [$emailAddressId],
+                [
+                    'status' => 'Sent',
+                    'createdById' => $userId,
+                ]
+            ],
+            [
+                'status!=' => 'Draft',
+            ],
+            'emailUser.inTrash' => false,
         ];
 
         $expectedLeftJoins = [
